@@ -4,7 +4,6 @@
     <name>Defined StickyShift onto JIS_KANA</name>
     <appendix>Use JIS_KANA to Sticky Shift_L</appendix>
     <identifier>private.defined_stickyshift_onto_jis_kana</identifier>
-    <inputmode_only>JAPANESE</inputmode_only>
     <autogen>__KeyToKey__ KeyCode::JIS_KANA, KeyCode::VK_STICKY_SHIFT_L</autogen>
   </item>
 
@@ -25,5 +24,10 @@
     <identifier>private.swap_shift_and_tab</identifier>
     <autogen>__KeyToKey__ KeyCode::JIS_EISUU,KeyCode::TAB</autogen>
   </item>
-  
-</root>
+
+  <item>
+    <name>Change Command_R Shift_R</name>
+    <identifier>private.change_command_r_shift_r</identifier>
+    <autogen>__KeyToKey__ KeyCode::COMMAND_R,KeyCode::SHIFT_R</autogen>
+  </item>
+  </root>
