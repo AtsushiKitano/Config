@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<root>
+  <item>
+    <name>Defined StickyShift onto JIS_KANA</name>
+    <appendix>Use JIS_KANA to Sticky Shift_L</appendix>
+    <identifier>private.defined_stickyshift_onto_jis_kana</identifier>
+    <inputmode_only>JAPANESE</inputmode_only>
+    <autogen>__KeyToKey__ KeyCode::JIS_KANA, KeyCode::VK_STICKY_SHIFT_L</autogen>
+  </item>
+
+  <item>
+    <name>Change Shift_R Control_R</name>
+    <identifier>private.change_shift_r_control_r</identifier>
+    <autogen>__KeyToKey__ KeyCode::SHIFT_R, KeyCode::CONTROL_R</autogen>
+  </item>
+
+  <item>
+    <name>Change CapsLock ESCAPE</name>
+    <identifier>private.change_capslock_tab</identifier>
+    <autogen>__KeyToKey__ KeyCode::CAPSLOCK, KeyCode::ESCAPE</autogen>
+  </item>
+
+  <item>
+    <name>Change JIS_EISUU TAB</name>
+    <identifier>private.swap_shift_and_tab</identifier>
+    <autogen>__KeyToKey__ KeyCode::JIS_EISUU,KeyCode::TAB</autogen>
+  </item>
+  
+</root>
