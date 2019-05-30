@@ -1,0 +1,5 @@
+- name: configurate manjaro machine
+  hosts: local
+  remote_user: 
+  roles:
+    - role: config

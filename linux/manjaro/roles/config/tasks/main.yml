@@ -1,0 +1,61 @@
+- name: package update
+  become: True
+  pacman:
+    update_cache: yes
+    upgrade: yes
+
+- name: install packages
+  become: True
+  pacman:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - emacs
+      - dmenu
+      - git
+      - i3
+      - tmux
+      - uim
+      - virtualbox
+      - vagrant
+      - wget
+      - xorg-xev
+      - zsh
+      - zsh-completions
+
+- name: settig each application
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dst }}"
+  loop:
+    - { src: '../files/tmux.conf', dst: '/home/aria/.tmux.conf' }
+    - { src: '../files/spacemacs', dst: '/home/aria/.spacemacs' }
+    - { src: '../files/zshrc', dst: '/home/aria/.zshrc' }
+
+- name: clone packages spacemacs,yay
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { repo: 'https://github.com/syl20bnr/spacemacs', dest: '/home/aria/.emacs.d' }
+    - { repo: 'https://aur.archlinux.org/yay.git', dest: '/home/aria/Download/yay' }
+
+- name: install oh-my-zsh
+  shell: sh -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
+
+- name: get info golang
+  find:
+    paths: '/usr/loca/bin/go'
+
+- name: install go package
+  get_url:
+    url: 'https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz'
+    dest: '~/Downloads/'
+    mode: '0660'
+
+- name: unarchive go package
+  become: True
+  unarchive:
+    src: '/home/aria/Downloads/go1.12.5.linux-amd64.tar.gz'
+    dest: '/usr/local/bin/'
+    remote_src: yes
