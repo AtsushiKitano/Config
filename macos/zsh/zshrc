@@ -147,12 +147,6 @@ setopt auto_pushd
 # pushd したとき、ディレクトリがすでにスタックに含まれていればスタックに追加されない
 setopt pushd_ignore_dups
 
-
-
-
-
-
-
 # PYTHON pyenv
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="PYENV_ROOT/shims:$PATH"
@@ -197,8 +191,8 @@ bindkey '^R' peco-history-selection
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=13'
 
 #GCP Service Account
-export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
-export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
+# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
+# export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
 export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
 
 autoload -U +X bashcompinit && bashcompinit
@@ -285,6 +279,15 @@ alias gup='gcloud components update'
 ## GCP AI
 alias gai='gcloud ai-platform'
 alias gmo='gcloud models'
+
+## GCP container cluster
+alias gcoi='gcloud container images'
+alias gcoc='gcloud container clusters'
+alias gcon='gcloud container node-pools'
+alias gcoo='gcloud container operations'
+alias gcos='gcloud container subnets'
+alias gcoh='gcloud container hub'
+alias gcob='gcloud container binauthz'
 
 # terraform command
 alias t='terraform'
