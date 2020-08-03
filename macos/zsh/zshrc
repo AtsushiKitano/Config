@@ -52,8 +52,11 @@ ZSH_THEME="robbyrussell"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
+    aws
     git
+    gcloud
     zsh-autosuggestions
+    terraform
 )
 
 # User configuration
@@ -149,7 +152,7 @@ setopt pushd_ignore_dups
 
 # PYTHON pyenv
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="PYENV_ROOT/shims:$PATH"
+export PATH="$PATH:PYENV_ROOT/shims"
 eval "$(pyenv init -)"
 
 # pip install libaray
@@ -159,17 +162,18 @@ eval "$(pyenv init -)"
 
 # Go PATH
 export GOPATH="$HOME/.go"
-export PATH="$HOME/src/bin:/usr/local/go/bin:$GOPATH/bin:$PATH"
+export PATH="$PATH:$HOME/src/bin:/usr/local/go/bin:$GOPATH/bin"
+
+# terraform
+export PATH="$PATH:$HOME/.tfenv/bin"
 
 # Javascript
 ## node brew
-export PATH=$HOME/.nodebrew/current/bin:$PATH
+export PATH=$PATH:$HOME/.nodebrew/current/bin
 
-# terraform
-export PATH="$HOME/.tfenv/bin:$PATH"
 
 # tex
-export PATH="/usr/local/texlive/2020/bin/x86_64-darwin/:$PATH"
+export PATH="$PATH:/usr/local/texlive/2020/bin/x86_64-darwin/"
 
 # 補完
 autoload -U compinit
@@ -186,7 +190,8 @@ function peco-history-selection(){
 
 zle -N peco-history-selection
 bindkey '^R' peco-history-selection
-
+bindkey 'M-"' quote-region
+bindkey 'M-]' quote-line
 # auto complete
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=13'
 
@@ -274,7 +279,7 @@ alias gco='gcloud container'
 alias gi='gcloud compute instances'
 alias gn='gcloud compute networks'
 alias gcs='gcloud compute ssh'
-alias gup='gcloud components update'
+alias gup='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components update'
 
 ## GCP AI
 alias gai='gcloud ai-platform'
