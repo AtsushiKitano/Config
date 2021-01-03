@@ -1,0 +1,373 @@
+;; -*- mode: emacs-lisp -*-
+;; This file is loaded by Spacemacs at startup.
+(defun dotspacemacs/init ()
+  (setq-default
+   dotspacemacs-elpa-https t
+   dotspacemacs-elpa-timeout 5
+   dotspacemacs-check-for-update nil
+   dotspacemacs-elpa-subdirectory nil
+   dotspacemacs-editing-style '(hybrid :variables
+                                       hybrid-style-visual-feedback nil
+                                       hybrid-style-enable-evilified-state t
+                                       hybrid-style-enable-hjkl-bindings nil
+                                       hybrid-style-use-evil-search-module nil
+                                       hybrid-style-default-state 'normal)
+   dotspacemacs-verbose-loading nil
+   dotspacemacs-startup-banner 'official
+   dotspacemacs-startup-lists '((recents . 5)
+                                (projects . 7))
+   dotspacemacs-startup-buffer-responsive t
+   dotspacemacs-scratch-mode 'text-mode
+   dotspacemacs-themes '(spacemacs-dark
+                         spacemacs-light)
+   dotspacemacs-colorize-cursor-according-to-state t
+   dotspacemacs-default-font '("Ricty"
+                               :size 18
+                               :weight light
+                               :width normal
+                               :powerline-scale 1.3 )
+   dotspacemacs-leader-key "SPC"
+   dotspacemacs-emacs-command-key "SPC"
+   dotspacemacs-ex-command-key ":"
+   dotspacemacs-emacs-leader-key "M-m"
+   dotspacemacs-major-mode-leader-key ","
+   dotspacemacs-major-mode-emacs-leader-key "C-M-m"
+   dotspacemacs-distinguish-gui-tab nil
+   dotspacemacs-remap-Y-to-y$ nil
+   dotspacemacs-retain-visual-state-on-shift t
+   dotspacemacs-visual-line-move-text nil
+   dotspacemacs-ex-substitute-global nil
+   dotspacemacs-default-layout-name "Default"
+   dotspacemacs-display-default-layout nil
+   dotspacemacs-auto-resume-layouts nil
+   dotspacemacs-large-file-size 1
+   dotspacemacs-auto-save-file-location 'cache
+   dotspacemacs-max-rollback-slots 5
+   dotspacemacs-helm-resize nil
+   dotspacemacs-helm-no-header nil
+   dotspacemacs-helm-position 'bottom
+   dotspacemacs-helm-use-fuzzy 'always
+   dotspacemacs-enable-paste-transient-state nil
+   dotspacemacs-which-key-delay 0.4
+   dotspacemacs-which-key-position 'bottom
+   dotspacemacs-loading-progress-bar t
+   dotspacemacs-fullscreen-at-startup nil
+   dotspacemacs-fullscreen-use-non-native nil
+   dotspacemacs-maximized-at-startup nil
+   dotspacemacs-active-transparency 90
+   dotspacemacs-inactive-transparency 90
+   dotspacemacs-show-transient-state-title t
+   dotspacemacs-show-transient-state-color-guide t
+   dotspacemacs-mode-line-unicode-symbols t
+   dotspacemacs-smooth-scrolling t
+   dotspacemacs-line-numbers t
+   dotspacemacs-folding-method 'evil
+   dotspacemacs-smartparens-strict-mode nil
+   dotspacemacs-smart-closing-parenthesis nil
+   dotspacemacs-highlight-delimiters 'all
+   dotspacemacs-persistent-server nil
+   dotspacemacs-search-tools '("ag" "pt" "ack" "grep")
+   dotspacemacs-default-package-repository nil
+   dotspacemacs-whitespace-cleanup nil
+   )
+)
+
+(defun dotspacemacs/user-init ()
+  ;; backgroud
+  (setq alpha-on-flag nil)
+  (defun alpha-toggle()
+    (interactive)
+    (if (equal alpha-on-flag t)
+        (progn
+	        (set-frame-parameter nil 'alpha 100)
+	        (setq alpha-on-flag nil)
+	        (message "alpha-off"))
+      (progn
+        (set-frame-parameter nil 'alpha 80)
+        (setq alpha-on-flag t)
+        (message "alpha-on"))))
+  (define-key global-map (kbd "C-c C-a") 'alpha-toggle)
+
+  ;; csse
+  (add-hook 'css-mode-hook 'flycheck-mode)
+  (add-hook 'css-mode-hook
+            (lambda()
+              (setq tab-width 2)
+              ))
+
+  ;; minibuffer
+  (define-key minibuffer-local-map (kbd "C-j") 'skk-mode)
+  (setq exec-path-from-shell-check-startup-files nil)
+
+    ;; Chrom Layer Configuration
+  (setq edit-server-url-major-mode-alist
+        '(("github\\.com" . org-mode)))
+
+  ;; Terraform
+  ;;; terraform key bind
+  (add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
+
+
+  ;;   Skk
+  (setq skk-init-file "~/.skk")
+  (global-set-key "\C-xj" 'skk-mode)
+  (setq skk-egg-like-newline t)
+  (setq skk-use-azik t)
+  (setq skk-azik-keyboard-type 'jp106)
+
+  ;; Git
+  (custom-set-faces
+   '(magit-diff-added ((t (:background "black" :foreground "green"))))
+   '(magit-diff-added-highlight ((t (:background "white" :foreground "green"))))
+   '(magit-diff-removed ((t (:background "black" :foreground "blue"))))
+   '(magit-diff-removed-hightlight ((t (:background "white" :foreground "blue"))))
+   '(magit-hash ((t (:foreground "red"))))
+   )
+
+  ;; Python
+  (add-hook 'python-mode-hook 'flycheck-mode)
+  (add-hook 'python-mode-hook
+            (lambda()
+              (setq python-indent 2)
+              (setq indent-tabs-mode nil)
+             ))
+
+  ;; Go
+  (with-eval-after-load 'go-mode
+    (require 'go-autocomplete)
+    (add-hook 'go-mode-hook 'go-eldoc-setup)
+    (define-key go-mode-map (kbd "M-.") 'godef-jump)
+    (define-key go-mode-map (kbd "M-,") 'godef-jump)
+    )
+  (add-hook 'go-mode-hook 'flycheck-mode)
+  (add-hook 'go-mode-hook (lambda()
+                            (add-hook 'before-save-hook' 'gofmt-before-save)
+                            (local-set-key (kbd "M-.") 'godef-jump)
+                            (setq indent-tabs-mode nil)
+                            (setq c-basic-offset 4)
+                            (setq tab-width 4)))
+
+
+  ;; C++
+  (add-hook 'c++-mode-hook 'flycheck-mode)
+  (add-hook 'c++-mode-hook
+            (lambda()
+              (setq tab-width 2)))
+
+  ;; Rust
+  (add-hook 'rust-mode-hook 'flycheck-mode)
+
+  ;; javascript
+  (add-hook 'js-mode-hook 'flycheck-mode)
+  (add-hook 'js-mode-hook
+            (lambda()
+              (make-local-variable 'js-indent-level)
+              (setq tab-width 2)
+              (setq js-indent-level 2)))
+
+
+  ;; React (JS)
+  (setq-default
+   js2-basic-offset 2
+   css-indent-offset 2
+   web-mode-markup-indent-offset 2
+   web-mode-css-indent-offset 2
+   web-mode-code-indent-offset 2
+   web-mode-attr-indent-offset 2)
+
+  (with-eval-after-load 'web-mode
+    (add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
+    (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
+    (add-to-list 'web-mode-indentation-params '("lineup-calls" . nil))
+    )
+)
+
+
+
+(defun dotspacemacs/layers ()
+  (setq-default
+   dotspacemacs-distribution 'spacemacs
+   dotspacemacs-enable-lazy-installation 'unused
+   dotspacemacs-ask-for-lazy-installation t
+   dotspacemacs-configuration-layer-path '()
+   dotspacemacs-configuration-layers
+   '(
+     ivy
+     better-defaults
+     osx
+     shell
+     ansible
+     javascript
+     php
+     windows-scripts
+     typescript
+     auto-completion
+     csv
+     docker
+     emacs-lisp
+     git
+     go
+     ;; html
+     helm
+     javascript
+     markdown
+     org
+     python
+     ruby
+     sql
+     terraform
+     yaml
+     typescript
+     rust
+     react
+     java
+     chrome
+     slack
+     )
+   dotspacemacs-additional-packages '(
+                                      minimap
+                                      counsel
+                                      counsel-recentf
+                                      counsel-rg
+                                      ddskk
+                                      dockerfile
+                                      dumb-jump
+                                      find-file-in-project 
+                                      neotree
+                                      symbol-overlay
+                                      yatex
+                                      rjsx
+                                      go-autocomplete
+                                      company
+                                      web-mode
+                                      tern
+                                      )
+   dotspacemacs-frozen-packages '()
+   dotspacemacs-excluded-packages '(
+                                    )
+   dotspacemacs-install-packages 'used-only))
+
+
+(defun dotspacemacs/user-config ()
+  ;; package import
+  (require 'use-package)
+  (require 'bind-key)
+
+  ;; Key Binding
+  ;; window control
+  (bind-key "M-[" 'previous-multiframe-window)
+  (bind-key "M-]" 'next-multiframe-window)
+  (bind-key "C-t" 'next-multiframe-window)
+  (bind-key "C-x o" 'ace-window)
+  (bind-key "C-2" 'split-window-vertically)
+  (bind-key "C-3" 'split-window-horizontally)
+  (bind-key "C-z" 'delete-window)
+  (bind-key "M-z" 'delete-other-windows)
+
+  (bind-key "C-x b" 'switch-to-buffer)
+  ;;
+  (bind-key (kbd "C-h") 'delete-backward-char)
+  (define-key global-map (kbd "C-h") 'delete-backward-char)
+
+  ;; word edit bind
+  (bind-key "M-f" 'forward-word)
+  (bind-key "M-b" 'backward-word)
+
+  (define-key global-map (kbd "C-:") 'dabbrev-expand)
+
+  (define-key global-map [?¥] [?\\])
+
+  (global-set-key "\M-p" 'swiper)
+  (global-set-key (kbd "C-c C-r") 'ivy-resume)
+  (global-set-key (kbd "C-c g") 'counsel-git)
+  (global-set-key (kbd "C-c j") 'counsel-git-grep)
+  (global-set-key (kbd "C-c k") 'counsel-ag)
+  (global-set-key (kbd "C-x l") 'counsel-locate)
+  ;; shell
+  (bind-key (kbd "C-c s") 'eshell)
+
+  ;; program config
+  ;; Typescript
+  (use-package typescript-mode
+    :config
+    (setq typescript-indent-level 2)
+    (add-hook 'typescript-mode-hook
+              (lambda ()
+                (interactive)
+                (mmm-mode)
+                ))
+    )
+
+  (use-package mmm-mode
+    :commands mmm-mode
+    :mode (("\\.tsx\\'" . typescript-mode))
+    :config
+    (setq mmm-global-mode t)
+    (setq mmm-submode-decoration-level 0)
+
+    (mmm-add-classes
+     '((mmm-jsx-mode
+        :submode web-mode
+        :face mmm-code-submode-face
+        :front "\\(return\s\\|n\s\\|(\n\s*\\)<"
+        :front-offset -1
+        :back ">\n?\s*)\n}\n"
+        :back-offset 1
+        )))
+    (mmm-add-mode-ext-class 'typescript-mode nil 'mmm-jsx-mode)
+
+    (defun mmm-reapply ()
+      (mmm-mode)
+      (mmm-mode))
+
+    (add-hook 'after-save-hook
+              (lambda ()
+                (when (string-match-p "\\.tsx?" buffer-file-name)
+                  (mmm-reapply)
+                  )))
+    )
+
+  (use-package web-mode
+    :mode (("\\.html?\\'" . web-mode))
+    :config
+    (setq web-mode-enable-auto-closing t)
+    (setq web-mode-enable-auto-pairing t)
+    )
+)
+
+
+(defun dotspacemacseuser-config ()
+  "Configuration function for user code.
+This function is called at the very end of Spacemacs initialization after
+layers configuration.
+This is the place where most of your configurations should be done. Unless it is
+explicitly specified that a variable should be set before a package is loaded,
+you should place your code here."
+  ;; ;; tern error
+  ;; (when (memq window-system '(mac ns))
+  ;;   (require 'exec-path-from-shell)
+  ;;   (exec-path-from-shell-initialize))
+
+  (setq ispell-program-name "aspell")
+  )
+
+;; Do not write anything past this comment. This is where Emacs will
+;; auto-generate custom variable definitions.
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (slack emojify circe oauth2 websocket nadvice ht gmail-message-mode ham-mode html-to-markdown flymd edit-server company-emacs-eclim eclim toml-mode racer pos-tip cargo rust-auto-use rust-playground rust-mode prettier reveal-in-osx-finder pbcopy osx-trash xterm-color unfill shell-pop minimap osx-dictionary mwim multi-term launchctl git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter eshell-z eshell-prompt-extras esh-help diff-hl wgrep smex ivy-hydra flyspell-correct-ivy counsel-projectile jinja2-mode company-ansible ansible-doc ansible sqlformat terraform-doc flymake-go go-complete go-direx go-errcheck rjsx-mode js-react-redux-yasnippets twittering-mode flyspell-correct-helm flyspell-correct auto-dictionary dash-functional phpunit phpcbf php-extras php-auto-yasnippets drupal-mode php-mode serverspec powershell mew ac-etags git git-annex git-attr transient git-commit with-editor undo-tree magit-popup k8s-mode lv swiper ivy symbol-overlay counsel find-file-in-project google-this docker tablist docker-tramp tide typescript-mode flycheck noflet ensime sbt-mode scala-mode dockerfile-mode csv-mode helm-etags-plus sql-indent yaml-mode go-autocomplete java-snippets react-snippets aws-snippets yasnippet-snippets evil-magit smeargle orgit magit-gitflow ghub helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link magit web-mode tagedit slim-mode scss-mode sass-mode pug-mode helm-css-scss haml-mode emmet-mode company-web web-completion-data hcl-mode ctags-update rvm ruby-tools ruby-test-mode rubocop rspec-mode robe rbenv rake minitest chruby bundler inf-ruby company-terraform go-guru go-eldoc company-go go-mode terraform-mode helm-company helm-c-yasnippet fuzzy company-tern tern company-statistics company-anaconda company auto-yasnippet ac-ispell auto-complete yatex cdb ccc org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mmm-mode markdown-toc markdown-mode htmlize gnuplot gh-md spinner powerline skewer-mode simple-httpd json-snatcher json-reformat yasnippet multiple-cursors js2-mode hydra parent-mode projectile pkg-info epl flx smartparens iedit anzu evil goto-chg highlight bind-map bind-key packed helm avy popup helm-core async f dash s ddskk pyenv-mode anaconda-mode pythonic yapfify ws-butler winum which-key web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline restart-emacs request rainbow-delimiters pyvenv pytest py-isort popwin pip-requirements persp-mode pcre2el paradox org-projectile org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint json-mode js2-refactor js-doc indent-guide hy-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu elisp-slime-nav dumb-jump diminish define-word cython-mode column-enforce-mode coffee-mode clean-aindent-mode bracketed-paste auto-highlight-symbol auto-compile aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(magit-diff-added ((t (:background "black" :foreground "green"))))
+ '(magit-diff-added-highlight ((t (:background "white" :foreground "green"))))
+ '(magit-diff-removed ((t (:background "black" :foreground "blue"))))
+ '(magit-diff-removed-hightlight ((t (:background "white" :foreground "blue"))))
+ '(magit-hash ((t (:foreground "red")))))
