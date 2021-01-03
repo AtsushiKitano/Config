@@ -251,40 +251,10 @@
 (defun dotspacemacs/user-config ()
   ;; package import
   (require 'use-package)
-  (require 'bind-key)
-
+  ;; import files
+  (add-to-list 'load-path "~/.spacemacs.d/configs")
   ;; Key Binding
-  ;; window control
-  (bind-key "M-[" 'previous-multiframe-window)
-  (bind-key "M-]" 'next-multiframe-window)
-  (bind-key "C-t" 'next-multiframe-window)
-  (bind-key "C-x o" 'ace-window)
-  (bind-key "C-2" 'split-window-vertically)
-  (bind-key "C-3" 'split-window-horizontally)
-  (bind-key "C-z" 'delete-window)
-  (bind-key "M-z" 'delete-other-windows)
-
-  (bind-key "C-x b" 'switch-to-buffer)
-  ;;
-  (bind-key (kbd "C-h") 'delete-backward-char)
-  (define-key global-map (kbd "C-h") 'delete-backward-char)
-
-  ;; word edit bind
-  (bind-key "M-f" 'forward-word)
-  (bind-key "M-b" 'backward-word)
-
-  (define-key global-map (kbd "C-:") 'dabbrev-expand)
-
-  (define-key global-map [?¥] [?\\])
-
-  (global-set-key "\M-p" 'swiper)
-  (global-set-key (kbd "C-c C-r") 'ivy-resume)
-  (global-set-key (kbd "C-c g") 'counsel-git)
-  (global-set-key (kbd "C-c j") 'counsel-git-grep)
-  (global-set-key (kbd "C-c k") 'counsel-ag)
-  (global-set-key (kbd "C-x l") 'counsel-locate)
-  ;; shell
-  (bind-key (kbd "C-c s") 'eshell)
+  (load "keybind")
 
   ;; program config
   ;; Typescript
