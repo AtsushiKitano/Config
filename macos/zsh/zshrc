@@ -52,11 +52,11 @@ ZSH_THEME="robbyrussell"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
-    aws
+    # aws
     git
-    gcloud
+    # gcloud
     zsh-autosuggestions
-    terraform
+    # terraform
 )
 
 # User configuration
@@ -165,15 +165,17 @@ export GOPATH="$HOME/.go"
 export PATH="$PATH:$HOME/src/bin:/usr/local/go/bin:$GOPATH/bin"
 
 # terraform
-export PATH="$PATH:$HOME/.tfenv/bin"
+export PATH="$HOME/.tfenv/bin:$PATH"
 
 # Javascript
 ## node brew
 export PATH=$PATH:$HOME/.nodebrew/current/bin
 
-
 # tex
 export PATH="$PATH:/usr/local/texlive/2020/bin/x86_64-darwin/"
+
+# Rust
+export PATH="$PATH:$HOME/.cargo/bin"
 
 # 補完
 autoload -U compinit
@@ -181,7 +183,20 @@ autoload -U compinit
 
 #Google Cloud Platform
 export CLOUDSDK_PYTHON=/usr/bin/python2.7
+export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
+export GCP_PROJECT=$(gcloud config get-value core/project)
+#GCP Service Account
+# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
+# export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
 
+# AWS config
+export AWS_CREDENTIAL=$HOME/.config/aws/credentials/office.csv
+
+# Terraform config
+## aws credential
+export TF_VAR_aws_credential=$AWS_CREDENTIAL
+
+#### function
 function peco-history-selection(){
     BUFFER=`\\history -n 1 | tail -r | awk '!a[$0]++' | peco`
     CURSOR=$#BUFFER
@@ -195,9 +210,6 @@ bindkey 'M-]' quote-line
 # auto complete
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=13'
 
-#GCP Service Account
-# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
-# export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
 export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
 
 autoload -U +X bashcompinit && bashcompinit
@@ -226,6 +238,7 @@ cdls (){
 alias -g L='| less'
 alias -g G='| grep'
 alias cd='cdls'
+alias mkdir='mkdir -p'
 
 # brew
 alias b='brew'
@@ -243,6 +256,7 @@ alias gtree='git log --graph --branches --pretty="format:%C(yellow)%h%Creset %s 
 
 #emacs client
 alias ec='emacsclient'
+alias emacs='emacs -nw'
 
 #AWS reagion set
 alias virginia='export AWS_DEFAULT_REGION=us-east-1'
@@ -276,6 +290,7 @@ alias gs='gsutil'
 alias gc='gcloud'
 alias gcm='gcloud compute'
 alias gco='gcloud container'
+alias gcl='gcloud container clusters'
 alias gi='gcloud compute instances'
 alias gn='gcloud compute networks'
 alias gcs='gcloud compute ssh'
@@ -304,6 +319,7 @@ alias tw='terraform workspace'
 alias twl='terraform workspace list'
 alias tws='terraform workspace select'
 alias twn='terraform workspace new'
+alias tgu='terraform get -update'
 
 # tfenv
 alias tf='tfenv'
@@ -315,3 +331,27 @@ alias tflr='tfenv list-remote'
 # javascript
 ## reacr
 alias rcp='create-react-app'
+
+# typescript
+
+
+# waypoint
+alias wp='waypoint'
+alias wb='waypoint build'
+alias wa='waypoint artifact'
+alias wup='waypoint up'
+alias wui='waypoint ui'
+alias wt='waypoint token'
+alias wtn='waypoint token new'
+alias wte='waypoint token exchange'
+alias wti='waypoint token invite'
+alias wins='waypoint install'
+alias wini='waypoint init'
+alias wdep='waypoint deployment'
+alias wdst='waypoint destroy'
+alias wlog='waypoint logs'
+alias winsk='waypoint install --platform=kubernetes -accept-tos'
+
+# packer
+alias p='packer'
+alias pb='packer build'
