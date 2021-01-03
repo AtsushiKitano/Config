@@ -1,0 +1,13 @@
+(with-eval-after-load 'go-mode
+  (require 'go-autocomplete)
+  (add-hook 'go-mode-hook 'go-eldoc-setup)
+  (define-key go-mode-map (kbd "M-.") 'godef-jump)
+  (define-key go-mode-map (kbd "M-,") 'godef-jump)
+  )
+(add-hook 'go-mode-hook 'flycheck-mode)
+(add-hook 'go-mode-hook (lambda()
+                          (add-hook 'before-save-hook' 'gofmt-before-save)
+                          (local-set-key (kbd "M-.") 'godef-jump)
+                          (setq indent-tabs-mode nil)
+                          (setq c-basic-offset 4)
+                          (setq tab-width 4)))

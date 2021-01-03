@@ -73,113 +73,19 @@
 )
 
 (defun dotspacemacs/user-init ()
-  ;; backgroud
-  (setq alpha-on-flag nil)
-  (defun alpha-toggle()
-    (interactive)
-    (if (equal alpha-on-flag t)
-        (progn
-	        (set-frame-parameter nil 'alpha 100)
-	        (setq alpha-on-flag nil)
-	        (message "alpha-off"))
-      (progn
-        (set-frame-parameter nil 'alpha 80)
-        (setq alpha-on-flag t)
-        (message "alpha-on"))))
-  (define-key global-map (kbd "C-c C-a") 'alpha-toggle)
-
-  ;; csse
-  (add-hook 'css-mode-hook 'flycheck-mode)
-  (add-hook 'css-mode-hook
-            (lambda()
-              (setq tab-width 2)
-              ))
-
-  ;; minibuffer
-  (define-key minibuffer-local-map (kbd "C-j") 'skk-mode)
-  (setq exec-path-from-shell-check-startup-files nil)
-
-    ;; Chrom Layer Configuration
-  (setq edit-server-url-major-mode-alist
-        '(("github\\.com" . org-mode)))
-
-  ;; Terraform
-  ;;; terraform key bind
-  (add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
-
-
-  ;;   Skk
-  (setq skk-init-file "~/.skk")
-  (global-set-key "\C-xj" 'skk-mode)
-  (setq skk-egg-like-newline t)
-  (setq skk-use-azik t)
-  (setq skk-azik-keyboard-type 'jp106)
-
-  ;; Git
-  (custom-set-faces
-   '(magit-diff-added ((t (:background "black" :foreground "green"))))
-   '(magit-diff-added-highlight ((t (:background "white" :foreground "green"))))
-   '(magit-diff-removed ((t (:background "black" :foreground "blue"))))
-   '(magit-diff-removed-hightlight ((t (:background "white" :foreground "blue"))))
-   '(magit-hash ((t (:foreground "red"))))
-   )
-
-  ;; Python
-  (add-hook 'python-mode-hook 'flycheck-mode)
-  (add-hook 'python-mode-hook
-            (lambda()
-              (setq python-indent 2)
-              (setq indent-tabs-mode nil)
-             ))
-
-  ;; Go
-  (with-eval-after-load 'go-mode
-    (require 'go-autocomplete)
-    (add-hook 'go-mode-hook 'go-eldoc-setup)
-    (define-key go-mode-map (kbd "M-.") 'godef-jump)
-    (define-key go-mode-map (kbd "M-,") 'godef-jump)
-    )
-  (add-hook 'go-mode-hook 'flycheck-mode)
-  (add-hook 'go-mode-hook (lambda()
-                            (add-hook 'before-save-hook' 'gofmt-before-save)
-                            (local-set-key (kbd "M-.") 'godef-jump)
-                            (setq indent-tabs-mode nil)
-                            (setq c-basic-offset 4)
-                            (setq tab-width 4)))
-
-
-  ;; C++
-  (add-hook 'c++-mode-hook 'flycheck-mode)
-  (add-hook 'c++-mode-hook
-            (lambda()
-              (setq tab-width 2)))
-
-  ;; Rust
-  (add-hook 'rust-mode-hook 'flycheck-mode)
-
-  ;; javascript
-  (add-hook 'js-mode-hook 'flycheck-mode)
-  (add-hook 'js-mode-hook
-            (lambda()
-              (make-local-variable 'js-indent-level)
-              (setq tab-width 2)
-              (setq js-indent-level 2)))
-
-
-  ;; React (JS)
-  (setq-default
-   js2-basic-offset 2
-   css-indent-offset 2
-   web-mode-markup-indent-offset 2
-   web-mode-css-indent-offset 2
-   web-mode-code-indent-offset 2
-   web-mode-attr-indent-offset 2)
-
-  (with-eval-after-load 'web-mode
-    (add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
-    (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
-    (add-to-list 'web-mode-indentation-params '("lineup-calls" . nil))
-    )
+  ;; import files
+  (add-to-list 'load-path "~/.spacemacs.d/configs")
+  (load "git")
+  (load "terraform")
+  (load "background")
+  (load "css")
+  (load "minibuffer")
+  (load "chrome_layer_config")
+  (load "python")
+  (load "go")
+  (load "c++")
+  (load "rust")
+  (load "react")
 )
 
 
@@ -207,7 +113,6 @@
      emacs-lisp
      git
      go
-     ;; html
      helm
      javascript
      markdown
@@ -253,56 +158,10 @@
   (require 'use-package)
   ;; import files
   (add-to-list 'load-path "~/.spacemacs.d/configs")
-  ;; Key Binding
   (load "keybind")
+  (load "typescript")
+  (load "html")
 
-  ;; program config
-  ;; Typescript
-  (use-package typescript-mode
-    :config
-    (setq typescript-indent-level 2)
-    (add-hook 'typescript-mode-hook
-              (lambda ()
-                (interactive)
-                (mmm-mode)
-                ))
-    )
-
-  (use-package mmm-mode
-    :commands mmm-mode
-    :mode (("\\.tsx\\'" . typescript-mode))
-    :config
-    (setq mmm-global-mode t)
-    (setq mmm-submode-decoration-level 0)
-
-    (mmm-add-classes
-     '((mmm-jsx-mode
-        :submode web-mode
-        :face mmm-code-submode-face
-        :front "\\(return\s\\|n\s\\|(\n\s*\\)<"
-        :front-offset -1
-        :back ">\n?\s*)\n}\n"
-        :back-offset 1
-        )))
-    (mmm-add-mode-ext-class 'typescript-mode nil 'mmm-jsx-mode)
-
-    (defun mmm-reapply ()
-      (mmm-mode)
-      (mmm-mode))
-
-    (add-hook 'after-save-hook
-              (lambda ()
-                (when (string-match-p "\\.tsx?" buffer-file-name)
-                  (mmm-reapply)
-                  )))
-    )
-
-  (use-package web-mode
-    :mode (("\\.html?\\'" . web-mode))
-    :config
-    (setq web-mode-enable-auto-closing t)
-    (setq web-mode-enable-auto-pairing t)
-    )
 )
 
 
