@@ -73,20 +73,19 @@
 )
 
 (defun dotspacemacs/user-init ()
-  ;; import files
-  (add-to-list 'load-path "~/.spacemacs.d/configs")
+  (add-to-list 'load-path "~/.spacemacs.d/configs/init/")
   (load "git")
   (load "skk")
-  (load "terraform")
   (load "background")
-  (load "css")
   (load "minibuffer")
+  (load "css")
+  (load "terraform")
   (load "chrome_layer_config")
   (load "python")
   (load "go")
   (load "c++")
   (load "rust")
-)
+  )
 
 
 
@@ -144,10 +143,11 @@
                                       go-autocomplete
                                       web-mode
                                       tern
-                                      tern-auto-complete
                                       company
-                                      flycheck
                                       add-node-modules-path
+                                      tern-auto-complete
+                                      flycheck
+                                      use-package
                                       )
    dotspacemacs-frozen-packages '()
    dotspacemacs-excluded-packages '(
@@ -157,16 +157,16 @@
 
 
 (defun dotspacemacs/user-config ()
-  ;; package import
   (require 'use-package)
-  ;; import files
-  (add-to-list 'load-path "~/.spacemacs.d/configs")
-  (load "flycheck")
+  (add-to-list 'load-path "~/.spacemacs.d/configs/user-conf/")
   (load "keybind")
+  ;; (load "flycheck")
   (load "typescript")
   (load "javascript")
   (load "html")
   (load "react")
+  (load "json")
+
 )
 
 
