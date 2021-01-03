@@ -1,13 +1,34 @@
-(setq-default
- js2-basic-offset 2
- css-indent-offset 2
- web-mode-markup-indent-offset 2
- web-mode-css-indent-offset 2
- web-mode-code-indent-offset 2
- web-mode-attr-indent-offset 2)
+(use-package mmm-mode
+  :commands mmm-mode
+  :mode (("\\.tsx\\'" . typescript-mode))
+  :config
+  (setq mmm-global-mode t)
+  (setq mmm-submode-decoration-level 0)
 
-(with-eval-after-load 'web-mode
-  (add-to-list 'web-mode-indentation-params '("lineup-args" . nil))
-  (add-to-list 'web-mode-indentation-params '("lineup-concats" . nil))
-  (add-to-list 'web-mode-indentation-params '("lineup-calls" . nil))
-  )
+  (mmm-add-classes
+   '((mmm-jsx-mode
+      :submode web-mode
+      :face mmm-code-submode-face
+      :front "\\(return\s\\|n\s\\|(\n\s*\\)<"
+      :front-offset -1
+      :back ">\n?\s*)\n}\n"
+      :back-offset 1
+      )))
+  (mmm-add-mode-ext-class 'typescript-mode nil 'mmm-jsx-mode)
+
+  (defun mmm-reapply ()
+    (mmm-mode)
+    (mmm-mode))
+
+  (add-hook 'after-save-hook
+            (lambda ()
+              (when (string-match-p "\\.tsx?" buffer-file-name)
+                (mmm-reapply)
+                )))
+
+  (add-hook 'mmm-mode-hook
+            (lambda ()
+              (flycheck-add-mode 'javascript-eslint 'mmm-mode)
+              (flycheck-mode)
+              ))
+)

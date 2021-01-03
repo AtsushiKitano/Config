@@ -86,7 +86,6 @@
   (load "go")
   (load "c++")
   (load "rust")
-  (load "react")
 )
 
 
@@ -115,7 +114,6 @@
      git
      go
      helm
-     javascript
      markdown
      org
      python
@@ -138,18 +136,22 @@
                                       ddskk
                                       dockerfile
                                       dumb-jump
-                                      find-file-in-project 
+                                      find-file-in-project
                                       neotree
                                       symbol-overlay
                                       yatex
                                       rjsx
                                       go-autocomplete
-                                      company
                                       web-mode
                                       tern
+                                      tern-auto-complete
+                                      company
+                                      flycheck
+                                      add-node-modules-path
                                       )
    dotspacemacs-frozen-packages '()
    dotspacemacs-excluded-packages '(
+                                    company-tern
                                     )
    dotspacemacs-install-packages 'used-only))
 
@@ -159,10 +161,12 @@
   (require 'use-package)
   ;; import files
   (add-to-list 'load-path "~/.spacemacs.d/configs")
+  (load "flycheck")
   (load "keybind")
   (load "typescript")
+  (load "javascript")
   (load "html")
-
+  (load "react")
 )
 
 
@@ -173,11 +177,6 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  ;; ;; tern error
-  ;; (when (memq window-system '(mac ns))
-  ;;   (require 'exec-path-from-shell)
-  ;;   (exec-path-from-shell-initialize))
-
   (setq ispell-program-name "aspell")
   )
 
@@ -190,7 +189,7 @@ you should place your code here."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (slack emojify circe oauth2 websocket nadvice ht gmail-message-mode ham-mode html-to-markdown flymd edit-server company-emacs-eclim eclim toml-mode racer pos-tip cargo rust-auto-use rust-playground rust-mode prettier reveal-in-osx-finder pbcopy osx-trash xterm-color unfill shell-pop minimap osx-dictionary mwim multi-term launchctl git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter eshell-z eshell-prompt-extras esh-help diff-hl wgrep smex ivy-hydra flyspell-correct-ivy counsel-projectile jinja2-mode company-ansible ansible-doc ansible sqlformat terraform-doc flymake-go go-complete go-direx go-errcheck rjsx-mode js-react-redux-yasnippets twittering-mode flyspell-correct-helm flyspell-correct auto-dictionary dash-functional phpunit phpcbf php-extras php-auto-yasnippets drupal-mode php-mode serverspec powershell mew ac-etags git git-annex git-attr transient git-commit with-editor undo-tree magit-popup k8s-mode lv swiper ivy symbol-overlay counsel find-file-in-project google-this docker tablist docker-tramp tide typescript-mode flycheck noflet ensime sbt-mode scala-mode dockerfile-mode csv-mode helm-etags-plus sql-indent yaml-mode go-autocomplete java-snippets react-snippets aws-snippets yasnippet-snippets evil-magit smeargle orgit magit-gitflow ghub helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link magit web-mode tagedit slim-mode scss-mode sass-mode pug-mode helm-css-scss haml-mode emmet-mode company-web web-completion-data hcl-mode ctags-update rvm ruby-tools ruby-test-mode rubocop rspec-mode robe rbenv rake minitest chruby bundler inf-ruby company-terraform go-guru go-eldoc company-go go-mode terraform-mode helm-company helm-c-yasnippet fuzzy company-tern tern company-statistics company-anaconda company auto-yasnippet ac-ispell auto-complete yatex cdb ccc org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mmm-mode markdown-toc markdown-mode htmlize gnuplot gh-md spinner powerline skewer-mode simple-httpd json-snatcher json-reformat yasnippet multiple-cursors js2-mode hydra parent-mode projectile pkg-info epl flx smartparens iedit anzu evil goto-chg highlight bind-map bind-key packed helm avy popup helm-core async f dash s ddskk pyenv-mode anaconda-mode pythonic yapfify ws-butler winum which-key web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline restart-emacs request rainbow-delimiters pyvenv pytest py-isort popwin pip-requirements persp-mode pcre2el paradox org-projectile org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint json-mode js2-refactor js-doc indent-guide hy-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu elisp-slime-nav dumb-jump diminish define-word cython-mode column-enforce-mode coffee-mode clean-aindent-mode bracketed-paste auto-highlight-symbol auto-compile aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line))))
+    (tern-auto-complete add-node-modules-path slack emojify circe oauth2 websocket nadvice ht gmail-message-mode ham-mode html-to-markdown flymd edit-server company-emacs-eclim eclim toml-mode racer pos-tip cargo rust-auto-use rust-playground rust-mode prettier reveal-in-osx-finder pbcopy osx-trash xterm-color unfill shell-pop minimap osx-dictionary mwim multi-term launchctl git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter eshell-z eshell-prompt-extras esh-help diff-hl wgrep smex ivy-hydra flyspell-correct-ivy counsel-projectile jinja2-mode company-ansible ansible-doc ansible sqlformat terraform-doc flymake-go go-complete go-direx go-errcheck rjsx-mode js-react-redux-yasnippets twittering-mode flyspell-correct-helm flyspell-correct auto-dictionary dash-functional phpunit phpcbf php-extras php-auto-yasnippets drupal-mode php-mode serverspec powershell mew ac-etags git git-annex git-attr transient git-commit with-editor undo-tree magit-popup k8s-mode lv swiper ivy symbol-overlay counsel find-file-in-project google-this docker tablist docker-tramp tide typescript-mode flycheck noflet ensime sbt-mode scala-mode dockerfile-mode csv-mode helm-etags-plus sql-indent yaml-mode go-autocomplete java-snippets react-snippets aws-snippets yasnippet-snippets evil-magit smeargle orgit magit-gitflow ghub helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link magit web-mode tagedit slim-mode scss-mode sass-mode pug-mode helm-css-scss haml-mode emmet-mode company-web web-completion-data hcl-mode ctags-update rvm ruby-tools ruby-test-mode rubocop rspec-mode robe rbenv rake minitest chruby bundler inf-ruby company-terraform go-guru go-eldoc company-go go-mode terraform-mode helm-company helm-c-yasnippet fuzzy company-tern tern company-statistics company-anaconda company auto-yasnippet ac-ispell auto-complete yatex cdb ccc org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mmm-mode markdown-toc markdown-mode htmlize gnuplot gh-md spinner powerline skewer-mode simple-httpd json-snatcher json-reformat yasnippet multiple-cursors js2-mode hydra parent-mode projectile pkg-info epl flx smartparens iedit anzu evil goto-chg highlight bind-map bind-key packed helm avy popup helm-core async f dash s ddskk pyenv-mode anaconda-mode pythonic yapfify ws-butler winum which-key web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline restart-emacs request rainbow-delimiters pyvenv pytest py-isort popwin pip-requirements persp-mode pcre2el paradox org-projectile org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum livid-mode live-py-mode linum-relative link-hint json-mode js2-refactor js-doc indent-guide hy-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu elisp-slime-nav dumb-jump diminish define-word cython-mode column-enforce-mode coffee-mode clean-aindent-mode bracketed-paste auto-highlight-symbol auto-compile aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
