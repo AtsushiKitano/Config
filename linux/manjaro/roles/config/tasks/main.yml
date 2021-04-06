@@ -12,8 +12,11 @@
     packages:
       - emacs
       - dmenu
+      - docker
+      - fcitx-skk
       - git
       - i3
+      - skk-jisyo
       - tmux
       - uim
       - virtualbox
