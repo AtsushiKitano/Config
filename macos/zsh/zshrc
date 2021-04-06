@@ -3,90 +3,18 @@ USER=$(whoami)
 export ZSH_DISABLE_COMPFIX=true
 export ZSH=/Users/$USER/.oh-my-zsh
 
-# Set name of the theme to load.
-# Look in ~/.oh-my-zsh/themes/
-# Optionally, if you set this to "random", it'll load a random theme each
-# time that oh-my-zsh is loaded.
 ZSH_THEME="robbyrussell"
 
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion. Case
-# sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
-
-# Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
 plugins=(
+    # aws
     git
+    # gcloud
     zsh-autosuggestions
 )
 
 # User configuration
 
-# export MANPATH="/usr/local/man:$MANPATH"
-
 source $ZSH/oh-my-zsh.sh
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# ssh
-# export SSH_KEY_PATH="~/.ssh/dsa_id"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-
 
 # 大文字小文字を共にマッチさせる
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
@@ -149,27 +77,25 @@ setopt pushd_ignore_dups
 
 # PYTHON pyenv
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="PYENV_ROOT/shims:$PATH"
+export PATH="$PATH:PYENV_ROOT/shims"
 eval "$(pyenv init -)"
-
-# pip install libaray
-# export PATH="$HOME/Library/Python/3.7/bin:$PATH"
-
-# alias ipython='ipython --pylab'
 
 # Go PATH
 export GOPATH="$HOME/.go"
-export PATH="$HOME/src/bin:/usr/local/go/bin:$GOPATH/bin:$PATH"
-
-# Javascript
-## node brew
-export PATH=$HOME/.nodebrew/current/bin:$PATH
+export PATH="$PATH:$HOME/src/bin:/usr/local/go/bin:$GOPATH/bin"
 
 # terraform
 export PATH="$HOME/.tfenv/bin:$PATH"
 
+# Javascript
+## node brew
+export PATH=$PATH:$HOME/.nodebrew/current/bin
+
 # tex
-export PATH="/usr/local/texlive/2020/bin/x86_64-darwin/:$PATH"
+export PATH="$PATH:/usr/local/texlive/2020/bin/x86_64-darwin/"
+
+# Rust
+export PATH="$PATH:$HOME/.cargo/bin"
 
 # 補完
 autoload -U compinit
@@ -177,7 +103,20 @@ autoload -U compinit
 
 #Google Cloud Platform
 export CLOUDSDK_PYTHON=/usr/bin/python2.7
+export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
+export GCP_PROJECT=$(gcloud config get-value core/project)
+#GCP Service Account
+# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
+# export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
 
+# AWS config
+export AWS_CREDENTIAL=$HOME/.config/aws/credentials/office.csv
+
+# Terraform config
+## aws credential
+export TF_VAR_aws_credential=$AWS_CREDENTIAL
+
+#### function
 function peco-history-selection(){
     BUFFER=`\\history -n 1 | tail -r | awk '!a[$0]++' | peco`
     CURSOR=$#BUFFER
@@ -186,13 +125,11 @@ function peco-history-selection(){
 
 zle -N peco-history-selection
 bindkey '^R' peco-history-selection
-
+bindkey 'M-"' quote-region
+bindkey 'M-]' quote-line
 # auto complete
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=13'
 
-#GCP Service Account
-# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
-# export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
 export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
 
 autoload -U +X bashcompinit && bashcompinit
@@ -221,6 +158,7 @@ cdls (){
 alias -g L='| less'
 alias -g G='| grep'
 alias cd='cdls'
+alias mkdir='mkdir -p'
 
 # brew
 alias b='brew'
@@ -238,6 +176,7 @@ alias gtree='git log --graph --branches --pretty="format:%C(yellow)%h%Creset %s 
 
 #emacs client
 alias ec='emacsclient'
+alias emacs='emacs -nw'
 
 #AWS reagion set
 alias virginia='export AWS_DEFAULT_REGION=us-east-1'
@@ -271,10 +210,12 @@ alias gs='gsutil'
 alias gc='gcloud'
 alias gcm='gcloud compute'
 alias gco='gcloud container'
+alias gcl='gcloud container clusters'
 alias gi='gcloud compute instances'
 alias gn='gcloud compute networks'
 alias gcs='gcloud compute ssh'
-alias gup='gcloud components update'
+alias gup='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components update'
+alias gcmp='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components'
 
 ## GCP AI
 alias gai='gcloud ai-platform'
@@ -299,6 +240,7 @@ alias tw='terraform workspace'
 alias twl='terraform workspace list'
 alias tws='terraform workspace select'
 alias twn='terraform workspace new'
+alias tgu='terraform get -update'
 
 # tfenv
 alias tf='tfenv'
@@ -310,3 +252,27 @@ alias tflr='tfenv list-remote'
 # javascript
 ## reacr
 alias rcp='create-react-app'
+
+# typescript
+
+
+# waypoint
+alias wp='waypoint'
+alias wb='waypoint build'
+alias wa='waypoint artifact'
+alias wup='waypoint up'
+alias wui='waypoint ui'
+alias wt='waypoint token'
+alias wtn='waypoint token new'
+alias wte='waypoint token exchange'
+alias wti='waypoint token invite'
+alias wins='waypoint install'
+alias wini='waypoint init'
+alias wdep='waypoint deployment'
+alias wdst='waypoint destroy'
+alias wlog='waypoint logs'
+alias winsk='waypoint install --platform=kubernetes -accept-tos'
+
+# packer
+alias p='packer'
+alias pb='packer build'
