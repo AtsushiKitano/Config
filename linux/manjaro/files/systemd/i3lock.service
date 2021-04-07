@@ -1,0 +1,12 @@
+[Unit]
+Description=Lock screen on sleep
+Before=sleep.target
+
+[Service]
+User=aria
+Type=forking
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/i3lock -i /home/aria/Pictures/WallPaper/many/yuki.png -e
+
+[Install]
+WantedBy=sleep.target
