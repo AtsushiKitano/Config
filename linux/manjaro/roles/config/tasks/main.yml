@@ -25,6 +25,8 @@
       - xorg-xev
       - zsh
       - zsh-completions
+      - npm
+      - tfenv
 
 - name: settig each application
   copy:
