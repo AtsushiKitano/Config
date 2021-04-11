@@ -18,6 +18,7 @@ install:
 	zsh \
 	zsh-completions \
 	sysstat \
+	typescript \
 	npm \
 	zathura-pdf-poppler \
 
@@ -46,3 +47,13 @@ kubectl:
 	git clone https://arc.archlinux.org/kubernetes.git
 	cd kubernetes
 	makepkg -si
+
+npm-install:
+	sudo npm install -g yarn
+
+yarn-install:
+	yarn global add \
+	create-react-app \
+	parcel-bundler \
+	react \
+	react-dom
