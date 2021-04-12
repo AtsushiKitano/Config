@@ -20,7 +20,7 @@ install:
 	sysstat \
 	typescript \
 	npm \
-	zathura-pdf-poppler \
+	zathura-pdf-poppler
 
 yay-install: #yay install
 	cd $HOME/src/github.com
@@ -32,7 +32,7 @@ install-yay:
 	yay -S \
 	packer \
 	slack-desktop \
-	zoom
+	tfenv \
 
 tmux: #configurate tmux
 
@@ -49,7 +49,9 @@ kubectl:
 	makepkg -si
 
 npm-install:
-	sudo npm install -g yarn
+	sudo npm install -g \
+		yarn \
+		@marp-team/marp-cli
 
 yarn-install:
 	yarn global add \
