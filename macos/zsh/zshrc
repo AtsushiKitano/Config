@@ -1,9 +1,13 @@
 # Path to your oh-my-zsh installation.
 USER=$(whoami)
 export ZSH_DISABLE_COMPFIX=true
-export ZSH=/Users/$USER/.oh-my-zsh
+export ZSH=$HOME/.oh-my-zsh
 
-ZSH_THEME="robbyrussell"
+ZSH_THEME="powerlevel9k/powerlevel9k"
+
+POWERLEVEL9K_MODE="nerdfont-complete"
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon dir vcs ssh)
+POWERLEVEL9K_DISABLE_RPROMPT=true
 
 plugins=(
     # aws
