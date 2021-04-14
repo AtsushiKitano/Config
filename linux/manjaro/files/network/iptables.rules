@@ -1,0 +1,27 @@
+# Empty iptables rule file
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+
+
+
+#Allow SSH Connection(port:1224)
+-A INPUT -p tcp --dport 1244 -j ACCEPT
+
+-A INPUT -p tcp -j REJECT --reject-with tcp-reset
+-A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+-A INPUT -j REJECT
+COMMIT
+
+# locked for 1day (60*60*24 = 86400 sec)
+-A INPUT -m recent --name portscan --rcheck --seconds 86400
+-A INPUT -m recent --name portscan --remove
+
+# 以下のポートにアクセスしてきたらportscanとみなす
+-A INPUT -p tcp -m multiport --dports 1,7,9,11,15,23,70,79,109,110,111,119,138,138,512,513,514,515,540,635 -m recent --name portscan --set -j DROP
+-A INPUT -p udp -m multiport --dports 1,7,9,23,66,67,68,69,111,137,138,161,162,474,513,517,518,635,640,641,666,700 -m recent --name portscan --set -j DROP

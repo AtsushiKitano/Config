@@ -12,8 +12,11 @@
     packages:
       - emacs
       - dmenu
+      - docker
+      - fcitx-skk
       - git
       - i3
+      - skk-jisyo
       - tmux
       - uim
       - virtualbox
@@ -22,6 +25,8 @@
       - xorg-xev
       - zsh
       - zsh-completions
+      - npm
+      - tfenv
 
 - name: settig each application
   copy:
