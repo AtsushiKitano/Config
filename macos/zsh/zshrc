@@ -159,6 +159,14 @@ cdls (){
 }
 
 #########################################################
+#################emacs###################################
+#########################################################
+
+perl -wle \
+     'do { print qq/(setenv "$_" "$ENV{$_}")/ if exists $ENV{$_} } for @ARGV' \
+     PATH > ~/src/github.com/Config/Emacs/configs/user-conf/shellenv.el
+
+#########################################################
 ################Alias####################################
 #########################################################
 # System command
@@ -256,6 +264,18 @@ alias tfl='tfenv list'
 alias tfi='tfenv install'
 alias tflr='tfenv list-remote'
 
+# terragrunt
+alias tg='terragrunt run-all'
+alias tgp='terragrunt run-all plan'
+alias tga='terragrunt run-all apply'
+alias tgw='terragrunt run-all workspace'
+alias tgwn='terragrunt run-all workspace new'
+alias tgws='terragrunt run-all workspace select'
+alias tgo='terragrunt output'
+alias tgd='terragrunt run-all destroy'
+alias tgaf='terragrunt run-all apply --terragrunt-non-interactive'
+alias tgdf='terragrunt run-all destroy --terragrunt-non-interactive'
+
 # javascript
 ## reacr
 alias rcp='create-react-app'
@@ -283,3 +303,18 @@ alias winsk='waypoint install --platform=kubernetes -accept-tos'
 # packer
 alias p='packer'
 alias pb='packer build'
+
+# docker
+alias d='docker'
+alias dru='docker run'
+alias drm='docker rm'
+alias drmi='docker rmi'
+alias dc='docker-compose'
+alias dcu='docker-compose up'
+alias dcd='docker-compose down'
+alias dcb='docker-compose build'
+alias dcc='docker-compose create'
+alias di='docker images'
+
+# pdf(zathura)
+alias pdf='zathura'

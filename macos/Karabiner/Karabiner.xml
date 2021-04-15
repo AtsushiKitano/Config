@@ -36,4 +36,18 @@
     <identifier>private.change_fn_into_escape</identifier>
     <autogen>__KeyToKey__ KeyCode::FN,KeyCode::ESCAPE</autogen>
   </item>
+
+  <item>
+    <name>Vim in Preview</name>
+    <identifier>private.app_preview_vimium_in_preview</identifier>
+    <only>PREVIEW</only>
+    <autogen>__KeyToKey__ KeyCode::J, ModifierFlag::NONE, KeyCode::CURSOR_DOWN</autogen>
+    <autogen>__KeyToKey__ KeyCode::K, ModifierFlag::NONE, KeyCode::CURSOR_UP</autogen>
+    <autogen>__KeyToKey__ KeyCode::H, ModifierFlag::NONE, KeyCode::CURSOR_LEFT</autogen>
+    <autogen>__KeyToKey__ KeyCode::L, ModifierFlag::NONE, KeyCode::CURSOR_RIGHT</autogen>
+    <autogen>__KeyToKey__ KeyCode::B, ModifierFlag::CONTROL_L, KeyCode::PAGEUP</autogen>
+    <autogen>__KeyToKey__ KeyCode::B, ModifierFlag::CONTROL_R, KeyCode::PAGEUP</autogen>
+    <autogen>__KeyToKey__ KeyCode::F, ModifierFlag::CONTROL_L, KeyCode::PAGEDOWN</autogen>
+    <autogen>__KeyToKey__ KeyCode::F, ModifierFlag::CONTROL_R, KeyCode::PAGEDOWN</autogen>
+  </item>
 </root>
