@@ -15,8 +15,7 @@ plugins=(
     zsh-autosuggestions
 )
 
-# Emacs
-#export PATH="/Applications/Emacs.app/Contents/MacOS:$PATH"
+export SAVEHIST=100000
 
 # User configuration
 
@@ -111,9 +110,10 @@ autoload -U compinit
 
 
 #Google Cloud Platform
-export CLOUDSDK_PYTHON=/usr/bin/python2.7
+# export CLOUDSDK_PYTHON=/usr/bin/python2.7
 export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
 export GCP_PROJECT=$(gcloud config get-value core/project)
+export GOOGLE_CLOUD_KEYFILE_JSON=$HOME/.config/gcloud/credential/$GCP_PROJECT.json
 #GCP Service Account
 # export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.jsonb
 # export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default

@@ -1,9 +1,10 @@
 install:
 	sudo pacman -S \
-	emacs \
-	docker \
 	cryptsetup \
+	docker \
+	docker-compose \
 	dmenu \
+	emacs \
 	i3 \
 	powerline-fonts \
 	iptables \
@@ -20,7 +21,9 @@ install:
 	sysstat \
 	typescript \
 	npm \
-	zathura-pdf-poppler
+	zathura-pdf-poppler \
+	awesome-terminal-fonts \
+	ttf-font-awesome \
 
 yay-install: #yay install
 	cd $HOME/src/github.com
@@ -33,6 +36,10 @@ install-yay:
 	packer \
 	slack-desktop \
 	tfenv \
+	fast \
+	jq \
+	pyenv \
+	lm-sensors \
 
 tmux: #configurate tmux
 
@@ -58,4 +65,13 @@ yarn-install:
 	create-react-app \
 	parcel-bundler \
 	react \
-	react-dom
+	react-dom \
+
+pip-install:
+	sudo pip3 install \
+	speedtest-cli \
+	ansible
+
+oh-my-zsh:
+	git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh &&
+	git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
