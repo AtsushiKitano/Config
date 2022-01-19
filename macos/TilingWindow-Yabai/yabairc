@@ -35,5 +35,7 @@ yabai -m config window_gap                   06
 yabai -m rule --add app=Emacs manage=on
 yabai -m rule --add app=zathura manage=on
 yabai -m rule --add app=PDF\ Viewer manage=on
+yabai -m rule --add app=LINE manage=on
+yabai -m rule --add app=App\ for\ Google\ Calendar manage=on
 
 echo "yabai configuration loaded.."

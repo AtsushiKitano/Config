@@ -115,11 +115,15 @@ export CLOUDSDK_PYTHON=/usr/bin/python2.7
 export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
 export GCP_PROJECT=$(gcloud config get-value core/project)
 #GCP Service Account
-# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
+# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.jsonb
 # export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
+export GOOGLEWORKSPACE_CREDENTIALS=$HOME/.config/gcp/aquamarine-cloud/service_accounts/workspace_service_account.json
+export TF_VAR_project=$(gcloud config get-value core/project)
 
 # AWS config
 export AWS_CREDENTIAL=$HOME/.config/aws/credentials/office.csv
+
+alias aws="aws --profile company"
 
 # Terraform config
 ## aws credential
@@ -228,11 +232,15 @@ alias gc='gcloud'
 alias gcm='gcloud compute'
 alias gco='gcloud container'
 alias gcl='gcloud container clusters'
+alias gclg='gcloud container clusters get-credentials'
 alias gi='gcloud compute instances'
 alias gn='gcloud compute networks'
 alias gcs='gcloud compute ssh'
 alias gup='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components update'
 alias gcmp='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components'
+# alias gr ='gcloud run'
+# alias grd ='gcloud run deploy'
+# alias grs ='gcloud run service'
 
 ## GCP AI
 alias gai='gcloud ai-platform'
