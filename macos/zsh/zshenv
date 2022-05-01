@@ -6,3 +6,9 @@
 # export RSYNC_RSH=ssh
 # export CVS_RSH=ssh
 source "$HOME/.cargo/env"
+
+# Gcloud ENV Config
+export GCP_PROJECT=$(gcloud config get-value core/project)
+
+## Terraform project variable value
+export TF_VAR_project=$(gcloud config get-value core/project)
