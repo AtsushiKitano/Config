@@ -102,3 +102,6 @@ xterm*color14:             #93a1a1
 xterm*color15:             #fdf6e3
 xterm*foreground:          #dcdccc
 xterm*background:          #002b36
+
+!! SKK
+Emacs*useXIM: false

@@ -9,7 +9,6 @@ install:
 	powerline-fonts \
 	iptables \
 	tmux \
-	uim \
 	virtualbox \
 	vagrant \
 	compton \
@@ -40,6 +39,7 @@ install-yay:
 	jq \
 	pyenv \
 	lm-sensors \
+  emacs-ddskk \
 
 tmux: #configurate tmux
 
@@ -66,6 +66,7 @@ yarn-install:
 	parcel-bundler \
 	react \
 	react-dom \
+
 
 pip-install:
 	sudo pip3 install \
