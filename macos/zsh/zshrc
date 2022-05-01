@@ -6,15 +6,14 @@ export CONFIGPATH=$HOME/Conf
 export CLOUDSDK_PYTHON=/usr/bin/python2.7
 
 ZSH_THEME="powerlevel9k/powerlevel9k"
+export TERM="xterm-256color"
 
 POWERLEVEL9K_MODE="nerdfont-complete"
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon dir vcs ssh)
 POWERLEVEL9K_DISABLE_RPROMPT=true
 
 plugins=(
-    # aws
     git
-    # gcloud
     zsh-autosuggestions
 )
 
@@ -105,6 +104,9 @@ export PATH="$PATH:/usr/local/texlive/2020/bin/x86_64-darwin/"
 # Rust
 export PATH="$PATH:$HOME/.cargo/bin"
 
+# ruby
+eval "$(rbenv init -)"
+
 # 補完
 autoload -U compinit
 
@@ -115,11 +117,15 @@ export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
 export GCP_PROJECT=$(gcloud config get-value core/project)
 # export GOOGLE_CLOUD_KEYFILE_JSON=$HOME/.config/gcloud/credential/$GCP_PROJECT.json
 #GCP Service Account
-# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
+# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.jsonb
 # export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
+export GOOGLEWORKSPACE_CREDENTIALS=$HOME/.config/gcp/aquamarine-cloud/service_accounts/workspace_service_account.json
+export TF_VAR_project=$(gcloud config get-value core/project)
 
 # AWS config
 export AWS_CREDENTIAL=$HOME/.config/aws/credentials/office.csv
+
+alias aws="aws --profile company"
 
 # Terraform config
 ## aws credential
@@ -231,11 +237,15 @@ alias gc='gcloud'
 alias gcm='gcloud compute'
 alias gco='gcloud container'
 alias gcl='gcloud container clusters'
+alias gclg='gcloud container clusters get-credentials'
 alias gi='gcloud compute instances'
 alias gn='gcloud compute networks'
 alias gcs='gcloud compute ssh'
 alias gup='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components update'
 alias gcmp='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components'
+# alias gr ='gcloud run'
+# alias grd ='gcloud run deploy'
+# alias grs ='gcloud run service'
 
 ## GCP AI
 alias gai='gcloud ai-platform'
