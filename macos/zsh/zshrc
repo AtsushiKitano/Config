@@ -2,6 +2,8 @@
 USER=$(whoami)
 export ZSH_DISABLE_COMPFIX=true
 export ZSH=$HOME/.oh-my-zsh
+export CONFIGPATH=$HOME/Conf
+export CLOUDSDK_PYTHON=/usr/bin/python2.7
 
 ZSH_THEME="powerlevel9k/powerlevel9k"
 
@@ -111,7 +113,7 @@ autoload -U compinit
 # export CLOUDSDK_PYTHON=/usr/bin/python2.7
 export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
 export GCP_PROJECT=$(gcloud config get-value core/project)
-export GOOGLE_CLOUD_KEYFILE_JSON=$HOME/.config/gcloud/credential/$GCP_PROJECT.json
+# export GOOGLE_CLOUD_KEYFILE_JSON=$HOME/.config/gcloud/credential/$GCP_PROJECT.json
 #GCP Service Account
 # export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.json
 # export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
@@ -122,6 +124,9 @@ export AWS_CREDENTIAL=$HOME/.config/aws/credentials/office.csv
 # Terraform config
 ## aws credential
 export TF_VAR_aws_credential=$AWS_CREDENTIAL
+
+## gcp default pj
+export TF_VAR_default_project=$GCP_PROJECT
 
 #### function
 function peco-history-selection(){
@@ -164,7 +169,7 @@ cdls (){
 
 perl -wle \
      'do { print qq/(setenv "$_" "$ENV{$_}")/ if exists $ENV{$_} } for @ARGV' \
-     PATH > ~/src/github.com/Config/Emacs/configs/user-conf/shellenv.el
+     PATH > $CONFIGPATH/Emacs/configs/user-conf/shellenv.el
 
 #########################################################
 ################Alias####################################
