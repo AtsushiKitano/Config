@@ -60,9 +60,10 @@
     (redraw-frame))
 
   :bind (("M-ESC ESC" . c/redraw-frame))
-  :custom '((user-full-name . "Naoya Yamashita")
-            (user-mail-address . "conao3@gmail.com")
-            (user-login-name . "conao3")
+  :custom '((user-full-name . "Atsushi Kitano")
+            (user-mail-address . "atsushi@aquamarine-cloud.net")
+            (user-login-name . "atsushi")
+            (fill-column . 72)
             (create-lockfiles . nil)
             (debug-on-error . t)
             (init-file-debug . t)
@@ -76,12 +77,18 @@
             (ring-bell-function . 'ignore)
             (text-quoting-style . 'straight)
             (truncate-lines . t)
-            ;; (use-dialog-box . nil)
-            ;; (use-file-dialog . nil)
-            ;; (menu-bar-mode . t)
-            ;; (tool-bar-mode . nil)
-            (scroll-bar-mode . nil)
-            (indent-tabs-mode . nil))
+            (use-dialog-box . nil)
+            (use-file-dialog . nil)
+            (menu-bar-mode . t)
+            (tool-bar-mode . nil)
+            (scroll-bar-mode . t)
+            (indent-tabs-mode . t)
+            (auto-save-default . t)
+            (auto-save-timeout . 15)
+            (auto-save-interval . 60)
+            (make-backup-files . t)
+            (backup-by-copying . t)
+            )
   :config
   (defalias 'yes-or-no-p 'y-or-n-p)
   (keyboard-translate ?\C-h ?\C-?))
@@ -273,17 +280,6 @@
   :added "2022-04-24"
   :init (electric-pair-mode 1))
 
-(leaf cus-start
-  :custom
-  `(
-    (ring-bell-function . 'ignore)
-    (tab-width . 2)
-    (make-backup-files . t)
-     (undo-limit . 200000)
-    (undo-strong-limit . 260000)
-    (inhibit-startup-message . t)
-    ))
-
 (leaf magit
   :ensure t
   :bind (("C-x g" . magit-status)
@@ -299,6 +295,17 @@
   :init
   (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode))
 
+(leaf python-mode
+  :ensure t 
+  :mode (("\\.py\\'" . python-mode))
+  :mode-hook
+  (python-mode-hook . ((setq tab-width 2)
+                       (setq indent-tabs-mode t)
+                       )
+                    )
+
+  )
+
 (provide 'init)
 
 (custom-set-variables
@@ -306,7 +313,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(blackout el-get hydra leaf-keywords leaf)))
+ '(package-selected-packages
+   '(tea-time terraform-mode evil ddskk auto-async-byte-compile lispxmp open-junk-file paredit blackout el-get hydra leaf-keywords leaf)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

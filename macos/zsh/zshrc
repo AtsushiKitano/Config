@@ -116,12 +116,9 @@ autoload -U compinit
 #Google Cloud Platform
 # export CLOUDSDK_PYTHON=/usr/bin/python2.7
 export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
-<<<<<<< HEAD
-
-=======
 export GCP_PROJECT=$(gcloud config get-value core/project)
 # export GOOGLE_CLOUD_KEYFILE_JSON=$HOME/.config/gcloud/credential/$GCP_PROJECT.json
->>>>>>> origin/master
+
 #GCP Service Account
 # export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.jsonb
 # export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
@@ -181,16 +178,17 @@ cdls (){
 }
 
 #########################################################
+#################mac copy################################
+#########################################################
+
+if which pbcopy > /dev/null 2>&1 ; then
+   alias -g C='| pbcopy'
+fi
+
+#########################################################
 #################emacs###################################
 #########################################################
 
-perl -wle \
-     'do { print qq/(setenv "$_" "$ENV{$_}")/ if exists $ENV{$_} } for @ARGV' \
-<<<<<<< HEAD
-     PATH > $HOME/dev/src/github.com/Config/Emacs/configs/user-conf/shellenv.el
-=======
-     PATH > $CONFIGPATH/Emacs/configs/user-conf/shellenv.el
->>>>>>> origin/master
 
 #########################################################
 ################Alias####################################
