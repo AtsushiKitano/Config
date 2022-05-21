@@ -288,23 +288,71 @@
 (leaf skk
   :ensure ddskk
   :require t skk-study skk-hint
-  :bind (("C-x j" . skk-auto-fill-mode)))
+  :bind (
+         ("C-x j" . skk-mode)
+         )
+  :custom
+  (skk-use-azik . t)
+  (skk-azik-keyboard-type . t)
+  (skk-egg-linke-newline . t)
+  (skk-show-annotation . t)
+  )
 
 (leaf terraform-mode
   :ensure t
   :init
   (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode))
 
-(leaf python-mode
-  :ensure t 
-  :mode (("\\.py\\'" . python-mode))
-  :mode-hook
-  (python-mode-hook . ((setq tab-width 2)
-                       (setq indent-tabs-mode t)
-                       )
-                    )
-
+(leaf lsp-mode
+  :ensure t
+  :require t
+  :commands lsp
+  :hook
+  (go-mode-hook . lsp)
   )
+
+(leaf golang
+  :config
+  (leaf go-mode
+    :ensure t
+    :leaf-defer t
+    :commands (gofmt-before-save)
+    :init
+    (add-hook 'before-save-hook 'gofmt-before-save)
+    (setq tab-width 4))
+  
+  (leaf protobuf-mode
+    :ensure t)
+
+  (leaf go-impl
+    :ensure t
+    :leaf-defer t
+    :commands go-impl)
+  )
+
+(leaf typescript-mode
+  :ensure t
+  :custom
+  (typescript-indent-level . 2)
+  )
+
+
+;; (leaf yaml-mode
+;;  :ensure t
+;;  :leaf-defer t
+;;  :mode ("\\.yaml\\" . yaml-mode))
+
+;;  (leaf markdown
+;;   :config
+;;   (leaf markdown-mode
+;;     :ensure t
+;;     :leaf-defer t
+;;     :mode ("\\.md\\" .gfm-mode)
+;;     :custom
+;;     (markdown-command . "github-markup")
+;;     (markdown-command-needs-filename . t))
+;;   (leaf markdown-preview-mode
+;;   :ensure t))
 
 (provide 'init)
 
