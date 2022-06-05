@@ -91,7 +91,8 @@
             )
   :config
   (defalias 'yes-or-no-p 'y-or-n-p)
-  (keyboard-translate ?\C-h ?\C-?))
+  ;; (keyboard-translate ?\C-h ?\C-?)
+  )
 
 (leaf autorevert
   :doc "revert buffers when files on disk change"
@@ -285,18 +286,30 @@
   :bind (("C-x g" . magit-status)
          ("C-x M-g" . magit-dispatch-popup)))
 
-(leaf skk
-  :ensure ddskk
-  :require t skk-study skk-hint
-  :bind (
-         ("C-x j" . skk-mode)
-         )
+;; (leaf skk
+;;   :ensure ddskk
+;;   :require t skk-study skk-hint
+;;   :bind (
+;;          ("C-x j" . skk-mode)
+;;          )
+;;   :custom
+;;   (skk-use-azik . t)
+;;   (skk-azik-keyboard-type . t)
+;;   (skk-egg-linke-newline . t)
+;;   (skk-show-annotation . t)
+;;   )
+
+(leaf ddskk
+  ;; :straight t
+  :bind
+  (("C-x C-j" . skk-mode)
+   ("C-x j"   . skk-mode))
+  :init
+  (defvar dired-bind-jump nil)  ; dired-xがC-xC-jを奪うので対処しておく
   :custom
-  (skk-use-azik . t)
-  (skk-azik-keyboard-type . t)
-  (skk-egg-linke-newline . t)
-  (skk-show-annotation . t)
-  )
+  (skk-use-azik . t)                     ; AZIKを使用する
+  (skk-azik-keyboard-type . 'jp106)      ;
+)
 
 (leaf terraform-mode
   :ensure t
@@ -309,6 +322,19 @@
   :commands lsp
   :hook
   (go-mode-hook . lsp)
+  (web-mode-hook . lsp)
+  (typescript-mode-hook . lsp)
+  :config
+  (leaf lsp-ui
+    :ensure t
+    :require t
+    :hook
+    (lsp-mode-hook . lsp-ui-mode)
+    :custom
+    (lsp-ui-sideline-enable . nil)
+    (lsp-prefer-flymake . nil)
+    (lsp-print-performance . t)
+    )
   )
 
 (leaf golang
@@ -330,11 +356,91 @@
     :commands go-impl)
   )
 
+;; (leaf web-mode
+;;   :ensure t
+;;   :after flycheck
+;;   :defun flycheck-add-mode
+;;   :mode (
+;;          ("\\.html?\\" . web-mode)
+;;          ("\\.scss\\" . web-mode)
+;;          ("\\.css\\" . web-mode)
+;;          ("\\.twing\\" . web-mode)
+;;          ("\\.vue\\" . web-mode)
+;;          ("\\.js\\" . web-mode))
+;;   :config
+;;   (flycheck-add-mode 'javascript-eslint 'web-mode)
+;;   (setq web-mode-markup-indent-offset 2
+;;         web-mode-css-indent-offset 2
+;;         web-mode-code-indent-offset 2
+;;         web-mode-comment-style 2
+;;         web-mode-style-padding 1
+;;         web-mode-script-padding 1)
+;;   )
+
+;; (leaf emmet-mode
+;;   :ensure t
+;;   :leaf-defer t
+;;   :commands (emment-mode)
+;;   :hook
+;;   (web-mode-hook.emmet-mode))
+
 (leaf typescript-mode
   :ensure t
   :custom
   (typescript-indent-level . 2)
   )
+
+(leaf vterm
+  ;; requirements: brew install cmake libvterm libtool
+  :ensure t
+  :custom
+  (vterm-max-scrollback . 10000)
+  (vterm-buffer-name-string . "vterm: %s")
+  ;; delete "C-h", add <f1> and <f2>
+  (vterm-keymap-exceptions
+   . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y"))
+  ;; :config
+  ;; ;; Workaround of not working counsel-yank-pop
+  ;; ;; https://github.com/akermu/emacs-libvterm#counsel-yank-pop-doesnt-work
+  ;; (defun my/vterm-counsel-yank-pop-action (orig-fun &rest args)
+  ;;   (if (equal major-mode 'vterm-mode)
+  ;;       (let ((inhibit-read-only t)
+  ;;             (yank-undo-function (lambda (_start _end) (vterm-undo))))
+  ;;         (cl-letf (((symbol-function 'insert-for-yank)
+  ;;                    (lambda (str) (vterm-send-string str t))))
+  ;;           (apply orig-fun args)))
+  ;;     (apply orig-fun args)))
+  ;; (advice-add 'counsel-yank-pop-action :around #'my/vterm-counsel-yank-pop-action)
+  )
+
+(leaf vterm-toggle
+  :ensure t
+  :custom
+  (vterm-toggle-scope . 'project)
+  :config
+  ;; Show vterm buffer in the window located at bottom
+  (add-to-list 'display-buffer-alist
+               '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                 (display-buffer-reuse-window display-buffer-in-direction)
+                 (direction . bottom)
+                 (reusable-frames . visible)
+                 (window-height . 0.4)))
+  ;; Above display config affects all vterm command, not only vterm-toggle
+  (defun my/vterm-new-buffer-in-current-window()
+    (interactive)
+    (let ((display-buffer-alist nil))
+            (vterm)))
+  )
+
+;; (leaf projectile
+;;   :ensure t counsel-projectile
+;;   :require t
+;;   :config
+;;   (projectile-mode +1)
+;;   :defer-config
+;;   (customize-set-variable 'projectile-globally-ignored-modes
+;;                           (let ((newlist projectile-globally-ignored-modes))
+;;                             (add-to-list 'newlist "vterm-mode"))))
 
 
 ;; (leaf yaml-mode
@@ -353,6 +459,9 @@
 ;;     (markdown-command-needs-filename . t))
 ;;   (leaf markdown-preview-mode
 ;;   :ensure t))
+
+;(leaf evil
+;  :config (evil-mode 1))
 
 (provide 'init)
 
