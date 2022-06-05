@@ -26,7 +26,15 @@
 	;; initialize leaf-keywords.el
 	(leaf-keywords-init)))
 
-;; ここにいっぱい設定を書く
+;; ここにいっぱい設定を書く(
+; 背景
+(set-face-background 'default "#333333")
+(set-face-foreground 'default "#32cd32")
+(add-to-list 'default-frame-alist
+             '(alpha . (0.85 0.85)))
+(add-to-list 'default-frame-alist
+             '(font . "Monospace-18"))
+
 
 (leaf leaf
   :config
@@ -286,19 +294,6 @@
   :bind (("C-x g" . magit-status)
          ("C-x M-g" . magit-dispatch-popup)))
 
-;; (leaf skk
-;;   :ensure ddskk
-;;   :require t skk-study skk-hint
-;;   :bind (
-;;          ("C-x j" . skk-mode)
-;;          )
-;;   :custom
-;;   (skk-use-azik . t)
-;;   (skk-azik-keyboard-type . t)
-;;   (skk-egg-linke-newline . t)
-;;   (skk-show-annotation . t)
-;;   )
-
 (leaf ddskk
   ;; :straight t
   :bind
@@ -309,6 +304,16 @@
   :custom
   (skk-use-azik . t)                     ; AZIKを使用する
   (skk-azik-keyboard-type . 'jp106)      ;
+  (skk-preload . t)
+  (skk-byte-compile-init-file . t)
+  (skk-indicator-use-cursor-color . nil)
+  (skk-indicator-prefix . "")
+  (skk-egg-like-newline . t)
+  (skk-show-annotation . nil)
+  (skk-undo-kakutei-word-only . t)
+  (skk-henkan-strict-okuri-precedence . t)
+  (default-input-method . "japanese-skk")
+  (skk-show-inline . t)
 )
 
 (leaf terraform-mode
@@ -393,6 +398,7 @@
 (leaf vterm
   ;; requirements: brew install cmake libvterm libtool
   :ensure t
+  :bind (("M-t" . vterm))
   :custom
   (vterm-max-scrollback . 10000)
   (vterm-buffer-name-string . "vterm: %s")
