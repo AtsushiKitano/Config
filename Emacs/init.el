@@ -30,11 +30,56 @@
 ; 背景
 (set-face-background 'default "#333333")
 (set-face-foreground 'default "#32cd32")
-(add-to-list 'default-frame-alist
-             '(alpha . (0.85 0.85)))
+;; 透過設定
+;; (add-to-list 'default-frame-alist
+;;              '(alpha . (0.85 0.85)))
 (add-to-list 'default-frame-alist
              '(font . "Monospace-18"))
 
+
+;; Themes
+(leaf doom-themes
+  :ensure t neotree 
+  :custom
+  (doom-themes-enable-italic . nil)
+  (doom-themes-enable-bold . nil)
+  :config
+  (load-theme 'doom-tomorrow-night t)
+  (doom-themes-neotree-config)
+  (doom-themes-org-config)
+  )
+
+(leaf *modeline-settings
+  :config
+  ;; doom-modeline
+  ;; doom を利用した mode-line
+  (leaf doom-modeline
+    :ensure t
+    :commands (doom-modeline-def-modeline)
+    :custom
+    (doom-modeline-buffer-file-name-style . 'truncate-with-project)
+    (doom-modeline-icon . t)
+    (doom-modeline-major-mode-icon . nil)
+    (doom-modeline-minor-modes . nil)
+    :hook (after-init-hook . doom-modeline-mode)
+    :config
+    (line-number-mode 0)
+    (column-number-mode 0)
+    (doom-modeline-def-modeline 'main
+      '(bar window-number matches buffer-info remote-host buffer-position parrot selection-info)
+      '(misc-info persp-name lsp github debug minor-modes input-method major-mode process vcs checker))
+    )
+    ;; Hide mode line
+  ;; 特定のモードでモードラインを非表示にする
+  (leaf hide-mode-line
+    :ensure t neotree minimap imenu-list
+    :hook
+    ((neotree-mode imenu-list-minor-mode minimap-mode) . hide-mode-line-mode)
+    )
+  )
+
+
+(define-key global-map [?¥] [?\\])
 
 (leaf leaf
   :config
@@ -43,6 +88,56 @@
     :ensure t
     :custom ((imenu-list-size . 30)
              (imenu-list-position . 'left))))
+
+(leaf general-setting
+  :config
+  (prefer-coding-system 'utf-8-unix)
+  (defalias 'yes-or-no-p 'y-or-n-p) ; yes-or-no-pをy/nで選択できるようにする
+  ;; recentf
+  (defvar recentf-max-saved-items 1000)
+  (defvar recentf-auto-cleanup 'never)
+  (global-set-key [mouse-2] 'mouse-yank-at-click)
+  (delete-selection-mode t) ; リージョン選択時にリージョンまるごと削除
+  (global-display-line-numbers-mode t)
+  (set-face-attribute 'line-number-current-line nil
+                      :foreground "gold")
+
+  ;; 対応する括弧を光らせる
+  (show-paren-mode t)
+  (defvar show-paren-style 'mixed)
+  ;; カーソルを点滅させない
+  (blink-cursor-mode 0)
+  ;; 単語での折り返し
+  (leaf visual-line-mode
+    :require simple
+    :config
+    (global-visual-line-mode t))
+
+  ;; マウスを避けさせる
+  (mouse-avoidance-mode 'jump)
+  (setq frame-title-format "%f")
+  :setq
+  `((large-file-warning-threshold	         . ,(* 25 1024 1024))
+    (read-file-name-completion-ignore-case . t)
+    (use-dialog-box                        . nil)
+    (history-length                        . 500)
+    (history-delete-duplicates             . t)
+    (line-move-visual                      . nil)
+    (mouse-drag-copy-region                . t)
+    (backup-inhibited                      . t)
+    (inhibit-startup-message               . t)
+    (require-final-newline                 . t)
+    (next-line-add-newlines                . nil)
+    (frame-title-format                    . "%f")
+    (truncate-lines                        . t)
+    (read-process-output-max               . ,(* 1024 1024)))
+  :setq-default
+  (indent-tabs-mode . nil) ; タブはスペースで
+  (tab-width        . 4)
+  (require-final-newline . t)
+  )
+
+
 
 (leaf macrostep
   :ensure t
@@ -87,7 +182,7 @@
             (truncate-lines . t)
             (use-dialog-box . nil)
             (use-file-dialog . nil)
-            (menu-bar-mode . t)
+            (menu-bar-mode . nil)
             (tool-bar-mode . nil)
             (scroll-bar-mode . t)
             (indent-tabs-mode . t)
@@ -107,19 +202,6 @@
   :tag "builtin"
   :custom ((auto-revert-interval . 1))
   :global-minor-mode global-auto-revert-mode)
-
-
-;; (leaf cc-mode
-;;   :doc "major mode for editing C and similar languages"
-;;   :tag "builtin"
-;;   :defvar (c-basic-offset)
-;;   :bind (c-mode-base-map
-;;          ("C-c c" . compile))
-;;   :mode-hook
-;;   (c-mode-hook . ((c-set-style "bsd")
-;;                   (setq c-basic-offset 4)))
-;;   (c++-mode-hook . ((c-set-style "bsd")
-;;                     (setq c-basic-offset 4))))
 
 (leaf delsel
   :doc "delete selection if you insert"
@@ -157,6 +239,7 @@
   :tag "builtin" "internal"
   :custom `((auto-save-list-file-prefix . ,(locate-user-emacs-file "backup/.saves-"))))
 
+;; 補完機能
 (leaf ivy
   :doc "Incremental Vertical completYon"
   :req "emacs-24.5"
@@ -191,7 +274,8 @@
            ("C-x C-r" . counsel-recentf))
     :custom `((counsel-yank-pop-separator . "\n----------\n")
               (counsel-find-file-ignore-regexp . ,(rx-to-string '(or "./" "../") 'no-group)))
-    :global-minor-mode t))
+    :global-minor-mode t)
+  )
 
 (leaf prescient
   :doc "Better sorting and filtering"
@@ -289,11 +373,53 @@
   :added "2022-04-24"
   :init (electric-pair-mode 1))
 
+
+;; Gitの設定
 (leaf magit
   :ensure t
   :bind (("C-x g" . magit-status)
          ("C-x M-g" . magit-dispatch-popup)))
 
+;; Gitの差分表示
+(leaf git-gutter-fringe
+    :ensure t
+    :require t
+    :custom
+    (git-gutter:lighter . "")
+    (global-git-gutter-mode . t)
+    :bind ("C-x G" . hydra-git-gutter/body)
+    )
+
+(leaf neotree
+  :ensure t
+  :commands
+  (neotree-show neotree-hide neotree-dir neotree-find projectile-project-root)
+  :custom (neo-theme . 'nerd2)
+  :bind
+  ("<f9>" . neotree-projectile-toggle)
+  :preface
+  (defun neotree-projectile-toggle ()
+    (interactive)
+    (let ((project-dir
+           (ignore-errors
+         ;;; Pick one: projectile or find-file-in-project
+             (projectile-project-root)
+             ))
+          (file-name (buffer-file-name))
+          (neo-smart-open t))
+      (if (and (fboundp 'neo-global--window-exists-p)
+               (neo-global--window-exists-p))
+          (neotree-hide)
+        (progn
+          (neotree-show)
+          (if project-dir
+              (neotree-dir project-dir))
+          (if file-name
+              (neotree-find file-name)))))
+    )
+  )
+
+;; 日本語表示 ( SKK の設定)
 (leaf ddskk
   ;; :straight t
   :bind
@@ -318,8 +444,12 @@
 
 (leaf terraform-mode
   :ensure t
+  :mode (("\\.tf'" . terraform-mode)
+         ("\\.hcl'" . terraform-mode))
   :init
-  (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode))
+  (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode)
+  (add-hook 'terraform-mode-hook 'hs-minor-mode)
+  )
 
 (leaf lsp-mode
   :ensure t
@@ -350,7 +480,10 @@
     :commands (gofmt-before-save)
     :init
     (add-hook 'before-save-hook 'gofmt-before-save)
-    (setq tab-width 4))
+    (setq tab-width 4)
+    :hook
+    (go-mode . (lambda ()
+                 (hs-minor-mode 1))))
   
   (leaf protobuf-mode
     :ensure t)
@@ -361,33 +494,24 @@
     :commands go-impl)
   )
 
-;; (leaf web-mode
-;;   :ensure t
-;;   :after flycheck
-;;   :defun flycheck-add-mode
-;;   :mode (
-;;          ("\\.html?\\" . web-mode)
-;;          ("\\.scss\\" . web-mode)
-;;          ("\\.css\\" . web-mode)
-;;          ("\\.twing\\" . web-mode)
-;;          ("\\.vue\\" . web-mode)
-;;          ("\\.js\\" . web-mode))
-;;   :config
-;;   (flycheck-add-mode 'javascript-eslint 'web-mode)
-;;   (setq web-mode-markup-indent-offset 2
-;;         web-mode-css-indent-offset 2
-;;         web-mode-code-indent-offset 2
-;;         web-mode-comment-style 2
-;;         web-mode-style-padding 1
-;;         web-mode-script-padding 1)
-;;   )
-
-;; (leaf emmet-mode
-;;   :ensure t
-;;   :leaf-defer t
-;;   :commands (emment-mode)
-;;   :hook
-;;   (web-mode-hook.emmet-mode))
+;;; web-mode
+;; Web modeの設定
+(leaf web-mode
+  :ensure t
+  :mode (("\\.phtml\\'" . web-mode)
+         ("\\.tpl\\.php\\'" . web-mode)
+         ("\\.[gj]sp\\'" . web-mode)
+         ("\\.as[cp]x\\'" . web-mode)
+         ("\\.erb\\'" . web-mode)
+         ("\\.mustache\\'" . web-mode)
+         ("\\.djhtml\\'" . web-mode)
+         ("\\.html?\\'" . web-mode)
+         )
+  :custom
+  (web-mode-engines-alist . '(("php"    . "\\.phtml\\'")
+                              ("blade"  . "\\.blade\\.")))
+  (web-mode-enable-current-element-highlight . t)
+  )
 
 (leaf typescript-mode
   :ensure t
@@ -395,6 +519,7 @@
   (typescript-indent-level . 2)
   )
 
+;; Emacsのターミナル vtermの設定
 (leaf vterm
   ;; requirements: brew install cmake libvterm libtool
   :ensure t
@@ -405,7 +530,7 @@
   ;; delete "C-h", add <f1> and <f2>
   (vterm-keymap-exceptions
    . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y"))
-  ;; :config
+  :config
   ;; ;; Workaround of not working counsel-yank-pop
   ;; ;; https://github.com/akermu/emacs-libvterm#counsel-yank-pop-doesnt-work
   ;; (defun my/vterm-counsel-yank-pop-action (orig-fun &rest args)
@@ -438,36 +563,73 @@
             (vterm)))
   )
 
-;; (leaf projectile
-;;   :ensure t counsel-projectile
-;;   :require t
-;;   :config
-;;   (projectile-mode +1)
-;;   :defer-config
-;;   (customize-set-variable 'projectile-globally-ignored-modes
-;;                           (let ((newlist projectile-globally-ignored-modes))
-;;                             (add-to-list 'newlist "vterm-mode"))))
+(leaf projectile
+  :ensure t counsel-projectile
+  :bind
+  (projectile-mode-map
+   ("C-." . projectile-next-project-buffer)
+   ("C-," . projectile-previous-project-buffer)
+   ("C-c p" . projectile-command-map)
+   )
+  :require t
+  :config
+  (projectile-mode +1)
+  ;; (when (executable-find "ghq")
+  ;;   (setq projectile-knwon-projects
+  ;;         (mapcar
+  ;;          (lambda (x) (abbreviate-file-name x))
+  ;;          (split-string (shell-command-to-string "ghq list --full-path")))))
+  :defer-config
+  ;; (customize-set-variable 'projectile-globally-ignored-modes
+  ;;                         (let ((newlist projectile-globally-ignored-modes))
+  ;;                           (add-to-list 'newlist "vterm-mode")))
+  )
 
+(leaf ruby-mode
+  ;; :mode "\\.rb\\"
+  )
 
-;; (leaf yaml-mode
-;;  :ensure t
-;;  :leaf-defer t
-;;  :mode ("\\.yaml\\" . yaml-mode))
+;; yamlの設定
+(leaf yaml-mode
+ :ensure t
+ :leaf-defer t
+ )
 
-;;  (leaf markdown
-;;   :config
-;;   (leaf markdown-mode
-;;     :ensure t
-;;     :leaf-defer t
-;;     :mode ("\\.md\\" .gfm-mode)
-;;     :custom
-;;     (markdown-command . "github-markup")
-;;     (markdown-command-needs-filename . t))
-;;   (leaf markdown-preview-mode
-;;   :ensure t))
+(leaf dockerfile-mode
+  :ensure t
+  :mode (("Dockerfile" . dockerfile-mode)))
 
-;(leaf evil
-;  :config (evil-mode 1))
+;; インデントの表示
+(leaf highlight-indent-guides
+  :ensure t
+  :blackout t
+  :hook
+  (((prog-mode-hook yaml-mode-hook) . highlight-indent-guides-mode))
+  :custom (
+           (highlight-indent-guides-method . 'character)
+           (highlight-indent-guides-auto-enabled . t)
+           (highlight-indent-guides-responsive . t)
+           (highlight-indent-guides-character . ?\|)           
+           ))
+
+;; (leaf volatile-highlights
+;;              :diminish
+;;              :hook
+;;              (after-init . volatile-highlights-mode)
+;;              :custom-face
+;;              (vhl/default-face ((nil (:foreground "#FF3333" :background "#FFCDCD")))))
+
+ ;; (leaf markdown
+ ;;  :config
+ ;;  (leaf markdown-mode
+ ;;    :ensure t
+ ;;    :leaf-defer t
+ ;;    :mode ("\\.md\\" .gfm-mode)
+ ;;    :custom
+ ;;    (markdown-command . "github-markup")
+ ;;    (markdown-command-needs-filename . t))
+ ;;  (leaf markdown-preview-mode
+ ;;  :ensure t))
 
 (provide 'init)
 
