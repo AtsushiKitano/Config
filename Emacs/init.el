@@ -79,8 +79,6 @@
   )
 
 
-(define-key global-map [?¥] [?\\])
-
 (leaf leaf
   :config
   (leaf leaf-convert :ensure t)
@@ -89,13 +87,17 @@
     :custom ((imenu-list-size . 30)
              (imenu-list-position . 'left))))
 
+;; 全体設定
 (leaf general-setting
   :config
+  (define-key global-map (kbd "C-{") 'hs-hide-block)
+  (define-key global-map (kbd "C-}") 'hs-show-block)
+  (define-key global-map [?¥] [?\\])
   (prefer-coding-system 'utf-8-unix)
   (defalias 'yes-or-no-p 'y-or-n-p) ; yes-or-no-pをy/nで選択できるようにする
   ;; recentf
   (defvar recentf-max-saved-items 1000)
-  (defvar recentf-auto-cleanup 'never)
+  (defvar recentf-auto-cleanup 'never)  
   (global-set-key [mouse-2] 'mouse-yank-at-click)
   (delete-selection-mode t) ; リージョン選択時にリージョンまるごと削除
   (global-display-line-numbers-mode t)
@@ -136,7 +138,6 @@
   (tab-width        . 4)
   (require-final-newline . t)
   )
-
 
 
 (leaf macrostep
