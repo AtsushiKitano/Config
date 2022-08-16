@@ -39,7 +39,7 @@
 
 ;; Themes
 (leaf doom-themes
-  :ensure t neotree 
+  :ensure t neotree
   :custom
   (doom-themes-enable-italic . nil)
   (doom-themes-enable-bold . nil)
@@ -97,7 +97,7 @@
   (defalias 'yes-or-no-p 'y-or-n-p) ; yes-or-no-pをy/nで選択できるようにする
   ;; recentf
   (defvar recentf-max-saved-items 1000)
-  (defvar recentf-auto-cleanup 'never)  
+  (defvar recentf-auto-cleanup 'never)
   (global-set-key [mouse-2] 'mouse-yank-at-click)
   (delete-selection-mode t) ; リージョン選択時にリージョンまるごと削除
   (global-display-line-numbers-mode t)
@@ -115,11 +115,13 @@
     :config
     (global-visual-line-mode t))
 
+  ;; set markの領域の色の設定
+  (set-face-attribute 'region nil :background "#666")
   ;; マウスを避けさせる
   (mouse-avoidance-mode 'jump)
   (setq frame-title-format "%f")
   :setq
-  `((large-file-warning-threshold	         . ,(* 25 1024 1024))
+  `((large-file-warning-threshold . ,(* 25 1024 1024))
     (read-file-name-completion-ignore-case . t)
     (use-dialog-box                        . nil)
     (history-length                        . 500)
@@ -306,6 +308,15 @@
   :url "http://www.flycheck.org"
   :emacs>= 24.3
   :ensure t
+  :hook (prog-mode-hook . flycheck-mode)
+  :custom ((flycheck-display-errors-delay . 0.3))
+  :config
+  (leaf flycheck-inline
+    :ensure t
+    :hook (flycheck-mode-hook . flycheck-inline-mode))
+  (leaf flycheck-color-mode-line
+    :ensure t
+    :hook (flycheck-mode-hook . flycheck-color-mode-line-mode))
   :bind (("M-n" . flycheck-next-error)
          ("M-p" . flycheck-previous-error))
   :global-minor-mode global-flycheck-mode)
@@ -391,6 +402,12 @@
     :bind ("C-x G" . hydra-git-gutter/body)
     )
 
+(leaf all-the-icons
+  :ensure t
+  :init (leaf memoize :ensure t)
+  :require t
+)
+
 (leaf neotree
   :ensure t
   :commands
@@ -417,8 +434,8 @@
               (neotree-dir project-dir))
           (if file-name
               (neotree-find file-name)))))
-    )
-  )
+    ))
+
 
 ;; 日本語表示 ( SKK の設定)
 (leaf ddskk
@@ -441,7 +458,37 @@
   (skk-henkan-strict-okuri-precedence . t)
   (default-input-method . "japanese-skk")
   (skk-show-inline . t)
-)
+  )
+
+(leaf yasnippet
+  :ensure t
+  :blackout yas-minor-mode
+  :custom ((yas-indent-line . 'fixed)
+           (yas-global-mode . t)
+           )
+  :bind ((yas-keymap
+          ("<tab>" . nil))            ; conflict with company
+         (yas-minor-mode-map
+          ("C-c y i" . yas-insert-snippet)
+          ("C-c y n" . yas-new-snippet)
+          ("C-c y v" . yas-visit-snippet-file)
+          ("C-c y l" . yas-describe-tables)
+          ("C-c y g" . yas-reload-all)))
+  :config
+  (leaf yasnippet-snippets :ensure t)
+  (leaf yatemplate
+    :commands (yatemplate-fill-alist )
+    :ensure t
+    :config
+    (yatemplate-fill-alist))
+  (defvar company-mode/enable-yas t
+    "Enable yasnippet for all backends.")
+  (defun company-mode/backend-with-yas (backend)
+    (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
+        backend
+      (append (if (consp backend) backend (list backend))
+              '(:with company-yasnippet))))
+      )
 
 (leaf terraform-mode
   :ensure t
@@ -485,10 +532,8 @@
     :hook
     (go-mode . (lambda ()
                  (hs-minor-mode 1))))
-  
   (leaf protobuf-mode
     :ensure t)
-
   (leaf go-impl
     :ensure t
     :leaf-defer t
@@ -514,6 +559,7 @@
   (web-mode-enable-current-element-highlight . t)
   )
 
+;; typescript
 (leaf typescript-mode
   :ensure t
   :custom
@@ -612,6 +658,53 @@
            (highlight-indent-guides-responsive . t)
            (highlight-indent-guides-character . ?\|)           
            ))
+
+;; 括弧の強調
+(leaf rainbow-delimiters
+  :ensure t
+  :hook
+  ((prog-mode-hook . rainbow-delimiters-mode)))
+
+; スペース、タブの空白表示
+(leaf whitespace
+  :ensure t
+  :commands whitespace-mode
+  :bind ("C-c W" . whitespace-cleanup)
+  :custom ((whitespace-style . '(face
+                                trailing
+                                tabs
+                                spaces
+                                empty
+                                space-mark
+                                tab-mark))
+           (whitespace-display-mappings . '((space-mark ?\u3000 [?\u25a1])
+                                            (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+           (whitespace-space-regexp . "\\(\u3000+\\)")
+           (whitespace-global-modes . '(emacs-lisp-mode shell-script-mode sh-mode python-mode org-mode))
+           (global-whitespace-mode . t))
+
+  :config
+  (set-face-attribute 'whitespace-trailing nil
+                      :background "Black"
+                      :foreground "DeepPink"
+                      :underline t)
+  (set-face-attribute 'whitespace-tab nil
+                      :background "Black"
+                      :foreground "LightSkyBlue"
+                      :underline t)
+  (set-face-attribute 'whitespace-space nil
+                      :background "Black"
+                      :foreground "GreenYellow"
+                      :weight 'bold)
+    (set-face-attribute 'whitespace-empty nil
+                      :background "Black")
+  )
+
+;; コードの先頭・末尾への移動 C-a, C-e
+(leaf mwim
+  :ensure t
+  :bind (("C-a" . mwim-beginning-of-code-or-line)
+            ("C-e" . mwim-end-of-code-or-line)))
 
 ;; (leaf volatile-highlights
 ;;              :diminish
