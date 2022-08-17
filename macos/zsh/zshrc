@@ -116,7 +116,7 @@ autoload -U compinit
 #Google Cloud Platform
 # export CLOUDSDK_PYTHON=/usr/bin/python2.7
 export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
-export GCP_PROJECT=$(gcloud config get-value core/project)
+# export GCP_PROJECT=$(gcloud config get-value core/project)
 # export GOOGLE_CLOUD_KEYFILE_JSON=$HOME/.config/gcloud/credential/$GCP_PROJECT.json
 
 #GCP Service Account

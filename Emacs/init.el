@@ -7,8 +7,8 @@
 (eval-and-compile
   (customize-set-variable
    'package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
-		       ("melpa" . "https://melpa.org/packages/")
-		       ("org"   . "https://orgmode.org/elpa/")))
+	                   ("melpa" . "https://melpa.org/packages/")
+	                   ("org"   . "https://orgmode.org/elpa/")))
   (package-initialize)
   (unless (package-installed-p 'leaf)
     (package-refresh-contents)
@@ -27,16 +27,6 @@
 	(leaf-keywords-init)))
 
 ;; ここにいっぱい設定を書く(
-; 背景
-(set-face-background 'default "#333333")
-(set-face-foreground 'default "#32cd32")
-;; 透過設定
-;; (add-to-list 'default-frame-alist
-;;              '(alpha . (0.85 0.85)))
-(add-to-list 'default-frame-alist
-             '(font . "Monospace-18"))
-
-
 ;; Themes
 (leaf doom-themes
   :ensure t neotree
@@ -115,8 +105,12 @@
     :config
     (global-visual-line-mode t))
 
+  ;; FONT
+  (add-to-list 'default-frame-alist
+             '(font . "Monospace-18"))
+
   ;; set markの領域の色の設定
-  (set-face-attribute 'region nil :background "#666")
+  (set-face-attribute 'region nil :background "#ca6500")
   ;; マウスを避けさせる
   (mouse-avoidance-mode 'jump)
   (setq frame-title-format "%f")
