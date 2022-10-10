@@ -12,7 +12,7 @@
   (package-initialize)
   (unless (package-installed-p 'leaf)
     (package-refresh-contents)
-    (package-install 'leaf))  
+    (package-install 'leaf))
 
   (leaf leaf-keywords
 	:ensure t
@@ -114,6 +114,7 @@
   ;; マウスを避けさせる
   (mouse-avoidance-mode 'jump)
   (setq frame-title-format "%f")
+
   :setq
   `((large-file-warning-threshold . ,(* 25 1024 1024))
     (read-file-name-completion-ignore-case . t)
@@ -213,7 +214,7 @@
 
 (leaf simple
   :doc "basic editing commands for Emacs"
-   :tag "builtin" "internal"
+  :tag "builtin" "internal"
   :custom ((kill-ring-max . 100)
            (kill-read-only-ok . t)
            (kill-whole-line . t)
@@ -382,19 +383,31 @@
 
 ;; Gitの設定
 (leaf magit
+  :doc "A Git porcelain inside Emacs."
+  :req "emacs-25.1" "compat-28.1.1.0" "dash-20210826" "git-commit-20220222" "magit-section-20220325" "transient-20220325" "with-editor-20220318"
+  :tag "vc" "tools" "git" "emacs>=25.1"
+  :url "https://github.com/magit/magit"
+  :added "2022-10-10"
+  :emacs>= 25.1
   :ensure t
   :bind (("C-x g" . magit-status)
-         ("C-x M-g" . magit-dispatch-popup)))
+         ("C-x M-g" . magit-dispatch-popup))
+  )
 
 ;; Gitの差分表示
 (leaf git-gutter-fringe
-    :ensure t
-    :require t
-    :custom
-    (git-gutter:lighter . "")
-    (global-git-gutter-mode . t)
-    :bind ("C-x G" . hydra-git-gutter/body)
-    )
+  :doc "Fringe version of git-gutter.el"
+  :req "git-gutter-0.88" "fringe-helper-0.1.1" "cl-lib-0.5" "emacs-24"
+  :tag "emacs>=24"
+  :url "https://github.com/emacsorphanage/git-gutter-fringe"
+  :added "2022-10-10"
+  :emacs>= 24
+  :ensure t
+  :custom
+  (git-gutter:lighter . "")
+  (global-git-gutter-mode . t)
+  :bind ("C-x G" . hydra-git-gutter/body)  
+  )
 
 (leaf all-the-icons
   :ensure t
@@ -402,33 +415,33 @@
   :require t
 )
 
-(leaf neotree
-  :ensure t
-  :commands
-  (neotree-show neotree-hide neotree-dir neotree-find projectile-project-root)
-  :custom (neo-theme . 'nerd2)
-  :bind
-  ("<f9>" . neotree-projectile-toggle)
-  :preface
-  (defun neotree-projectile-toggle ()
-    (interactive)
-    (let ((project-dir
-           (ignore-errors
-         ;;; Pick one: projectile or find-file-in-project
-             (projectile-project-root)
-             ))
-          (file-name (buffer-file-name))
-          (neo-smart-open t))
-      (if (and (fboundp 'neo-global--window-exists-p)
-               (neo-global--window-exists-p))
-          (neotree-hide)
-        (progn
-          (neotree-show)
-          (if project-dir
-              (neotree-dir project-dir))
-          (if file-name
-              (neotree-find file-name)))))
-    ))
+;; (leaf neotree
+;;   :ensure t
+;;   :commands
+;;   (neotree-show neotree-hide neotree-dir neotree-find projectile-project-root)
+;;   :custom (neo-theme . 'nerd2)
+;;   :bind
+;;   ("<f9>" . neotree-projectile-toggle)
+;;   :preface
+;;   (defun neotree-projectile-toggle ()
+;;     (interactive)
+;;     (let ((project-dir
+;;            (ignore-errors
+;;          ;;; Pick one: projectile or find-file-in-project
+;;              (projectile-project-root)
+;;              ))
+;;           (file-name (buffer-file-name))
+;;           (neo-smart-open t))
+;;       (if (and (fboundp 'neo-global--window-exists-p)
+;;                (neo-global--window-exists-p))
+;;           (neotree-hide)
+;;         (progn
+;;           (neotree-show)
+;;           (if project-dir
+;;               (neotree-dir project-dir))
+;;           (if file-name
+;;               (neotree-find file-name)))))
+;;     ))
 
 
 ;; 日本語表示 ( SKK の設定)
@@ -571,6 +584,7 @@
   ;; delete "C-h", add <f1> and <f2>
   (vterm-keymap-exceptions
    . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y"))
+    ;; 行の表示しない
   :config
   ;; ;; Workaround of not working counsel-yank-pop
   ;; ;; https://github.com/akermu/emacs-libvterm#counsel-yank-pop-doesnt-work
@@ -604,27 +618,6 @@
             (vterm)))
   )
 
-(leaf projectile
-  :ensure t counsel-projectile
-  :bind
-  (projectile-mode-map
-   ("C-." . projectile-next-project-buffer)
-   ("C-," . projectile-previous-project-buffer)
-   ("C-c p" . projectile-command-map)
-   )
-  :require t
-  :config
-  (projectile-mode +1)
-  ;; (when (executable-find "ghq")
-  ;;   (setq projectile-knwon-projects
-  ;;         (mapcar
-  ;;          (lambda (x) (abbreviate-file-name x))
-  ;;          (split-string (shell-command-to-string "ghq list --full-path")))))
-  :defer-config
-  ;; (customize-set-variable 'projectile-globally-ignored-modes
-  ;;                         (let ((newlist projectile-globally-ignored-modes))
-  ;;                           (add-to-list 'newlist "vterm-mode")))
-  )
 
 (leaf ruby-mode
   ;; :mode "\\.rb\\"
@@ -700,12 +693,44 @@
   :bind (("C-a" . mwim-beginning-of-code-or-line)
             ("C-e" . mwim-end-of-code-or-line)))
 
+(leaf json-mode
+  :package t
+  :mode (("\\.json\\'" . json-mode))
+  :hook ((json-mode-hook . my-json-mode-initialize))
+  :init
+  (defun my-json-mode-initialize ()
+    "Initialize `json-mode' before file load."
+    (setq-local indent-tabs-mode nil)
+    (setq-local tab-width 2)
+    (setq-local js-indent-level tab-width)
+
+    ;; EditorConfig 対応
+    ;; (with-eval-after-load 'editorconfig
+    ;;   (if (hash-table-p editorconfig-properties-hash)
+    ;;       (let* ((indent-style-data (gethash 'indent_style editorconfig-properties-hash))
+    ;;              (indent-style (equal indent-style-data "tab"))
+    ;;              (tab-width-number-data (gethash 'tab_width editorconfig-properties-hash))
+    ;;              (tab-width-number (if (and tab-width-number-data
+    ;;                                         (stringp tab-width-number-data))
+    ;;                                    (string-to-number tab-width-number-data)
+    ;;                                  tab-width)))
+    ;;         (if (not (equal indent-tabs-mode indent-style))
+    ;;             (setq-local indent-tabs-mode indent-style))
+    ;;         (if (not (equal tab-width tab-width-number))
+    ;;             (setq-local tab-width tab-width-number))
+    ;;         (if (not (equal js-indent-level tab-width))
+    ;;             (setq-local js-indent-level tab-width)))))
+    ))
+
 ;; (leaf volatile-highlights
 ;;              :diminish
 ;;              :hook
 ;;              (after-init . volatile-highlights-mode)
 ;;              :custom-face
 ;;              (vhl/default-face ((nil (:foreground "#FF3333" :background "#FFCDCD")))))
+
+;; org mode
+
 
  ;; (leaf markdown
  ;;  :config
