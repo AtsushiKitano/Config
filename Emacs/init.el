@@ -136,6 +136,11 @@
   (require-final-newline . t)
   )
 
+(leaf smartparens
+  :ensure t
+  :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
+  :require smartparens-config
+  :custom ((electric-pair-mode . nil)))
 
 (leaf macrostep
   :ensure t
@@ -364,7 +369,8 @@
    (imenu-list-focus-after-activation . nil)
    (imenu-list-position . 'left))
   :hook
-  (imenu-list-major-mode-hook . (lambda ()
+  (imenyes
+   u-list-major-mode-hook . (lambda ()
                                   (setq mode-line-format nil)
                                   (display-line-numbers-mode 0)))
   )
@@ -403,46 +409,16 @@
   :added "2022-10-10"
   :emacs>= 24
   :ensure t
-  :custom
-  (git-gutter:lighter . "")
-  (global-git-gutter-mode . t)
-  :bind ("C-x G" . hydra-git-gutter/body)  
+  :custom ((git-gutter:lighter . "")
+           (global-git-gutter-mode . t))
   )
 
+;; Icon の表示
 (leaf all-the-icons
   :ensure t
   :init (leaf memoize :ensure t)
   :require t
 )
-
-;; (leaf neotree
-;;   :ensure t
-;;   :commands
-;;   (neotree-show neotree-hide neotree-dir neotree-find projectile-project-root)
-;;   :custom (neo-theme . 'nerd2)
-;;   :bind
-;;   ("<f9>" . neotree-projectile-toggle)
-;;   :preface
-;;   (defun neotree-projectile-toggle ()
-;;     (interactive)
-;;     (let ((project-dir
-;;            (ignore-errors
-;;          ;;; Pick one: projectile or find-file-in-project
-;;              (projectile-project-root)
-;;              ))
-;;           (file-name (buffer-file-name))
-;;           (neo-smart-open t))
-;;       (if (and (fboundp 'neo-global--window-exists-p)
-;;                (neo-global--window-exists-p))
-;;           (neotree-hide)
-;;         (progn
-;;           (neotree-show)
-;;           (if project-dir
-;;               (neotree-dir project-dir))
-;;           (if file-name
-;;               (neotree-find file-name)))))
-;;     ))
-
 
 ;; 日本語表示 ( SKK の設定)
 (leaf ddskk
@@ -499,8 +475,7 @@
 
 (leaf terraform-mode
   :ensure t
-  :mode (("\\.tf'" . terraform-mode)
-         ("\\.hcl'" . terraform-mode))
+  :mode "\\.tf\\'" "\\.pkr.hcl\\'"
   :init
   (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode)
   (add-hook 'terraform-mode-hook 'hs-minor-mode)
@@ -513,7 +488,7 @@
   :hook
   (go-mode-hook . lsp)
   (web-mode-hook . lsp)
-  (typescript-mode-hook . lsp)
+  ;; (typescript-mode-hook . lsp)
   :config
   (leaf lsp-ui
     :ensure t
@@ -566,9 +541,30 @@
   (web-mode-enable-current-element-highlight . t)
   )
 
+(leaf tide
+  :ensure t
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+         (typescript-mode . tide-hl-identifier-mode)
+         (before-save . tide-format-before-save)))
+
 ;; typescript
 (leaf typescript-mode
+  :doc "Major mode for editing typescript"
+  :req "emacs-24.3"
+  :tag "languages" "typescript" "emacs>=24.3"
+  :url "http://github.com/ananthakumaran/typescript.el"
+  :added "2022-10-10"
+  :emacs>= 24.3
   :ensure t
+  :mode "\\.ts\\'" "\\.tsx\\'"
+  :hook
+  (typescript-mode-hook . (lambda ()
+                            (interactive)
+                            (flycheck-mode +1)
+                            (company-mode +1)
+                            (eldoc-mode +1)
+                            ))
   :custom
   (typescript-indent-level . 2)
   )
@@ -618,6 +614,22 @@
             (vterm)))
   )
 
+;; python
+(leaf elpy
+  :ensure t
+  :defun
+  (elpy-enable)
+  :config
+  (remove-hook 'elpy-modules 'elpy-module-highlight-indentation)
+  (remove-hook 'elpy-modules 'elpy-module-flymake)
+  :init
+  (setq tab-width 2)
+  :custom
+  (elpy-rpc-python-command . "python3")
+  (flycheck-python-flake8-executable . "flake8")
+  :bind (elpy-mode-map
+         ("C-c C-r f" . elpy-format-code))
+  :hook ((elpy-mode-hook . flycheck-mode)))
 
 (leaf ruby-mode
   ;; :mode "\\.rb\\"
@@ -764,3 +776,4 @@
 ;; End:
 
 ;;; init.el ends here
+(put 'erase-buffer 'disabled nil)
