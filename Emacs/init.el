@@ -1,3 +1,4 @@
+
 (eval-and-compile
   (when (or load-file-name byte-compile-current-file)
     (setq user-emacs-directory
@@ -141,6 +142,11 @@
   :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
   :require smartparens-config
   :custom ((electric-pair-mode . nil)))
+
+(leaf blacken
+  :ensure t
+  :custom ((blacken-line-lenght . 119)
+           (blacken-skip-string-normalization . t)))
 
 (leaf macrostep
   :ensure t
@@ -614,6 +620,10 @@
             (vterm)))
   )
 
+;; py-isort
+(leaf py-isort :ensure t)
+
+
 ;; python
 (leaf elpy
   :ensure t
@@ -629,7 +639,8 @@
   (flycheck-python-flake8-executable . "flake8")
   :bind (elpy-mode-map
          ("C-c C-r f" . elpy-format-code))
-  :hook ((elpy-mode-hook . flycheck-mode)))
+  :hook ((elpy-mode-hook . flycheck-mode))
+  )
 
 (leaf ruby-mode
   ;; :mode "\\.rb\\"
