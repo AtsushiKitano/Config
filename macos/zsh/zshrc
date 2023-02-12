@@ -118,15 +118,7 @@ autoload -U compinit
 
 
 #Google Cloud Platform
-# export CLOUDSDK_PYTHON=/usr/bin/python2.7
-export GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
-# export GCP_PROJECT=$(gcloud config get-value core/project)
-# export GOOGLE_CLOUD_KEYFILE_JSON=$HOME/.config/gcloud/credential/$GCP_PROJECT.json
-
-#GCP Service Account
-# export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/credentials/editor-iam.jsonb
-# export GOOGLE_ACCOUNT_INFO=~/.config/gcloud/configurations/config_default
-export GOOGLEWORKSPACE_CREDENTIALS=$HOME/.config/gcp/aquamarine-cloud/service_accounts/workspace_service_account.json
+GOOGLE_AUTH_SUPPRESS_CREDENTIALS_WARNINGS=true
 
 # AWS config
 export AWS_CREDENTIAL=$HOME/.config/aws/credentials/office.csv
@@ -138,7 +130,7 @@ alias aws="aws --profile company"
 export TF_VAR_aws_credential=$AWS_CREDENTIAL
 
 ## gcp default pj
-export TF_VAR_default_project=$GCP_PROJECT
+export TF_VAR_project=$GCP_PROJECT
 
 #### function
 function peco-history-selection(){
@@ -268,6 +260,9 @@ alias gn='gcloud compute networks'
 alias gcs='gcloud compute ssh'
 alias gup='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components update'
 alias gcmp='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components'
+alias gcp_env='gcloud config configurations'
+alias gc_ap_login='gcloud auth application-default login'
+
 # alias gr ='gcloud run'
 # alias grd ='gcloud run deploy'
 # alias grs ='gcloud run service'
@@ -358,3 +353,9 @@ alias di='docker images'
 
 # pdf(zathura)
 alias pdf='zathura'
+
+# firebase
+alias fb='firebase'
+alias fbi='firebase init hosting'
+alias fbd='firebase deploy'
+alias fbdel='firebase hosting:disable'

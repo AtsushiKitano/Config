@@ -1,0 +1,1 @@
+export GCP_PROJECT=$(gcloud config get-value core/project)
