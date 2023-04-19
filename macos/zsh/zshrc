@@ -20,6 +20,8 @@ plugins=(
 
 export SAVEHIST=100000
 
+# GitHub PAT
+export GITHUB_TOKEN=$(cat $HOME/.config/github/pat/terraform )
 # User configuration
 
 source $ZSH/oh-my-zsh.sh
@@ -125,6 +127,10 @@ export AWS_CREDENTIAL=$HOME/.config/aws/credentials/office.csv
 
 alias aws="aws --profile company"
 
+# Packer config
+## gcp deefault pj
+export PKR_VAR_project=$GCP_PROJECT
+
 # Terraform config
 ## aws credential
 export TF_VAR_aws_credential=$AWS_CREDENTIAL
@@ -218,8 +224,8 @@ alias bui='brew uninstall'
 alias gtree='git log --graph --branches --pretty="format:%C(yellow)%h%Creset %s %Cgreen(%an)%Creset %Cred%d%Creset"'
 
 #emacs client
-# alias ec='emacsclient'
-# alias emacs='emacs -nw'
+alias ec='emacsclient'
+alias emacs='emacs -nw'
 
 #AWS reagion set
 alias virginia='export AWS_DEFAULT_REGION=us-east-1'
