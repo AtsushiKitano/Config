@@ -490,23 +490,39 @@
 (leaf lsp-mode
   :ensure t
   :require t
-  :commands lsp
+  :commands (lsp lsp-deferred)
   :hook
   (go-mode-hook . lsp)
   (web-mode-hook . lsp)
   ;; (typescript-mode-hook . lsp)
   :config
   (leaf lsp-ui
-    :ensure t
-    :require t
-    :hook
-    (lsp-mode-hook . lsp-ui-mode)
-    :custom
-    (lsp-ui-sideline-enable . nil)
-    (lsp-prefer-flymake . nil)
-    (lsp-print-performance . t)
-    )
-  )
+          :ensure t
+          :after lsp-mode
+          :custom ((lsp-ui-doc-enable            . t)
+                   (lsp-ui-doc-position          . 'at-point)
+                   (lsp-ui-doc-header            . t)
+                   (lsp-ui-doc-include-signature . t)
+                   (lsp-ui-doc-max-width         . 150)
+                   (lsp-ui-doc-max-height        . 30)
+                   (lsp-ui-doc-use-childframe    . nil)
+                   (lsp-ui-doc-use-webkit        . nil)
+                   (lsp-ui-peek-enable           . t)
+                   (lsp-ui-peek-peek-height      . 20)
+                   (lsp-ui-peek-list-width       . 50))
+          :bind ((lsp-ui-mode-map ([remap xref-find-definitions] .
+                                   lsp-ui-peek-find-definitions)
+                                  ([remap xref-find-references] .
+                                   lsp-ui-peek-find-references))
+                 (lsp-mode-map ("C-c s" . lsp-ui-sideline-mode)
+                               ("C-c d" . lsp-ui-doc-mode)))
+          :hook ((lsp-mode-hook . lsp-ui-mode))))
+
+(leaf lsp-pyright
+  :ensure t
+  :hook (python-mode-hook . (lambda ()
+                              (require 'lsp-pyright)
+                              (lsp-deferred))))
 
 (leaf golang
   :config
@@ -623,7 +639,6 @@
 ;; py-isort
 (leaf py-isort :ensure t)
 
-
 ;; python
 (leaf elpy
   :ensure t
@@ -666,7 +681,7 @@
            (highlight-indent-guides-method . 'character)
            (highlight-indent-guides-auto-enabled . t)
            (highlight-indent-guides-responsive . t)
-           (highlight-indent-guides-character . ?\|)           
+           (highlight-indent-guides-character . ?\|)
            ))
 
 ;; 括弧の強調
@@ -754,18 +769,18 @@
 
 ;; org mode
 
-
- ;; (leaf markdown
- ;;  :config
- ;;  (leaf markdown-mode
- ;;    :ensure t
- ;;    :leaf-defer t
- ;;    :mode ("\\.md\\" .gfm-mode)
- ;;    :custom
- ;;    (markdown-command . "github-markup")
- ;;    (markdown-command-needs-filename . t))
- ;;  (leaf markdown-preview-mode
- ;;  :ensure t))
+;; markdown
+(leaf markdown
+  :config
+  (leaf markdown-mode
+    :ensure t
+    :leaf-defer t
+    :mode ("\\.md\\'" . gfm-mode)
+    :custom
+    (markdown-command . "github-markup")
+    (markdown-command-needs-filename . t))
+  (leaf markdown-preview-mode
+    :ensure t))
 
 (provide 'init)
 
