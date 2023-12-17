@@ -490,33 +490,73 @@
 (leaf lsp-mode
   :ensure t
   :require t
-  :commands (lsp lsp-deferred)
+  :commands lsp
   :hook
   (go-mode-hook . lsp)
   (web-mode-hook . lsp)
-  ;; (typescript-mode-hook . lsp)
+  (typescript-mode-hook . lsp)
   :config
+  ;; (leaf lsp-ui
+  ;;         :ensure t
+  ;;         :after lsp-mode
+  ;;         :custom ((lsp-ui-doc-enable            . t)
+  ;;                  (lsp-ui-doc-position          . 'at-point)
+  ;;                  (lsp-ui-doc-header            . t)
+  ;;                  (lsp-ui-doc-include-signature . t)
+  ;;                  (lsp-ui-doc-max-width         . 150)
+  ;;                  (lsp-ui-doc-max-height        . 30)
+  ;;                  (lsp-ui-doc-use-childframe    . nil)
+  ;;                  (lsp-ui-doc-use-webkit        . nil)
+  ;;                  (lsp-ui-peek-enable           . t)
+  ;;                  (lsp-ui-peek-peek-height      . 20)
+  ;;                  (lsp-ui-peek-list-width       . 50))
+  ;;         :bind ((lsp-ui-mode-map ([remap xref-find-definitions] .
+  ;;                                  lsp-ui-peek-find-definitions)
+  ;;                                 ([remap xref-find-references] .
+  ;;                                  lsp-ui-peek-find-references))
+  ;;                (lsp-mode-map ("C-c s" . lsp-ui-sideline-mode)
+  ;;                              ("C-c d" . lsp-ui-doc-mode)))
+  ;;         :hook ((lsp-mode-hook . lsp-ui-mode)))
+
   (leaf lsp-ui
-          :ensure t
-          :after lsp-mode
-          :custom ((lsp-ui-doc-enable            . t)
-                   (lsp-ui-doc-position          . 'at-point)
-                   (lsp-ui-doc-header            . t)
-                   (lsp-ui-doc-include-signature . t)
-                   (lsp-ui-doc-max-width         . 150)
-                   (lsp-ui-doc-max-height        . 30)
-                   (lsp-ui-doc-use-childframe    . nil)
-                   (lsp-ui-doc-use-webkit        . nil)
-                   (lsp-ui-peek-enable           . t)
-                   (lsp-ui-peek-peek-height      . 20)
-                   (lsp-ui-peek-list-width       . 50))
-          :bind ((lsp-ui-mode-map ([remap xref-find-definitions] .
-                                   lsp-ui-peek-find-definitions)
-                                  ([remap xref-find-references] .
-                                   lsp-ui-peek-find-references))
-                 (lsp-mode-map ("C-c s" . lsp-ui-sideline-mode)
-                               ("C-c d" . lsp-ui-doc-mode)))
-          :hook ((lsp-mode-hook . lsp-ui-mode))))
+    :ensure t
+    :require t
+    :hook
+    (lsp-mode-hook . lsp-ui-mode)
+    :custom
+    (lsp-ui-sideline-enable . nil)
+    (lsp-prefer-flymake . nil)
+    (lsp-print-performance . t)
+    :config
+    (define-key lsp-ui-mode-map [remap xref-find-definitions] 'lsp-ui-peek-find-definitions)
+    (define-key lsp-ui-mode-map [remap xref-find-references] 'lsp-ui-peek-find-references)
+    (define-key lsp-ui-mode-map (kbd "C-c i") 'lsp-ui-imenu)
+    (define-key lsp-ui-mode-map (kbd "s-l") 'hydra-lsp/body)
+    (setq lsp-ui-doc-position 'bottom)
+    :hydra (hydra-lsp (:exit t :hint nil)
+                      "
+ Buffer^^               Server^^                   Symbol
+-------------------------------------------------------------------------------------
+ [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
+ [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
+ [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
+                      ("d" lsp-find-declaration)
+                      ("D" lsp-ui-peek-find-definitions)
+                      ("R" lsp-ui-peek-find-references)
+                      ("i" lsp-ui-peek-find-implementation)
+                      ("t" lsp-find-type-definition)
+                      ("s" lsp-signature-help)
+                      ("o" lsp-describe-thing-at-point)
+                      ("r" lsp-rename)
+
+                      ("f" lsp-format-buffer)
+                      ("m" lsp-ui-imenu)
+                      ("x" lsp-execute-code-action)
+
+                      ("M-s" lsp-describe-session)
+                      ("M-r" lsp-restart-workspace)
+                                            ("S" lsp-shutdown-workspace)))
+  )
 
 (leaf lsp-pyright
   :ensure t
