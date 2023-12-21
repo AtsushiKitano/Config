@@ -481,7 +481,7 @@
 
 (leaf terraform-mode
   :ensure t
-  :mode "\\.tf\\'" "\\.pkr.hcl\\'"
+  :mode "\\.tf\\'" "\\.hcl\\'"
   :init
   (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode)
   (add-hook 'terraform-mode-hook 'hs-minor-mode)
@@ -712,17 +712,17 @@
   :mode (("Dockerfile" . dockerfile-mode)))
 
 ;; インデントの表示
-(leaf highlight-indent-guides
-  :ensure t
-  :blackout t
-  :hook
-  (((prog-mode-hook yaml-mode-hook) . highlight-indent-guides-mode))
-  :custom (
-           (highlight-indent-guides-method . 'character)
-           (highlight-indent-guides-auto-enabled . t)
-           (highlight-indent-guides-responsive . t)
-           (highlight-indent-guides-character . ?\|)
-           ))
+;; (leaf highlight-indent-guides
+;;   :ensure t
+;;   :blackout t
+;;   :hook
+;;   (((prog-mode-hook yaml-mode-hook) . highlight-indent-guides-mode))
+;;   :custom (
+;;            (highlight-indent-guides-method . 'character)
+;;            (highlight-indent-guides-auto-enabled . t)
+;;            (highlight-indent-guides-responsive . t)
+;;            (highlight-indent-guides-character . ?\|)
+;;            ))
 
 ;; 括弧の強調
 (leaf rainbow-delimiters
