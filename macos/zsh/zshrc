@@ -232,7 +232,7 @@ alias gtree='git log --graph --branches --pretty="format:%C(yellow)%h%Creset %s 
 
 #emacs client
 alias ec='emacsclient'
-alias emacs='emacs -nw'
+alias egui='/Applications/Emacs.app/Contents/MacOS/Emacs &'
 
 #AWS reagion set
 alias virginia='export AWS_DEFAULT_REGION=us-east-1'

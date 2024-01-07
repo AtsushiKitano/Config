@@ -141,7 +141,37 @@
   :ensure t
   :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
   :require smartparens-config
-  :custom ((electric-pair-mode . nil)))
+  :bind (
+         ("C-M-a" . sp-beginning-of-sexp)              ;; カーソルが括弧の中か上にある場合、括弧の先頭に移動
+         ("C-M-e" . sp-end-of-sexp)                    ;; カーソルが括弧の中か上にある場合、括弧の最後に移動
+         ("C-M-d" . sp-down-sexp)          ;; 現在いる括弧の中にさらにネストした括弧がある場合その括弧に移動
+         ("C-M-u" . sp-up-sexp)            ;; 現在いる括弧の外の閉じ括弧に移動
+         ("C-M-w" . sp-backward-down-sexp) ;; カーソルから見て後ろにネストした括弧がある場合は、そのネストに入っていく
+         ("C-M-q" . sp-backward-up-sexp)   ;; カーソルより後ろに上位の括弧がある場合はその上位の括弧に移動する
+         ("C-M-f" . sp-forward-symbol)     ;; 次のシンボルへざっくり移動する。M-f良いような気がする。
+         ("C-M-b" . sp-backward-symbol)    ;; 前のシンボルへざっくり移動する。M-bで良いような気がする。
+         ("C-M-n" . sp-next-sexp)          ;; 現在のカーソルがある階層で次の括弧へ移動する
+         ("C-M-p" . sp-previous-sexp)      ;; 現在のカーソルがある階層で前の括弧へ移動する
+         ("C-s-f" . sp-forward-sexp)                   ;; カーソルからの次の括弧へ移動する。
+         ("C-s-b" . sp-backward-sexp)                  ;; カーソルからの前の括弧へ移動する。
+              
+              ;; カーソルがある位置のワードをその括弧で囲う
+         ("C-c ("  . wrap-with-parens)
+         ("C-c ["  . wrap-with-brackets)
+         ("C-c {"  . wrap-with-braces)
+         ("C-c '"  . wrap-with-single-quotes) ;; lisp-modeではシングルクオーはテキストではなく変数のオブジェクト化で使われるので、利用できない
+         ("C-c \"" . wrap-with-double-quotes)
+              
+              ;;          ;;("M-<" . sp-backward-unwrap-sexp)  ;; input系のM-[プレフィックスにぶつかり、予期せない挙動が出るのでショートカットを変更する。
+         ("M-]" . sp-unwrap-sexp) ;; 現在のカーソルがる位置の括弧を解除する
+              ;;          ("C-<right>" . sp-forward-slurp-sexp) ;; 括弧が囲む範囲を右に拡張する
+              ;;          ("C-<left>" . sp-forward-barf-sexp) ;; 括弧が囲む範囲を左に縮小する。
+         ("M-k" . sp-kill-sexp))
+  :init
+  (smartparens-global-mode t)
+  (require 'smartparens-config)
+  :custom ((electric-pair-mode . nil))
+  )
 
 (leaf blacken
   :ensure t
