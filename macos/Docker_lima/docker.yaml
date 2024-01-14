@@ -76,6 +76,10 @@ hostResolver:
 portForwards:
 - guestSocket: "/run/user/{{.UID}}/docker.sock"
   hostSocket: "{{.Dir}}/sock/docker.sock"
+- guestIP: "127.0.0.1"
+  guestPortRange: [1024, 65535]
+  hostIP: "127.0.0.1"
+  hostPortRange: [1024, 65535]"  
 message: |
   To run `docker` on the host (assumes docker-cli is installed), run the following commands:
   ------
