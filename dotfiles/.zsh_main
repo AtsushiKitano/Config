@@ -4,6 +4,11 @@ path=(\
 	/usr/local/sbin \
 	/usr/local/packages/google-cloud-sdk/bin \
 	/opt/homebrew/bin \
+	/opt/homebrew/sbin \
+	/usr/bin \
+	/usr/sbin \
+	/bin \
+	/sbin \
 	$HOME/dev/.goenv/bin \
 	$HOME/.nodebrew/current/bin \
 	$HOME/.deno/bin \
