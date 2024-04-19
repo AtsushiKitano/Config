@@ -13,8 +13,8 @@ if [ -f $HOME/.zsh_alias ]; then
 	source $HOME/.zsh_alias
 fi
 
-if [ -f $HOME/.zsh_ohmyzsh ]; then
-	source $HOME/.zsh_ohmyzsh
+if [ -f $HOME/.zsh_oh-my-zsh ]; then
+	source $HOME/.zsh_oh-my-zsh
 fi
 
 if [ -f $HOME/.zsh_function ]; then

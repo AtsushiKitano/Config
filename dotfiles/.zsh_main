@@ -1,5 +1,6 @@
 path=(\
 	$HOME/local/bin \
+	$HOME/.asdf/shimsI \
 	/usr/local/bin \
 	/usr/local/sbin \
 	/usr/local/packages/google-cloud-sdk/bin \
@@ -28,7 +29,7 @@ typeset -U path ld_library_path
 export PATH LD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
 
-export LANGUAGE="ja_JP.eucJP"
+export LANGUAGE="C"
 export LANG=$LANGUAGE
 export LC_ALL=$LANGUAGE
 
@@ -41,4 +42,3 @@ export SAVEHIST=$HISTSIZE
 
 export TERM="xterm-256color"
 export ZSH_DISABLE_COMPFIX=true
-export ZSH=$HOME/.zsh_ohmyzsh

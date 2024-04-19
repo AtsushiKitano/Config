@@ -32,7 +32,7 @@ yabai -m config window_gap                   06
 # restore position of floating windows when they are manually unfloated
 # ~/Scripts/yabai_restore.sh
 
-yabai -m rule --add app=Emacs manage=on
+#yabai -m rule --add app=Emacs manage=on
 yabai -m rule --add app=zathura manage=on
 yabai -m rule --add app=PDF\ Viewer manage=on
 yabai -m rule --add app=LINE manage=on

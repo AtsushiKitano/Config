@@ -22,7 +22,7 @@ fi
 for APP in ${APPS[@]}; do
 	asdf plugin add $APP ${PLUGINS[$APP]}
 	VERSION=$(asdf latest $APP)
-	asdf latest $APP $VERSION
+	asdf install $APP $VERSION
 	asdf global $APP $VERSION
 	
 	if [ $APP = "python" ];then

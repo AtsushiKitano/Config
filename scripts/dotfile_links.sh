@@ -9,6 +9,7 @@ done
 
 if [ $(uname) = "Darwin" ]; then
 	ln -fnsv $SCRIPT_DIR/macos/Karabiner/karabiner.json $HOME/.config/karabiner/
+	ln -fnsv $SCRIPT_DIR/macos/kitty.conf $HOME/.config/kitty/
 fi
 
 if type emacs > /dev/null 2>&1; then
