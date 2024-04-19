@@ -1,0 +1,11 @@
+ZSH_THEME="powerlevel10k/powerlevel10k"
+POWERLEVEL9K_MODE="nerdfont-complete"
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon dir vcs ssh)
+POWERLEVEL9K_DISABLE_RPROMPT=true
+
+plugins=(
+    git
+    zsh-autosuggestions
+)
+
+source $ZSH/oh-my-zsh.sh

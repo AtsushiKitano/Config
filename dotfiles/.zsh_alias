@@ -1,0 +1,98 @@
+alias aws="aws --profile company"
+
+# mac copy
+
+if which pbcopy > /dev/null 2>&1 ; then
+   alias -g C='| pbcopy'
+fi
+
+alias -g L='| less'
+alias -g G='| grep'
+alias cd='cdls'
+alias mkdir='mkdir -p'
+
+
+alias b='brew'
+alias bi='brew install'
+alias bs='brew search'
+alias bl='brew list'
+alias bo='brew outdated'
+alias bc='brew cleanup'
+alias bup='brew update'
+alias bug='brew upgrade'
+alias bui='brew uninstall'
+
+alias gtree='git log --graph --branches --pretty="format:%C(yellow)%h%Creset %s %Cgreen(%an)%Creset %Cred%d%Creset"'
+
+alias ec='emacsclient'
+
+alias virginia='export AWS_DEFAULT_REGION=us-east-1'
+alias tokyo='export AWS_DEFAULT_REGION=ap-northeast-1'
+alias oregon='export AWS_DEFAULT_REGION=us-west-2'
+alias ohaio='export AWS_DEFAULT_REGION=us-east-2'
+
+alias k='kubectl'
+alias kg='kubectl get'
+alias ke='kubectl exec -it'
+alias ka='kubectl apply -f'
+alias kd='kubectl delete -f'
+alias kpo='kubectl get pod'
+alias kde='kubectl describe'
+alias kbb='kubectl run busybox --image=busybox --rm -it --restart=Never --command --'
+
+alias h='helm'
+alias hs='helm show'
+alias hl='helm list'
+alias hr='helm repo'
+alias hi='helm install'
+alias hh='helm history'
+alias hug='helm upgrade'
+alias hrb='helm rollback'
+alias hui='helm uninstall'
+
+alias gs='gsutil'
+alias gc='gcloud'
+alias gcm='gcloud compute'
+alias gco='gcloud container'
+alias gcl='gcloud container clusters'
+alias gclg='gcloud container clusters get-credentials'
+alias gi='gcloud compute instances'
+alias gn='gcloud compute networks'
+alias gcs='gcloud compute ssh'
+alias gup='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components update'
+alias gcmp='sudo /usr/local/src/google-cloud-sdk/bin/gcloud components'
+alias gcp_env='gcloud config configurations'
+alias gc_ap_login='gcloud auth application-default login'
+
+alias gcoi='gcloud container images'
+alias gcoc='gcloud container clusters'
+alias gcon='gcloud container node-pools'
+alias gcoo='gcloud container operations'
+alias gcos='gcloud container subnets'
+alias gcoh='gcloud container hub'
+alias gcob='gcloud container binauthz'
+
+alias t='terraform'
+alias ta='terraform apply'
+alias tp='terraform plan'
+alias td='terraform destroy'
+alias ti='terraform init'
+alias tw='terraform workspace'
+alias twl='terraform workspace list'
+alias tws='terraform workspace select'
+alias twn='terraform workspace new'
+alias tgu='terraform get -update'
+
+alias rcp='create-react-app'
+
+# docker
+alias d='docker'
+alias dru='docker run'
+alias drm='docker rm'
+alias drmi='docker rmi'
+alias dc='docker-compose'
+alias dcu='docker-compose up'
+alias dcd='docker-compose down'
+alias dcb='docker-compose build'
+alias dcc='docker-compose create'
+alias di='docker images'

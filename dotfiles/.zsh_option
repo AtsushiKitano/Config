@@ -1,0 +1,98 @@
+autoload -Uz compinit
+compinit
+
+autoload -Uz colors
+colors
+
+autoload -U +X bashcompinit && bashcompinit
+
+zle -N peco-history-selection
+bindkey '^R' peco-history-selection
+bindkey 'M-"' quote-region
+bindkey 'M-]' quote-line
+
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=13'
+
+# Docker
+export DOCKER_HOST=unix://$HOME/.lima/docker/sock/docker.sock
+
+# Emacs
+if [[ "$INSIDE_EMACS" = 'vterm' ]] \
+    && [[ -n ${EMACS_VTERM_PATH} ]] \
+    && [[ -f ${EMACS_VTERM_PATH}/etc/emacs-vterm-zsh.sh ]]; then
+    source ${EMACS_VTERM_PATH}/etc/emacs-vterm-zsh.sh
+    # Initialize TITLE
+    print -Pn "\e]2;%m:%2~\a"
+fi
+
+# asdf
+if type asdf > /dev/null 2>&1; then
+   . $(brew --prefix asdf)/libexec/asdf.sh
+fi
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/usr/local/src/google-cloud-sdk/path.zsh.inc' ]; then . '/usr/local/src/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/usr/local/src/google-cloud-sdk/completion.zsh.inc' ]; then . '/usr/local/src/google-cloud-sdk/completion.zsh.inc'; fi
+
+
+# zstype
+# 大文字小文字を共にマッチさせる
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+# sudo の後ろでコマンド名を補完する
+zstyle ':completion:*:sudo:*' command-path /usr/local/sbin /usr/local/bin \
+                   /usr/sbin /usr/bin /sbin /bin /usr/X11R6/bin
+
+# ps コマンドのプロセス名補完
+zstyle ':completion:*:processes' command 'ps x -o pid,s,args'
+
+
+# オプション
+# 日本語ファイル名を表示可能にする
+setopt print_eight_bit
+
+# beep を無効にする
+setopt no_beep
+
+# フローコントロールを無効にする
+setopt no_flow_control
+
+# '#' 以降をコメントとして扱う
+setopt interactive_comments
+
+# ディレクトリ名だけでcdする
+setopt auto_cd
+
+# cd したら自動的にpushdする
+setopt auto_pushd
+# 重複したディレクトリを追加しない
+setopt pushd_ignore_dups
+
+# = の後はパス名として補完する
+setopt magic_equal_subst
+
+# 同時に起動したzshの間でヒストリを共有する
+setopt share_history
+
+# 同じコマンドをヒストリに残さない
+setopt hist_ignore_all_dups
+
+# ヒストリファイルに保存するとき、すでに重複したコマンドがあったら古い方を削除する
+setopt hist_save_nodups
+
+# スペースから始まるコマンド行はヒストリに残さない
+setopt hist_ignore_space
+
+# ヒストリに保存するときに余分なスペースを削除する
+setopt hist_reduce_blanks
+
+# 高機能なワイルドカード展開を使用する
+setopt extended_glob
+
+# cd+<Tab>でディレクトリがすでにスタックに含まれていればスタックに追加しない
+setopt auto_pushd
+
+# pushd したとき、ディレクトリがすでにスタックに含まれていればスタックに追加されない
+setopt pushd_ignore_dups

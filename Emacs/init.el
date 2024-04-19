@@ -1,4 +1,3 @@
-
 (eval-and-compile
   (when (or load-file-name byte-compile-current-file)
     (setq user-emacs-directory
@@ -27,7 +26,7 @@
 	;; initialize leaf-keywords.el
 	(leaf-keywords-init)))
 
-;; ここにいっぱい設定を書く(
+;; ここにいっぱい設定を書く
 ;; Themes
 (leaf doom-themes
   :ensure t neotree
@@ -77,6 +76,10 @@
     :ensure t
     :custom ((imenu-list-size . 30)
              (imenu-list-position . 'left))))
+
+(leaf macrostep
+  :ensure t
+  :bind (("C-c e" . macrostep-expand)))
 
 ;; 全体設定
 (leaf general-setting
@@ -154,15 +157,13 @@
          ("C-M-p" . sp-previous-sexp)      ;; 現在のカーソルがある階層で前の括弧へ移動する
          ("C-s-f" . sp-forward-sexp)                   ;; カーソルからの次の括弧へ移動する。
          ("C-s-b" . sp-backward-sexp)                  ;; カーソルからの前の括弧へ移動する。
-              
               ;; カーソルがある位置のワードをその括弧で囲う
          ("C-c ("  . wrap-with-parens)
          ("C-c ["  . wrap-with-brackets)
          ("C-c {"  . wrap-with-braces)
          ("C-c '"  . wrap-with-single-quotes) ;; lisp-modeではシングルクオーはテキストではなく変数のオブジェクト化で使われるので、利用できない
          ("C-c \"" . wrap-with-double-quotes)
-              
-              ;;          ;;("M-<" . sp-backward-unwrap-sexp)  ;; input系のM-[プレフィックスにぶつかり、予期せない挙動が出るのでショートカットを変更する。
+         ;;          ;;("M-<" . sp-backward-unwrap-sexp)  ;; input系のM-[プレフィックスにぶつかり、予期せない挙動が出るのでショートカットを変更する。
          ("M-]" . sp-unwrap-sexp) ;; 現在のカーソルがる位置の括弧を解除する
               ;;          ("C-<right>" . sp-forward-slurp-sexp) ;; 括弧が囲む範囲を右に拡張する
               ;;          ("C-<left>" . sp-forward-barf-sexp) ;; 括弧が囲む範囲を左に縮小する。
@@ -173,14 +174,20 @@
   :custom ((electric-pair-mode . nil))
   )
 
+(leaf evil
+  :doc "Extensible Vi layer for Emacs."
+  :req "emacs-24.1" "goto-chg-1.6" "cl-lib-0.5"
+  :tag "emulations" "emacs>=24.1"
+  :url "https://github.com/emacs-evil/evil"
+  :added "2024-03-16"
+  :emacs>= 24.1
+  :ensure t
+  :after goto-chg)
+
 (leaf blacken
   :ensure t
   :custom ((blacken-line-lenght . 119)
            (blacken-skip-string-normalization . t)))
-
-(leaf macrostep
-  :ensure t
-  :bind (("C-c e" . macrostep-expand)))
 
 (leaf line-number-mode
   :custom
@@ -194,7 +201,7 @@
   :custom `((custom-file . ,(locate-user-emacs-file "custom.el"))))
 
 (leaf cus-start
-  :doc "define customization properties of builtins"
+  :doc "起動時の設定のカスタマイズ"
   :tag "builtin" "internal"
   :preface
   (defun c/redraw-frame nil
