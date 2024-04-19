@@ -8,9 +8,9 @@ for dotfile in $SCRIPT_DIR/dotfiles/.??* ; do
 done
 
 if [ $(uname) = "Darwin" ]; then
-	ln -fnsv ../macos/Karabiner/karabiner.json $HOME/.config/karabiner/
+	ln -fnsv $SCRIPT_DIR/macos/Karabiner/karabiner.json $HOME/.config/karabiner/
 fi
 
 if type emacs > /dev/null 2>&1; then
-	ln -fnsv ../Emacs/init.el $HOME/.emacs.d/
+	ln -fnsv $SCRIPT_DIR/Emacs/init.el $HOME/.emacs.d/
 fi
