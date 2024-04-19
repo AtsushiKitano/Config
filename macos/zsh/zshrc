@@ -27,10 +27,6 @@ plugins=(
 
 export SAVEHIST=100000
 
-# GitHub PAT
-export GITHUB_TOKEN=$(cat $HOME/.config/github/pat/terraform )
-# User configuration
-
 source $ZSH/oh-my-zsh.sh
 
 # 大文字小文字を共にマッチさせる
@@ -144,6 +140,7 @@ export TF_VAR_aws_credential=$AWS_CREDENTIAL
 
 ## gcp default pj
 export TF_VAR_project=$GCP_PROJECT
+export TF_VAR_house_ip=$(curl -s inet-ip.info)
 
 #### function
 function peco-history-selection(){
@@ -375,3 +372,6 @@ alias fbdel='firebase hosting:disable'
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+
+. $(brew --prefix asdf)/libexec/asdf.sh
