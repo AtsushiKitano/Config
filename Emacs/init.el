@@ -27,6 +27,14 @@
 	(leaf-keywords-init)))
 
 ;; ここにいっぱい設定を書く
+(setq mac-command-modifier 'meta)
+
+(setq default-frame-alist
+      (append'((alpha . 70)
+               )
+             default-frame-alist))
+(setq initial-frame-alist default-frame-alist)
+
 ;; Themes
 (leaf doom-themes
   :ensure t neotree
@@ -133,6 +141,8 @@
     (next-line-add-newlines                . nil)
     (frame-title-format                    . "%f")
     (truncate-lines                        . t)
+    (mac-option-key-is-meta . nil)
+    (ns-right-alternate-modifier . nil)
     (read-process-output-max               . ,(* 1024 1024)))
   :setq-default
   (indent-tabs-mode . nil) ; タブはスペースで
@@ -731,7 +741,9 @@
   (flycheck-python-flake8-executable . "flake8")
   :bind (elpy-mode-map
          ("C-c C-r f" . elpy-format-code))
-  :hook ((elpy-mode-hook . flycheck-mode))
+  :hook (
+         (elpy-mode-hook . flycheck-mode)
+         )
   )
 
 (leaf ruby-mode
