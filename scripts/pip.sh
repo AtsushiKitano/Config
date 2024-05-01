@@ -13,3 +13,6 @@ pip install numpy \
 	pytz \
 	six \
 	tzdata \
+	powerline-status \
+	setuptools \
+	powerline-shell
