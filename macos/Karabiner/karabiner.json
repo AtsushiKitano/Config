@@ -2655,7 +2655,7 @@
                     },
                     "to": [
                         {
-                            "key_code": "right_option"
+                            "key_code": "left_option"
                         }
                     ]
                 },
