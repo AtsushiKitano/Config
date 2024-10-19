@@ -478,7 +478,8 @@
   ;; :straight t
   :bind
   (("C-x C-j" . skk-mode)
-   ("C-x j"   . skk-mode))
+   ("M-j"   . skk-mode)
+   )
   :init
   (defvar dired-bind-jump nil)  ; dired-xがC-xC-jを奪うので対処しておく
   :custom
@@ -643,11 +644,21 @@
          ("\\.mustache\\'" . web-mode)
          ("\\.djhtml\\'" . web-mode)
          ("\\.html?\\'" . web-mode)
+         ("\\.ts\\'" . web-mode)
+         ("\\.tsx\\'" . web-mode)
+         ("\\.js\\'" . web-mode)
          )
   :custom
   (web-mode-engines-alist . '(("php"    . "\\.phtml\\'")
                               ("blade"  . "\\.blade\\.")))
   (web-mode-enable-current-element-highlight . t)
+  :config
+  (setq web-mode-markup-indent-offset 2
+        web-mode-css-indent-offset 2
+        web-mode-code-indent-offset 2
+        web-mode-comment-style 2
+        web-mode-style-padding 1
+        web-mode-script-padding 1)
   )
 
 (leaf tide
@@ -658,25 +669,25 @@
          (before-save . tide-format-before-save)))
 
 ;; typescript
-(leaf typescript-mode
-  :doc "Major mode for editing typescript"
-  :req "emacs-24.3"
-  :tag "languages" "typescript" "emacs>=24.3"
-  :url "http://github.com/ananthakumaran/typescript.el"
-  :added "2022-10-10"
-  :emacs>= 24.3
-  :ensure t
-  :mode "\\.ts\\'" "\\.tsx\\'"
-  :hook
-  (typescript-mode-hook . (lambda ()
-                            (interactive)
-                            (flycheck-mode +1)
-                            (company-mode +1)
-                            (eldoc-mode +1)
-                            ))
-  :custom
-  (typescript-indent-level . 2)
-  )
+;; (leaf typescript-mode
+;;   :doc "Major mode for editing typescript"
+;;   :req "emacs-24.3"
+;;   :tag "languages" "typescript" "emacs>=24.3"
+;;   :url "http://github.com/ananthakumaran/typescript.el"
+;;   :added "2022-10-10"
+;;   :emacs>= 24.3
+;;   :ensure t
+;;   :mode "\\.ts\\'" "\\.tsx\\'"
+;;   :hook
+;;   (typescript-mode-hook . (lambda ()
+;;                             (interactive)
+;;                             (flycheck-mode +1)
+;;                             (company-mode +1)
+;;                             (eldoc-mode +1)
+;;                             ))
+;;   :custom
+;;   (typescript-indent-level . 2)
+;;   )
 
 ;; Emacsのターミナル vtermの設定
 (leaf vterm
