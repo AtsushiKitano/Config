@@ -429,8 +429,8 @@
   )
 
 (leaf-keys (("C-h" . backward-delete-char)
-            ("M-[" . previous-multiframe-window)
-            ("M-]" . next-multiframe-window)
+            ("M-h" . previous-multiframe-window)
+            ("M-l" . next-multiframe-window)
             ("M-z" . delete-other-windows)))
 
 (leaf electric
