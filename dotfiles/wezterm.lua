@@ -19,4 +19,9 @@ config.window_background_gradient = {
 }
 config.show_new_tab_button_in_tab_bar = false
 
+
+config.disable_default_key_bindings = true
+config.keys = require("wezterm_keybinds").keys
+config.key_tables = require("wezterm_keybinds").key_tables
+
 return config

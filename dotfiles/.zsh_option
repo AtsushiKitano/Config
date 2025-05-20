@@ -13,9 +13,6 @@ bindkey 'M-]' quote-line
 
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=13'
 
-# Docker
-export DOCKER_HOST=unix://$HOME/.lima/docker/sock/docker.sock
-
 # Emacs
 if [[ "$INSIDE_EMACS" = 'vterm' ]] \
     && [[ -n ${EMACS_VTERM_PATH} ]] \

@@ -20,3 +20,7 @@ fi
 if [ -f $HOME/.zsh_option ]; then
 	source $HOME/.zsh_option
 fi
+
+if [ -f $HOME/.zsh_code ]; then
+	source $HOME/.zsh_code
+fi
