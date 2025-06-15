@@ -7,6 +7,7 @@ POWERLEVEL9K_DISABLE_RPROMPT=true
 plugins=(
     git
     zsh-autosuggestions
+    poetry
 )
 
 source $ZSH/oh-my-zsh.sh

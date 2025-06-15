@@ -196,8 +196,10 @@
 
 (leaf blacken
   :ensure t
+  :hook (python-mode . blacken-mode)
   :custom ((blacken-line-lenght . 119)
-           (blacken-skip-string-normalization . t)))
+           (blacken-skip-string-normalization . t))
+  :config (add-hook 'before-save-hook #'blacken-buffer nil t))
 
 (leaf line-number-mode
   :custom
@@ -543,6 +545,7 @@
   (go-mode-hook . lsp)
   (web-mode-hook . lsp)
   (typescript-mode-hook . lsp)
+  (python-mode . lsp)
   :config
   ;; (leaf lsp-ui
   ;;         :ensure t
@@ -611,7 +614,7 @@
   :hook (python-mode-hook . (lambda ()
                               (require 'lsp-pyright)
                               (lsp-deferred))))
-
+(leaf company-lsp)
 (leaf golang
   :config
   (leaf go-mode

@@ -24,3 +24,11 @@ fi
 if [ -f $HOME/.zsh_code ]; then
 	source $HOME/.zsh_code
 fi
+
+if [ -f $HOME/.zfunc ]; then
+	fpath+=$HOME/.zfunc
+	autoload -Uz compinit && compinit
+fi
+
+# Created by `pipx` on 2025-06-15 04:00:03
+export PATH="$PATH:/Users/kitanoatsushi/.local/bin"
