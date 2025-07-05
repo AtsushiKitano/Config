@@ -152,7 +152,7 @@
 
 (leaf smartparens
   :ensure t
-  :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
+  ;; :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
   :require smartparens-config
   :bind (
          ("C-M-a" . sp-beginning-of-sexp)              ;; カーソルが括弧の中か上にある場合、括弧の先頭に移動
@@ -180,8 +180,11 @@
          ("M-k" . sp-kill-sexp))
   :init
   (smartparens-global-mode t)
+  (setq electric-pair-strict-mode nil)
   (require 'smartparens-config)
-  :custom ((electric-pair-mode . nil))
+  :custom (
+           (electric-pair-mode . nil)
+           )
   )
 
 (leaf evil
@@ -363,6 +366,7 @@
   :url "http://www.flycheck.org"
   :emacs>= 24.3
   :ensure t
+  :init (global-flycheck-mode)
   :hook (prog-mode-hook . flycheck-mode)
   :custom ((flycheck-display-errors-delay . 0.3))
   :config
@@ -372,6 +376,20 @@
   (leaf flycheck-color-mode-line
     :ensure t
     :hook (flycheck-mode-hook . flycheck-color-mode-line-mode))
+  (with-eval-after-load 'flycheck-python
+    (flycheck-define-checker python-mypy
+      "A Python syntax checker using mypy."
+      :command ("mypy" "--strict" source-original) ; ここで引数を追加
+      :error-patterns
+      ((error line-col-string
+              (info file) ":" line ":" column ":"
+              (message) "(.*\\|\\n)*"
+              ;; For "note: " lines that indicate related locations
+              (file nil) ":[0-9]+:[0-9]+:"
+              " note: " ".*"))
+      :modes python-mode
+      :priority 1) ; 他のPythonチェッカーより優先度を上げる
+    (add-to-list 'flycheck-checkers 'python-mypy t)) ; リストの先頭に追加
   :bind (("M-n" . flycheck-next-error)
          ("M-p" . flycheck-previous-error))
   :global-minor-mode global-flycheck-mode)
@@ -439,7 +457,7 @@
   :doc "window maker and command loop for `electric' modes"
   :tag "builtin"
   :added "2022-04-24"
-  :init (electric-pair-mode 1))
+  :config (electric-pair-mode 1))
 
 
 ;; Gitの設定
@@ -759,6 +777,8 @@
          (elpy-mode-hook . flycheck-mode)
          )
   )
+
+(add-hook 'python-mode-hook #'flycheck-mode)
 
 (leaf ruby-mode
   ;; :mode "\\.rb\\"
