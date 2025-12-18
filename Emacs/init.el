@@ -26,11 +26,29 @@
 	;; initialize leaf-keywords.el
 	(leaf-keywords-init)))
 
+
+(leaf leaf
+  :config
+  (leaf leaf-convert :ensure t)
+  (leaf leaf-tree
+    :ensure t
+    :custom ((imenu-list-size . 30)
+             (imenu-list-position . 'left))))
+
+(leaf macrostep
+  :ensure t
+  :bind (("C-c e" . macrostep-expand)))
+
+(leaf cus-edit
+  :doc "tools for customizing Emacs and Lisp packages"
+  :tag "builtin" "faces" "help"
+  :custom `((custom-file . ,(locate-user-emacs-file "custom.el"))))
+
 ;; ここにいっぱい設定を書く
 (setq mac-command-modifier 'meta)
 
 (setq default-frame-alist
-      (append'((alpha . 70)
+      (append'((alpha . 85)
                )
              default-frame-alist))
 (setq initial-frame-alist default-frame-alist)
@@ -75,19 +93,6 @@
     ((neotree-mode imenu-list-minor-mode minimap-mode) . hide-mode-line-mode)
     )
   )
-
-
-(leaf leaf
-  :config
-  (leaf leaf-convert :ensure t)
-  (leaf leaf-tree
-    :ensure t
-    :custom ((imenu-list-size . 30)
-             (imenu-list-position . 'left))))
-
-(leaf macrostep
-  :ensure t
-  :bind (("C-c e" . macrostep-expand)))
 
 ;; 全体設定
 (leaf general-setting
@@ -189,13 +194,9 @@
 
 (leaf evil
   :doc "Extensible Vi layer for Emacs."
-  :req "emacs-24.1" "goto-chg-1.6" "cl-lib-0.5"
-  :tag "emulations" "emacs>=24.1"
-  :url "https://github.com/emacs-evil/evil"
-  :added "2024-03-16"
-  :emacs>= 24.1
   :ensure t
-  :after goto-chg)
+  :config
+  (evil-mode t))
 
 (leaf blacken
   :ensure t
@@ -209,11 +210,6 @@
   ((linum-format . "%5d"))
   (line-number-mode . nil)
   )
-
-(leaf cus-edit
-  :doc "tools for customizing Emacs and Lisp packages"
-  :tag "builtin" "faces" "help"
-  :custom `((custom-file . ,(locate-user-emacs-file "custom.el"))))
 
 (leaf cus-start
   :doc "起動時の設定のカスタマイズ"
@@ -364,7 +360,6 @@
   :req "dash-2.12.1" "pkg-info-0.4" "let-alist-1.0.4" "seq-1.11" "emacs-24.3"
   :tag "minor-mode" "tools" "languages" "convenience" "emacs>=24.3"
   :url "http://www.flycheck.org"
-  :emacs>= 24.3
   :ensure t
   :init (global-flycheck-mode)
   :hook (prog-mode-hook . flycheck-mode)
@@ -396,10 +391,7 @@
 
 (leaf company
   :doc "Modular text completion framework"
-  :req "emacs-24.3"
-  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
   :url "http://company-mode.github.io/"
-  :emacs>= 24.3
   :ensure t
   :blackout t
   :leaf-defer nil
@@ -420,10 +412,6 @@
 
 (leaf company-c-headers
   :doc "Company mode backend for C/C++ header files"
-  :req "emacs-24.1" "company-0.8"
-  :tag "company" "development" "emacs>=24.1"
-  :added "2020-03-25"
-  :emacs>= 24.1
   :ensure t
   :after company
   :defvar company-backends
@@ -476,11 +464,7 @@
 ;; Gitの差分表示
 (leaf git-gutter-fringe
   :doc "Fringe version of git-gutter.el"
-  :req "git-gutter-0.88" "fringe-helper-0.1.1" "cl-lib-0.5" "emacs-24"
-  :tag "emacs>=24"
   :url "https://github.com/emacsorphanage/git-gutter-fringe"
-  :added "2022-10-10"
-  :emacs>= 24
   :ensure t
   :custom ((git-gutter:lighter . "")
            (global-git-gutter-mode . t))
@@ -627,11 +611,6 @@
                                             ("S" lsp-shutdown-workspace)))
   )
 
-(leaf lsp-pyright
-  :ensure t
-  :hook (python-mode-hook . (lambda ()
-                              (require 'lsp-pyright)
-                              (lsp-deferred))))
 (leaf company-lsp)
 (leaf golang
   :config
@@ -665,9 +644,10 @@
          ("\\.mustache\\'" . web-mode)
          ("\\.djhtml\\'" . web-mode)
          ("\\.html?\\'" . web-mode)
+         ("\\.js\\'" . web-mode)
          ("\\.ts\\'" . web-mode)
          ("\\.tsx\\'" . web-mode)
-         ("\\.js\\'" . web-mode)
+         ("\\.jsx\\'" . web-mode)
          )
   :custom
   (web-mode-engines-alist . '(("php"    . "\\.phtml\\'")
@@ -682,12 +662,48 @@
         web-mode-script-padding 1)
   )
 
+;; Typescript
+;; (leaf typescript-ts-mode
+;;   :mode(("\\\\.tsx\\\\'" .tsx-ts-mode)
+;;         ("\\\\.ts\\\\'" .tsx-ts-mode))
+;;   :config
+;;   (setq typescript-ts-mode-indent-offset 2))
+
+;; (leaf treesit
+;;   :config
+;;   (setq treesit-font-lock-level 4))
+
+;; (leaf treesit-auto
+;;   :ensure t
+;;   :init
+;;   (require 'treesit-auto)
+;;   (global-treesit-auto-mode)
+;;   :config
+;;   (setq treesit-auto-install t)
+;;   )
+
+;; (leaf tree-sitter
+;;   :ensure t
+;;   :hook ((typescript-ts-mode . tree-sitter-hl-mode)
+;;          (tsx-ts-mode . tree-sitter-hl-mode))
+;;   :config
+;;   (global-tree-sitter-mode)
+;;   )
+
+;; (leaf tree-sitter-langs
+;;   :ensure t
+;;   :after tree-sitter
+;;   :config
+;;   (tree-sitter-require 'tsx)
+;;   (add-to-list 'tree-sitter-major-mode-language-alist '(tsx-ts-mode .tsx)))
+
 (leaf tide
   :ensure t
   :after (typescript-mode company flycheck)
   :hook ((typescript-mode . tide-setup)
          (typescript-mode . tide-hl-identifier-mode)
-         (before-save . tide-format-before-save)))
+         (before-save . tide-format-before-save))
+  )
 
 ;; typescript
 ;; (leaf typescript-mode
@@ -904,6 +920,22 @@
     (markdown-command-needs-filename . t))
   (leaf markdown-preview-mode
     :ensure t))
+;;shell
+(defun toggle-zsh-window ()
+  (interactive)
+  (if (get-buffer-window "*terminal*")
+      (progn
+        (switch-to-buffer (other-buffer))
+        (delete-window (get-buffer-window "*terminal*")))
+    (progn
+      (split-window-below)
+      (other-window 1)
+      (term "/bin/zsh")
+      (rename-buffer "*terminal*"))))
+(global-set-key (kbd "C-'") 'toggle-zsh-window)
+(add-hook 'term-mode-hook
+          (lambda ()
+            (define-key global-map (kbd "C-'") 'toggle-zsh-window)))
 
 (provide 'init)
 
