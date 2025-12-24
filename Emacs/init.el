@@ -662,40 +662,6 @@
         web-mode-script-padding 1)
   )
 
-;; Typescript
-;; (leaf typescript-ts-mode
-;;   :mode(("\\\\.tsx\\\\'" .tsx-ts-mode)
-;;         ("\\\\.ts\\\\'" .tsx-ts-mode))
-;;   :config
-;;   (setq typescript-ts-mode-indent-offset 2))
-
-;; (leaf treesit
-;;   :config
-;;   (setq treesit-font-lock-level 4))
-
-;; (leaf treesit-auto
-;;   :ensure t
-;;   :init
-;;   (require 'treesit-auto)
-;;   (global-treesit-auto-mode)
-;;   :config
-;;   (setq treesit-auto-install t)
-;;   )
-
-;; (leaf tree-sitter
-;;   :ensure t
-;;   :hook ((typescript-ts-mode . tree-sitter-hl-mode)
-;;          (tsx-ts-mode . tree-sitter-hl-mode))
-;;   :config
-;;   (global-tree-sitter-mode)
-;;   )
-
-;; (leaf tree-sitter-langs
-;;   :ensure t
-;;   :after tree-sitter
-;;   :config
-;;   (tree-sitter-require 'tsx)
-;;   (add-to-list 'tree-sitter-major-mode-language-alist '(tsx-ts-mode .tsx)))
 
 (leaf tide
   :ensure t
@@ -705,26 +671,6 @@
          (before-save . tide-format-before-save))
   )
 
-;; typescript
-;; (leaf typescript-mode
-;;   :doc "Major mode for editing typescript"
-;;   :req "emacs-24.3"
-;;   :tag "languages" "typescript" "emacs>=24.3"
-;;   :url "http://github.com/ananthakumaran/typescript.el"
-;;   :added "2022-10-10"
-;;   :emacs>= 24.3
-;;   :ensure t
-;;   :mode "\\.ts\\'" "\\.tsx\\'"
-;;   :hook
-;;   (typescript-mode-hook . (lambda ()
-;;                             (interactive)
-;;                             (flycheck-mode +1)
-;;                             (company-mode +1)
-;;                             (eldoc-mode +1)
-;;                             ))
-;;   :custom
-;;   (typescript-indent-level . 2)
-;;   )
 
 ;; Emacsのターミナル vtermの設定
 (leaf vterm
@@ -920,22 +866,6 @@
     (markdown-command-needs-filename . t))
   (leaf markdown-preview-mode
     :ensure t))
-;;shell
-(defun toggle-zsh-window ()
-  (interactive)
-  (if (get-buffer-window "*terminal*")
-      (progn
-        (switch-to-buffer (other-buffer))
-        (delete-window (get-buffer-window "*terminal*")))
-    (progn
-      (split-window-below)
-      (other-window 1)
-      (term "/bin/zsh")
-      (rename-buffer "*terminal*"))))
-(global-set-key (kbd "C-'") 'toggle-zsh-window)
-(add-hook 'term-mode-hook
-          (lambda ()
-            (define-key global-map (kbd "C-'") 'toggle-zsh-window)))
 
 (provide 'init)
 
