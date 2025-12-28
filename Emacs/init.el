@@ -99,6 +99,10 @@
   :config
   (define-key global-map (kbd "C-{") 'hs-hide-block)
   (define-key global-map (kbd "C-}") 'hs-show-block)
+  (define-key global-map (kbd "C-d") 'delete-forward-char)
+  (define-key global-map (kbd "C-f") 'forward-char)
+  (define-key global-map (kbd "C-k") 'kill-line)
+  (define-key global-map (kbd "C-e") 'move-end-of-line)
   (define-key global-map [?¥] [?\\])
   (prefer-coding-system 'utf-8-unix)
   (defalias 'yes-or-no-p 'y-or-n-p) ; yes-or-no-pをy/nで選択できるようにする
@@ -549,27 +553,6 @@
   (typescript-mode-hook . lsp)
   (python-mode . lsp)
   :config
-  ;; (leaf lsp-ui
-  ;;         :ensure t
-  ;;         :after lsp-mode
-  ;;         :custom ((lsp-ui-doc-enable            . t)
-  ;;                  (lsp-ui-doc-position          . 'at-point)
-  ;;                  (lsp-ui-doc-header            . t)
-  ;;                  (lsp-ui-doc-include-signature . t)
-  ;;                  (lsp-ui-doc-max-width         . 150)
-  ;;                  (lsp-ui-doc-max-height        . 30)
-  ;;                  (lsp-ui-doc-use-childframe    . nil)
-  ;;                  (lsp-ui-doc-use-webkit        . nil)
-  ;;                  (lsp-ui-peek-enable           . t)
-  ;;                  (lsp-ui-peek-peek-height      . 20)
-  ;;                  (lsp-ui-peek-list-width       . 50))
-  ;;         :bind ((lsp-ui-mode-map ([remap xref-find-definitions] .
-  ;;                                  lsp-ui-peek-find-definitions)
-  ;;                                 ([remap xref-find-references] .
-  ;;                                  lsp-ui-peek-find-references))
-  ;;                (lsp-mode-map ("C-c s" . lsp-ui-sideline-mode)
-  ;;                              ("C-c d" . lsp-ui-doc-mode)))
-  ;;         :hook ((lsp-mode-hook . lsp-ui-mode)))
 
   (leaf lsp-ui
     :ensure t
@@ -660,6 +643,13 @@
         web-mode-comment-style 2
         web-mode-style-padding 1
         web-mode-script-padding 1)
+  (setq web-mode-attr-indent-offset nil)
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-pairing t)
+  (setq web-mode-auto-close-style 2)
+  (setq web-mode-tag-auto-close-style 2)
+  (setq indent-tabs-mode nil)
+  (setq tab-width 2)
   )
 
 
@@ -685,17 +675,6 @@
    . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y"))
     ;; 行の表示しない
   :config
-  ;; ;; Workaround of not working counsel-yank-pop
-  ;; ;; https://github.com/akermu/emacs-libvterm#counsel-yank-pop-doesnt-work
-  ;; (defun my/vterm-counsel-yank-pop-action (orig-fun &rest args)
-  ;;   (if (equal major-mode 'vterm-mode)
-  ;;       (let ((inhibit-read-only t)
-  ;;             (yank-undo-function (lambda (_start _end) (vterm-undo))))
-  ;;         (cl-letf (((symbol-function 'insert-for-yank)
-  ;;                    (lambda (str) (vterm-send-string str t))))
-  ;;           (apply orig-fun args)))
-  ;;     (apply orig-fun args)))
-  ;; (advice-add 'counsel-yank-pop-action :around #'my/vterm-counsel-yank-pop-action)
   )
 
 (leaf vterm-toggle
@@ -756,19 +735,6 @@
   :ensure t
   :mode (("Dockerfile" . dockerfile-mode)))
 
-;; インデントの表示
-;; (leaf highlight-indent-guides
-;;   :ensure t
-;;   :blackout t
-;;   :hook
-;;   (((prog-mode-hook yaml-mode-hook) . highlight-indent-guides-mode))
-;;   :custom (
-;;            (highlight-indent-guides-method . 'character)
-;;            (highlight-indent-guides-auto-enabled . t)
-;;            (highlight-indent-guides-responsive . t)
-;;            (highlight-indent-guides-character . ?\|)
-;;            ))
-
 ;; 括弧の強調
 (leaf rainbow-delimiters
   :ensure t
@@ -827,32 +793,9 @@
     (setq-local tab-width 2)
     (setq-local js-indent-level tab-width)
 
-    ;; EditorConfig 対応
-    ;; (with-eval-after-load 'editorconfig
-    ;;   (if (hash-table-p editorconfig-properties-hash)
-    ;;       (let* ((indent-style-data (gethash 'indent_style editorconfig-properties-hash))
-    ;;              (indent-style (equal indent-style-data "tab"))
-    ;;              (tab-width-number-data (gethash 'tab_width editorconfig-properties-hash))
-    ;;              (tab-width-number (if (and tab-width-number-data
-    ;;                                         (stringp tab-width-number-data))
-    ;;                                    (string-to-number tab-width-number-data)
-    ;;                                  tab-width)))
-    ;;         (if (not (equal indent-tabs-mode indent-style))
-    ;;             (setq-local indent-tabs-mode indent-style))
-    ;;         (if (not (equal tab-width tab-width-number))
-    ;;             (setq-local tab-width tab-width-number))
-    ;;         (if (not (equal js-indent-level tab-width))
-    ;;             (setq-local js-indent-level tab-width)))))
     ))
 
-;; (leaf volatile-highlights
-;;              :diminish
-;;              :hook
-;;              (after-init . volatile-highlights-mode)
-;;              :custom-face
-;;              (vhl/default-face ((nil (:foreground "#FF3333" :background "#FFCDCD")))))
 
-;; org mode
 
 ;; markdown
 (leaf markdown
