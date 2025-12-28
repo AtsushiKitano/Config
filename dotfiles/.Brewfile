@@ -65,6 +65,7 @@ brew "nodebrew"
 brew "emacs-plus@31"
 brew "pwgen"
 brew "lua"
+brew "pnpm"
 
 cask "chromium"
 cask "google-cloud-sdk"
