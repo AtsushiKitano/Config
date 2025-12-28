@@ -161,7 +161,6 @@
 
 (leaf smartparens
   :ensure t
-  ;; :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
   :require smartparens-config
   :bind (
          ("C-M-a" . sp-beginning-of-sexp)              ;; カーソルが括弧の中か上にある場合、括弧の先頭に移動
@@ -393,6 +392,59 @@
          ("M-p" . flycheck-previous-error))
   :global-minor-mode global-flycheck-mode)
 
+(leaf lsp-mode
+  :ensure t
+  :require t
+  :commands lsp
+  :hook
+  (go-mode-hook . lsp)
+  (web-mode-hook . lsp)
+  (typescript-mode-hook . lsp)
+  (python-mode . lsp)
+  :config
+  (setq lsp-disabled-clients '(tfls))
+  (leaf lsp-ui
+    :ensure t
+    :require t
+    :hook
+    (lsp-mode-hook . lsp-ui-mode)
+    :custom
+    (lsp-ui-sideline-enable . nil)
+    (lsp-prefer-flymake . nil)
+    (lsp-print-performance . t)
+    :config
+    (define-key lsp-ui-mode-map [remap xref-find-definitions] 'lsp-ui-peek-find-definitions)
+    (define-key lsp-ui-mode-map [remap xref-find-references] 'lsp-ui-peek-find-references)
+    (define-key lsp-ui-mode-map (kbd "C-c i") 'lsp-ui-imenu)
+    (define-key lsp-ui-mode-map (kbd "s-l") 'hydra-lsp/body)
+    (setq lsp-ui-doc-position 'bottom)
+    :hydra (hydra-lsp (:exit t :hint nil)
+                      "
+ Buffer^^               Server^^                   Symbol
+-------------------------------------------------------------------------------------
+ [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
+ [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
+ [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
+                      ("d" lsp-find-declaration)
+                      ("D" lsp-ui-peek-find-definitions)
+                      ("R" lsp-ui-peek-find-references)
+                      ("i" lsp-ui-peek-find-implementation)
+                      ("t" lsp-find-type-definition)
+                      ("s" lsp-signature-help)
+                      ("o" lsp-describe-thing-at-point)
+                      ("r" lsp-rename)
+
+                      ("f" lsp-format-buffer)
+                      ("m" lsp-ui-imenu)
+                      ("x" lsp-execute-code-action)
+
+                      ("M-s" lsp-describe-session)
+                      ("M-r" lsp-restart-workspace)
+                                            ("S" lsp-shutdown-workspace)))
+  )
+
+(leaf company-lsp)
+
 (leaf company
   :doc "Modular text completion framework"
   :url "http://company-mode.github.io/"
@@ -541,60 +593,9 @@
   :init
   (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode)
   (add-hook 'terraform-mode-hook 'hs-minor-mode)
+  :hook (terraform-mode-hook . lsp-deferred)
   )
 
-(leaf lsp-mode
-  :ensure t
-  :require t
-  :commands lsp
-  :hook
-  (go-mode-hook . lsp)
-  (web-mode-hook . lsp)
-  (typescript-mode-hook . lsp)
-  (python-mode . lsp)
-  :config
-
-  (leaf lsp-ui
-    :ensure t
-    :require t
-    :hook
-    (lsp-mode-hook . lsp-ui-mode)
-    :custom
-    (lsp-ui-sideline-enable . nil)
-    (lsp-prefer-flymake . nil)
-    (lsp-print-performance . t)
-    :config
-    (define-key lsp-ui-mode-map [remap xref-find-definitions] 'lsp-ui-peek-find-definitions)
-    (define-key lsp-ui-mode-map [remap xref-find-references] 'lsp-ui-peek-find-references)
-    (define-key lsp-ui-mode-map (kbd "C-c i") 'lsp-ui-imenu)
-    (define-key lsp-ui-mode-map (kbd "s-l") 'hydra-lsp/body)
-    (setq lsp-ui-doc-position 'bottom)
-    :hydra (hydra-lsp (:exit t :hint nil)
-                      "
- Buffer^^               Server^^                   Symbol
--------------------------------------------------------------------------------------
- [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
- [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
- [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
-                      ("d" lsp-find-declaration)
-                      ("D" lsp-ui-peek-find-definitions)
-                      ("R" lsp-ui-peek-find-references)
-                      ("i" lsp-ui-peek-find-implementation)
-                      ("t" lsp-find-type-definition)
-                      ("s" lsp-signature-help)
-                      ("o" lsp-describe-thing-at-point)
-                      ("r" lsp-rename)
-
-                      ("f" lsp-format-buffer)
-                      ("m" lsp-ui-imenu)
-                      ("x" lsp-execute-code-action)
-
-                      ("M-s" lsp-describe-session)
-                      ("M-r" lsp-restart-workspace)
-                                            ("S" lsp-shutdown-workspace)))
-  )
-
-(leaf company-lsp)
 (leaf golang
   :config
   (leaf go-mode
