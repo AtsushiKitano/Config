@@ -662,6 +662,19 @@
          (before-save . tide-format-before-save))
   )
 
+;; GraphQL mode
+(leaf graphql-mode
+  :ensure t
+  :mode ("\\.graphql\\'" "\\.gql\\'")
+  :custom
+  (graphql-indent-level . 2))
+
+;; Prisma Mode
+(use-package prisma-mode
+  :vc (
+       :url "https://github.com/pimeys/emacs-prisma-mode"
+            :rev
+            :newest))
 
 ;; Emacsのターミナル vtermの設定
 (leaf vterm
