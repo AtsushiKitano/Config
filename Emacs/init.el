@@ -155,7 +155,7 @@
     (read-process-output-max               . ,(* 1024 1024)))
   :setq-default
   (indent-tabs-mode . nil) ; タブはスペースで
-  (tab-width        . 4)
+  (tab-width        . 2)
   (require-final-newline . t)
   )
 
@@ -392,57 +392,6 @@
          ("M-p" . flycheck-previous-error))
   :global-minor-mode global-flycheck-mode)
 
-(leaf lsp-mode
-  :ensure t
-  :require t
-  :commands lsp
-  :hook
-  (go-mode-hook . lsp)
-  (web-mode-hook . lsp)
-  (typescript-mode-hook . lsp)
-  (python-mode . lsp)
-  :config
-  (setq lsp-disabled-clients '(tfls))
-  (leaf lsp-ui
-    :ensure t
-    :require t
-    :hook
-    (lsp-mode-hook . lsp-ui-mode)
-    :custom
-    (lsp-ui-sideline-enable . nil)
-    (lsp-prefer-flymake . nil)
-    (lsp-print-performance . t)
-    :config
-    (define-key lsp-ui-mode-map [remap xref-find-definitions] 'lsp-ui-peek-find-definitions)
-    (define-key lsp-ui-mode-map [remap xref-find-references] 'lsp-ui-peek-find-references)
-    (define-key lsp-ui-mode-map (kbd "C-c i") 'lsp-ui-imenu)
-    (define-key lsp-ui-mode-map (kbd "s-l") 'hydra-lsp/body)
-    (setq lsp-ui-doc-position 'bottom)
-    :hydra (hydra-lsp (:exit t :hint nil)
-                      "
- Buffer^^               Server^^                   Symbol
--------------------------------------------------------------------------------------
- [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
- [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
- [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
-                      ("d" lsp-find-declaration)
-                      ("D" lsp-ui-peek-find-definitions)
-                      ("R" lsp-ui-peek-find-references)
-                      ("i" lsp-ui-peek-find-implementation)
-                      ("t" lsp-find-type-definition)
-                      ("s" lsp-signature-help)
-                      ("o" lsp-describe-thing-at-point)
-                      ("r" lsp-rename)
-
-                      ("f" lsp-format-buffer)
-                      ("m" lsp-ui-imenu)
-                      ("x" lsp-execute-code-action)
-
-                      ("M-s" lsp-describe-session)
-                      ("M-r" lsp-restart-workspace)
-                                            ("S" lsp-shutdown-workspace)))
-  )
-
 (leaf company-lsp)
 
 (leaf company
@@ -585,7 +534,161 @@
         backend
       (append (if (consp backend) backend (list backend))
               '(:with company-yasnippet))))
-      )
+  )
+
+;; 括弧の強調
+(leaf rainbow-delimiters
+  :ensure t
+  :hook
+  ((prog-mode-hook . rainbow-delimiters-mode)))
+
+; スペース、タブの空白表示
+(leaf whitespace
+  :ensure t
+  :commands whitespace-mode
+  :bind ("C-c W" . whitespace-cleanup)
+  :custom ((whitespace-style . '(face
+                                trailing
+                                tabs
+                                spaces
+                                empty
+                                space-mark
+                                tab-mark))
+           (whitespace-display-mappings . '((space-mark ?\u3000 [?\u25a1])
+                                            (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+           (whitespace-space-regexp . "\\(\u3000+\\)")
+           (whitespace-global-modes . '(emacs-lisp-mode shell-script-mode sh-mode python-mode org-mode))
+           (global-whitespace-mode . t))
+
+  :config
+  (set-face-attribute 'whitespace-trailing nil
+                      :background "Black"
+                      :foreground "DeepPink"
+                      :underline t)
+  (set-face-attribute 'whitespace-tab nil
+                      :background "Black"
+                      :foreground "LightSkyBlue"
+                      :underline t)
+  (set-face-attribute 'whitespace-space nil
+                      :background "Black"
+                      :foreground "GreenYellow"
+                      :weight 'bold)
+    (set-face-attribute 'whitespace-empty nil
+                      :background "Black")
+  )
+
+;; コードの先頭・末尾への移動 C-a, C-e
+(leaf mwim
+  :ensure t
+  :bind (("C-a" . mwim-beginning-of-code-or-line)
+            ("C-e" . mwim-end-of-code-or-line)))
+
+;; Shell
+;; Emacsのターミナル vtermの設定
+(leaf vterm
+  ;; requirements: brew install cmake libvterm libtool
+  :ensure t
+  :bind (("M-t" . vterm))
+  :custom
+  (vterm-max-scrollback . 10000)
+  (vterm-buffer-name-string . "vterm: %s")
+  ;; delete "C-h", add <f1> and <f2>
+  (vterm-keymap-exceptions
+   . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y"))
+    ;; 行の表示しない
+  :config
+  )
+
+(leaf vterm-toggle
+  :ensure t
+  :custom
+  (vterm-toggle-scope . 'project)
+  :config
+  ;; Show vterm buffer in the window located at bottom
+  (add-to-list 'display-buffer-alist
+               '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                 (display-buffer-reuse-window display-buffer-in-direction)
+                 (direction . bottom)
+                 (reusable-frames . visible)
+                 (window-height . 0.4)))
+  ;; Above display config affects all vterm command, not only vterm-toggle
+  (defun my/vterm-new-buffer-in-current-window()
+    (interactive)
+    (let ((display-buffer-alist nil))
+            (vterm)))
+  )
+
+
+
+;; Program Configures
+;; reformat
+(leaf reformatter
+  :ensure t
+  :config
+  (reformatter-define web-format
+    :program "npx"
+    :args `("prettier" "--stdin-filepath" buffer-file-name "--tab-width" "2"))
+  (reformatter-define python-format
+    :program "ruff"
+    :args `("format" "--stdin-filename", buffer-file-name))
+  :hook
+  (tsx-ts-mode . web-format-on-save-mode)
+  (json-ts-mode . web-format-on-save-mode)
+  (graphql-mode . web-format-on-save-mode)
+  (prisma-mode . web-format-on-save-mode)
+  (python-ts-mode . python-format-on-save-mode)
+  )
+
+(leaf lsp-mode
+  :ensure t
+  :require t
+  :commands lsp
+  :hook
+  (go-mode-hook . lsp)
+  (web-mode-hook . lsp)
+  (typescript-mode-hook . lsp)
+  (python-mode . lsp)
+  :config
+  (setq lsp-disabled-clients '(tfls))
+  (leaf lsp-ui
+    :ensure t
+    :require t
+    :hook
+    (lsp-mode-hook . lsp-ui-mode)
+    :custom
+    (lsp-ui-sideline-enable . nil)
+    (lsp-prefer-flymake . nil)
+    (lsp-print-performance . t)
+    :config
+    (define-key lsp-ui-mode-map [remap xref-find-definitions] 'lsp-ui-peek-find-definitions)
+    (define-key lsp-ui-mode-map [remap xref-find-references] 'lsp-ui-peek-find-references)
+    (define-key lsp-ui-mode-map (kbd "C-c i") 'lsp-ui-imenu)
+    (define-key lsp-ui-mode-map (kbd "s-l") 'hydra-lsp/body)
+    (setq lsp-ui-doc-position 'bottom)
+    :hydra (hydra-lsp (:exit t :hint nil)
+                      "
+ Buffer^^               Server^^                   Symbol
+-------------------------------------------------------------------------------------
+ [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
+ [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
+ [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
+                      ("d" lsp-find-declaration)
+                      ("D" lsp-ui-peek-find-definitions)
+                      ("R" lsp-ui-peek-find-references)
+                      ("i" lsp-ui-peek-find-implementation)
+                      ("t" lsp-find-type-definition)
+                      ("s" lsp-signature-help)
+                      ("o" lsp-describe-thing-at-point)
+                      ("r" lsp-rename)
+
+                      ("f" lsp-format-buffer)
+                      ("m" lsp-ui-imenu)
+                      ("x" lsp-execute-code-action)
+
+                      ("M-s" lsp-describe-session)
+                      ("M-r" lsp-restart-workspace)
+                                            ("S" lsp-shutdown-workspace)))
+  )
 
 (leaf terraform-mode
   :ensure t
@@ -676,40 +779,6 @@
             :rev
             :newest))
 
-;; Emacsのターミナル vtermの設定
-(leaf vterm
-  ;; requirements: brew install cmake libvterm libtool
-  :ensure t
-  :bind (("M-t" . vterm))
-  :custom
-  (vterm-max-scrollback . 10000)
-  (vterm-buffer-name-string . "vterm: %s")
-  ;; delete "C-h", add <f1> and <f2>
-  (vterm-keymap-exceptions
-   . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y"))
-    ;; 行の表示しない
-  :config
-  )
-
-(leaf vterm-toggle
-  :ensure t
-  :custom
-  (vterm-toggle-scope . 'project)
-  :config
-  ;; Show vterm buffer in the window located at bottom
-  (add-to-list 'display-buffer-alist
-               '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
-                 (display-buffer-reuse-window display-buffer-in-direction)
-                 (direction . bottom)
-                 (reusable-frames . visible)
-                 (window-height . 0.4)))
-  ;; Above display config affects all vterm command, not only vterm-toggle
-  (defun my/vterm-new-buffer-in-current-window()
-    (interactive)
-    (let ((display-buffer-alist nil))
-            (vterm)))
-  )
-
 ;; py-isort
 (leaf py-isort :ensure t)
 
@@ -733,6 +802,10 @@
          )
   )
 
+;; (leaf python-mode
+;;   :ensure t
+;;   :hook (python-mode-hook . python-format-on-save-mode))
+
 (add-hook 'python-mode-hook #'flycheck-mode)
 
 (leaf ruby-mode
@@ -749,52 +822,6 @@
   :ensure t
   :mode (("Dockerfile" . dockerfile-mode)))
 
-;; 括弧の強調
-(leaf rainbow-delimiters
-  :ensure t
-  :hook
-  ((prog-mode-hook . rainbow-delimiters-mode)))
-
-; スペース、タブの空白表示
-(leaf whitespace
-  :ensure t
-  :commands whitespace-mode
-  :bind ("C-c W" . whitespace-cleanup)
-  :custom ((whitespace-style . '(face
-                                trailing
-                                tabs
-                                spaces
-                                empty
-                                space-mark
-                                tab-mark))
-           (whitespace-display-mappings . '((space-mark ?\u3000 [?\u25a1])
-                                            (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
-           (whitespace-space-regexp . "\\(\u3000+\\)")
-           (whitespace-global-modes . '(emacs-lisp-mode shell-script-mode sh-mode python-mode org-mode))
-           (global-whitespace-mode . t))
-
-  :config
-  (set-face-attribute 'whitespace-trailing nil
-                      :background "Black"
-                      :foreground "DeepPink"
-                      :underline t)
-  (set-face-attribute 'whitespace-tab nil
-                      :background "Black"
-                      :foreground "LightSkyBlue"
-                      :underline t)
-  (set-face-attribute 'whitespace-space nil
-                      :background "Black"
-                      :foreground "GreenYellow"
-                      :weight 'bold)
-    (set-face-attribute 'whitespace-empty nil
-                      :background "Black")
-  )
-
-;; コードの先頭・末尾への移動 C-a, C-e
-(leaf mwim
-  :ensure t
-  :bind (("C-a" . mwim-beginning-of-code-or-line)
-            ("C-e" . mwim-end-of-code-or-line)))
 
 (leaf json-mode
   :package t
@@ -823,6 +850,7 @@
     (markdown-command-needs-filename . t))
   (leaf markdown-preview-mode
     :ensure t))
+
 
 (provide 'init)
 
