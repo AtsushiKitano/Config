@@ -196,10 +196,30 @@
   )
 
 (leaf evil
-  :doc "Extensible Vi layer for Emacs."
   :ensure t
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
   :config
-  (evil-mode t))
+  (evil-mode 1)
+
+  (let ((map evil-insert-state-map))
+    (define-key map (kbd "C-p") 'previous-line)
+    (define-key map (kbd "C-n") 'next-line)
+    (define-key map (kbd "C-b") 'backward-char)
+    (define-key map (kbd "C-f") 'forward-char)
+    (define-key map (kbd "C-a") 'move-beginning-of-line)
+    (define-key map (kbd "C-e") 'move-end-of-line)
+    (define-key map (kbd "M-f") 'forward-word)
+    (define-key map (kbd "M-b") 'backward-word)
+    (define-key map (kbd "C-d") 'delete-char)
+    (define-key map (kbd "C-h") 'backward-delete-char)
+    (define-key map (kbd "C-k") 'kill-line)
+    (define-key map (kbd "C-w") 'backward-kill-word)
+    (define-key map (kbd "C-y") 'yank)
+    (define-key map (kbd "M-d") 'kill-word)
+    (define-key map (kbd "C-g") 'evil-normal-start)
+    ))
 
 (leaf blacken
   :ensure t
@@ -621,6 +641,16 @@
 
 
 ;; Program Configures
+;; 括弧の取り扱い
+(leaf smartparens
+  :ensure t
+  :hook (web-mode-hook . smartparens-mode)
+  :config
+  (require 'smartparens-config)
+  ;; { } の間で改行した時にインデントされた空行を挿入する設定
+  (sp-with-modes 'web-mode
+    (sp-local-pair "{" "}" :post-handlers '(("||\n[i]" "RET")))))
+
 ;; reformat
 (leaf reformatter
   :ensure t
@@ -801,10 +831,6 @@
          (elpy-mode-hook . flycheck-mode)
          )
   )
-
-;; (leaf python-mode
-;;   :ensure t
-;;   :hook (python-mode-hook . python-format-on-save-mode))
 
 (add-hook 'python-mode-hook #'flycheck-mode)
 
