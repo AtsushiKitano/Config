@@ -1,30 +1,34 @@
 (eval-and-compile
   (when (or load-file-name byte-compile-current-file)
     (setq user-emacs-directory
-	  (expand-file-name
-	   (file-name-directory (or load-file-name byte-compile-current-file))))))
+          (expand-file-name
+           (file-name-directory (or load-file-name byte-compile-current-file))))))
 
 (eval-and-compile
   (customize-set-variable
    'package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
-	                   ("melpa" . "https://melpa.org/packages/")
-	                   ("org"   . "https://orgmode.org/elpa/")))
+                       ("melpa" . "https://melpa.org/packages/")
+                       ("org"   . "https://orgmode.org/elpa/")
+                       )
+   )
   (package-initialize)
   (unless (package-installed-p 'leaf)
     (package-refresh-contents)
     (package-install 'leaf))
 
   (leaf leaf-keywords
-	:ensure t
-	:init
-	;; optional packages if you want to use :hydra, :el-get, :blackout,,,
-	(leaf hydra :ensure t)
-	(leaf el-get :ensure t)
-	(leaf blackout :ensure t)
+    :ensure t
+    :init
+;; optional packages if you want to use :hydra, :el-get, :blackout,,,
+    (leaf hydra :ensure t)
+    (leaf el-get :ensure t)
+    (leaf blackout :ensure t)
 
-	:config
-	;; initialize leaf-keywords.el
-	(leaf-keywords-init)))
+    :config
+;; initialize leaf-keywords.el
+    (leaf-keywords-init)
+  )
+)
 
 
 (leaf leaf
@@ -617,6 +621,8 @@
    . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y"))
     ;; 行の表示しない
   :config
+  :hook (vterm-mode-hook . (lambda ()
+                             (display-line-numbers-mode -1)))
   )
 
 (leaf vterm-toggle
@@ -638,23 +644,22 @@
             (vterm)))
   )
 
-
-
 ;; Program Configures
-;; 括弧の取り扱い
-(leaf smartparens
-  :ensure t
-  :hook (web-mode-hook . smartparens-mode)
+
+;; Claude Code
+(leaf claude-code-ide
+  :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
+  :bind ("C-c C-'" . claude-code-ide-menu)
   :config
-  (require 'smartparens-config)
-  ;; { } の間で改行した時にインデントされた空行を挿入する設定
-  (sp-with-modes 'web-mode
-    (sp-local-pair "{" "}" :post-handlers '(("||\n[i]" "RET")))))
+  (claude-code-ide-emacs-tools-setup))
+
 
 ;; reformat
 (leaf reformatter
   :ensure t
   :config
+  (reformatter-define go-format
+    :program "goimports")
   (reformatter-define web-format
     :program "npx"
     :args `("prettier" "--stdin-filepath" buffer-file-name "--tab-width" "2"))
@@ -662,12 +667,19 @@
     :program "ruff"
     :args `("format" "--stdin-filename", buffer-file-name))
   :hook
+  (go-ts-mode . go-format-on-save-mode)
   (tsx-ts-mode . web-format-on-save-mode)
   (json-ts-mode . web-format-on-save-mode)
   (graphql-mode . web-format-on-save-mode)
   (prisma-mode . web-format-on-save-mode)
   (python-ts-mode . python-format-on-save-mode)
   )
+
+(declare-function web-format-region "reformatter")
+(declare-function web-format-on-save-mode "reformatter")
+(declare-function python-format-region "reformatter")
+(declare-function go-format-region "reformatter")
+
 
 (leaf lsp-mode
   :ensure t
@@ -717,7 +729,8 @@
 
                       ("M-s" lsp-describe-session)
                       ("M-r" lsp-restart-workspace)
-                                            ("S" lsp-shutdown-workspace)))
+                      ("S" lsp-shutdown-workspace))
+    )
   )
 
 (leaf terraform-mode
