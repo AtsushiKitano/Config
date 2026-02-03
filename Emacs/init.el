@@ -9,6 +9,7 @@
    'package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
                        ("melpa" . "https://melpa.org/packages/")
                        ("org"   . "https://orgmode.org/elpa/")
+                       ("nongnu" . "https://elpa.nongnu.org/nongnu/")
                        )
    )
   (package-initialize)
@@ -114,7 +115,7 @@
   (defvar recentf-max-saved-items 1000)
   (defvar recentf-auto-cleanup 'never)
   (global-set-key [mouse-2] 'mouse-yank-at-click)
-  (delete-selection-mode t) ; リージョン選択時にリージョンまるごと削除
+  ;; (delete-selection-mode t) ; リージョン選択時にリージョンまるごと削除
   (global-display-line-numbers-mode t)
   (set-face-attribute 'line-number-current-line nil
                       :foreground "gold")
@@ -206,6 +207,7 @@
   (setq evil-want-keybinding nil)
   :config
   (evil-mode 1)
+  (evil-set-initial-state 'vterm-mode 'emacs)
 
   (let ((map evil-insert-state-map))
     (define-key map (kbd "C-p") 'previous-line)
@@ -224,6 +226,8 @@
     (define-key map (kbd "M-d") 'kill-word)
     (define-key map (kbd "C-g") 'evil-normal-start)
     ))
+
+(declare-function evil-set-initial-state "evil")
 
 (leaf blacken
   :ensure t
@@ -508,7 +512,7 @@
 
 ;; 日本語表示 ( SKK の設定)
 (leaf ddskk
-  ;; :straight t
+  :ensure t
   :bind
   (("C-x C-j" . skk-mode)
    ("M-j"   . skk-mode)
@@ -528,6 +532,7 @@
   (skk-henkan-strict-okuri-precedence . t)
   (default-input-method . "japanese-skk")
   (skk-show-inline . t)
+  (skk-use-look . t)
   )
 
 (leaf yasnippet
@@ -612,18 +617,49 @@
 (leaf vterm
   ;; requirements: brew install cmake libvterm libtool
   :ensure t
-  :bind (("M-t" . vterm))
+  :bind (:vterm-mode-map
+         ("M-j" . skk-mode)
+         ("M-t" . vterm))
   :custom
   (vterm-max-scrollback . 10000)
   (vterm-buffer-name-string . "vterm: %s")
   ;; delete "C-h", add <f1> and <f2>
-  (vterm-keymap-exceptions
-   . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y"))
+  ;; (vterm-keymap-exceptions
+  ;;  . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y" "RET"))
     ;; 行の表示しない
   :config
+  (add-to-list 'vterm-keymap-exceptions "M-j")
+
+
+  (setq vterm-keymap-exceptions
+        '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y" "RET" "M-j"))
+
+  (with-eval-after-load 'vterm
+
+    (add-to-list 'vterm-keymap-exceptions "M-j")
+
+    (defun my/vterm-skk-setup ()
+      (make-local-variable 'inhibit-read-only)
+      (setq inhibit-read-only t))
+    (add-hook 'vterm-mode-hook 'my/vterm-skk-setup)
+
+    (add-hook 'skk-kakutei-hook
+              (lambda ()
+                (when (eq major-mode 'vterm-mode
+                          (vterm-send-string skk-last-kakutei-text)))))
+    )
   :hook (vterm-mode-hook . (lambda ()
-                             (display-line-numbers-mode -1)))
+                             (setq-local scroll-margin 0)
+                             (display-line-numbers-mode -1)
+
+                             (setq-local skk-show-inline nil)
+                             (setq-local skk-egg-like-newline nil)
+                             (evil-emacs-state)
+                             ))
   )
+
+(declare-function evil-emacs-state "vterm")
+(declare-function vterm-send-string "vterm")
 
 (leaf vterm-toggle
   :ensure t
@@ -643,6 +679,24 @@
     (let ((display-buffer-alist nil))
             (vterm)))
   )
+
+(leaf eat
+  :ensure t
+  :bind (("C-c t" . eat))
+  :custom
+  (eat-kill-buffer-on-exit . t)
+  (eat-enable-mouse . t)
+
+  :config
+  (add-hook 'eat-mode-hook #'ins-eat-skk-settings)
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'eat-mode 'emacs))
+
+  (defun ins-eat-skk-settings ()
+    (when (fboundp 'evil-emacs-state)
+      (evil-emacs-state)))
+
+  (eat-reload-all-keymaps))
 
 ;; Program Configures
 
