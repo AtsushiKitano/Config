@@ -66,6 +66,7 @@ brew "pwgen"
 brew "lua"
 brew "pnpm"
 brew "hashicorp/tap/terraform-ls"
+brew "uv"
 
 cask "chromium"
 cask "google-cloud-sdk"
