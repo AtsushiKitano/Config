@@ -222,7 +222,7 @@
     (define-key map (kbd "C-w") 'backward-kill-word)
     (define-key map (kbd "C-y") 'yank)
     (define-key map (kbd "M-d") 'kill-word)
-    (define-key map (kbd "C-g") 'evil-normal-start)
+    (define-key map (kbd "C-g") 'evil-normal-state)
     ))
 
 (leaf blacken
@@ -252,8 +252,8 @@
             (user-login-name . "atsushi")
             (fill-column . 72)
             (create-lockfiles . nil)
-            (debug-on-error . t)
-            (init-file-debug . t)
+            (debug-on-error . nil)
+            (init-file-debug . nil)
             (frame-resize-pixelwise . t)
             (enable-recursive-minibuffers . t)
             (history-length . 1000)
