@@ -395,9 +395,18 @@
   (leaf flycheck-inline
     :ensure t
     :hook (flycheck-mode-hook . flycheck-inline-mode))
+
   (leaf flycheck-color-mode-line
     :ensure t
     :hook (flycheck-mode-hook . flycheck-color-mode-line-mode))
+
+  (unless (display-graphic-p)
+    (remove-hook 'flycheck-mode-hook #'flycheck-inline-mode)
+    (setq flycheck-inline-mode nil)
+
+    (setq flycheck-display-errors-function #'flycheck-display-error-messages)
+    (setq flycheck-display-errors-delay 0.1))
+
   (with-eval-after-load 'flycheck-python
     (flycheck-define-checker python-mypy
       "A Python syntax checker using mypy."
@@ -414,7 +423,8 @@
     (add-to-list 'flycheck-checkers 'python-mypy t)) ; リストの先頭に追加
   :bind (("M-n" . flycheck-next-error)
          ("M-p" . flycheck-previous-error))
-  :global-minor-mode global-flycheck-mode)
+  :global-minor-mode global-flycheck-mode
+  )
 
 (leaf company-lsp)
 
