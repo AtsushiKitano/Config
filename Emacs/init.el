@@ -627,9 +627,7 @@
 (leaf vterm
   ;; requirements: brew install cmake libvterm libtool
   :ensure t
-  :bind (:vterm-mode-map
-         ("M-j" . skk-mode)
-         ("M-t" . vterm))
+  :bind (("M-t" . vterm))
   :custom
   (vterm-max-scrollback . 10000)
   (vterm-buffer-name-string . "vterm: %s")
@@ -650,7 +648,7 @@
 
     (defun my/vterm-skk-setup ()
       (make-local-variable 'inhibit-read-only)
-      (setq inhibit-read-only t))
+      )
     (add-hook 'vterm-mode-hook 'my/vterm-skk-setup)
 
     (add-hook 'skk-kakutei-hook
