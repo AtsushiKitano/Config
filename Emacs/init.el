@@ -209,6 +209,12 @@
   (evil-mode 1)
   (evil-set-initial-state 'vterm-mode 'emacs)
 
+  (with-eval-after-load 'evil
+    (dolist (mode '(dired-mode
+                    magit-mode
+                    imenu-list-major-mode))
+      (evil-set-initial-state mode 'emacs)))
+
   (let ((map evil-insert-state-map))
     (define-key map (kbd "C-p") 'previous-line)
     (define-key map (kbd "C-n") 'next-line)
