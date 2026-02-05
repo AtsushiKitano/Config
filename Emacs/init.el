@@ -648,7 +648,9 @@
   :ensure t
   :bind (("M-t" . vterm)
          (:vterm-mode-map
-          ("C-h" . vterm-send-backspace)))
+          ("C-h" . vterm-send-backspace)
+          ("RET" . (lambda () (interactive) (vterm-send-string "\n")))
+          ("<return>" . (lambda () (interactive) (vterm-send-string "\n")))))
   :custom
   (vterm-max-scrollback . 10000)
   (vterm-buffer-name-string . "vterm: %s")
@@ -657,35 +659,24 @@
   (add-to-list 'vterm-keymap-exceptions "M-j")
 
 
-  (setq vterm-keymap-exceptions
-        '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y" "RET" "M-j"))
+  ;; (setq vterm-keymap-exceptions
+  ;;       '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y" "M-j"))
+  (setq vterm-keymap-exceptions nil)
 
   (with-eval-after-load 'vterm
-
     (add-to-list 'vterm-keymap-exceptions "M-j")
-
-    (defun my/vterm-skk-setup ()
-      (make-local-variable 'inhibit-read-only)
-      )
-    (add-hook 'vterm-mode-hook 'my/vterm-skk-setup)
-
-    (add-hook 'skk-kakutei-hook
-              (lambda ()
-                (when (eq major-mode 'vterm-mode
-                          (vterm-send-string skk-last-kakutei-text)))))
     )
   :hook (vterm-mode-hook . (lambda ()
                              (setq-local scroll-margin 0)
                              (display-line-numbers-mode -1)
-
-                             (setq-local skk-show-inline nil)
                              (setq-local skk-egg-like-newline nil)
+                             (smartparens-mode -1)
                              (evil-emacs-state)
+
                              ))
   )
 
 (declare-function evil-emacs-state "vterm")
-(declare-function vterm-send-string "vterm")
 
 (leaf vterm-toggle
   :ensure t
