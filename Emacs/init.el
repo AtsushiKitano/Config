@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t -*-
+
 (eval-and-compile
   (when (or load-file-name byte-compile-current-file)
     (setq user-emacs-directory
@@ -198,6 +200,14 @@
   :custom (
            (electric-pair-mode . nil)
            )
+  :config
+  (require 'smartparens-config)
+  (smartparens-global-mode t)
+
+  ;; 【追加】改行時の自動挿入を制御する（必要に応じて）
+  ;; 特定のメジャーモードで改行時の動作が干渉する場合は以下を試してください
+  (sp-with-modes '(go-mode)
+    (sp-local-pair "{" nil :post-handlers '(("||\n[i]" "RET"))))
   )
 
 (leaf evil
@@ -497,7 +507,7 @@
   :doc "window maker and command loop for `electric' modes"
   :tag "builtin"
   :added "2022-04-24"
-  :config (electric-pair-mode 1))
+  :config (electric-pair-mode 0))
 
 
 ;; Gitの設定
@@ -823,6 +833,7 @@
     (setq tab-width 4)
     :hook
     (go-mode . (lambda ()
+                 (setq-local indent-tabs-mode t)
                  (hs-minor-mode 1))))
   (leaf protobuf-mode
     :ensure t)
