@@ -225,6 +225,8 @@
     (define-key map (kbd "C-y") 'yank)
     (define-key map (kbd "M-d") 'kill-word)
     (define-key map (kbd "C-g") 'evil-normal-state)
+    (define-key map (kbd "C-v") 'scroll-up)
+    (define-key map (kbd "M-v") 'scroll-down)
     ))
 
 (declare-function evil-set-initial-state "evil")
@@ -627,13 +629,12 @@
 (leaf vterm
   ;; requirements: brew install cmake libvterm libtool
   :ensure t
-  :bind (("M-t" . vterm))
+  :bind (("M-t" . vterm)
+         (:vterm-mode-map
+          ("C-h" . vterm-send-backspace)))
   :custom
   (vterm-max-scrollback . 10000)
   (vterm-buffer-name-string . "vterm: %s")
-  ;; delete "C-h", add <f1> and <f2>
-  ;; (vterm-keymap-exceptions
-  ;;  . '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y" "RET"))
     ;; 行の表示しない
   :config
   (add-to-list 'vterm-keymap-exceptions "M-j")
