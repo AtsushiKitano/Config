@@ -340,7 +340,8 @@
   :blackout t
   :leaf-defer nil
   :custom ((ivy-initial-inputs-alist . nil)
-           (ivy-use-selectable-prompt . t))
+           (ivy-use-selectable-prompt . t)
+          (ivy-on-del-error-function . nil))
   :global-minor-mode t
   :config
   (leaf swiper
@@ -953,6 +954,9 @@
   (leaf markdown-preview-mode
     :ensure t))
 
+(with-eval-after-load 'ivy
+  ;; Ivyミニバッファ専用のキーマップで C-h をスマートな削除に設定
+  (define-key ivy-minibuffer-map (kbd "C-h") #'ivy-backward-delete-char))
 
 (provide 'init)
 
