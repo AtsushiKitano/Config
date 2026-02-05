@@ -1,5 +1,8 @@
 ;;; -*- lexical-binding: t -*-
 
+(add-to-list 'exec-path (expand-file-name "~/dev/bin"))
+(setenv "PATH" (concat (getenv "PATH") ":" (expand-file-name "~/dev/bin")))
+
 (eval-and-compile
   (when (or load-file-name byte-compile-current-file)
     (setq user-emacs-directory
@@ -469,8 +472,15 @@
           ("C-p" . company-select-previous)))
   :custom ((company-idle-delay . 0)
            (company-minimum-prefix-length . 1)
+           (company-require-match . nil)
+           (company-dabbrev-ignore-case . t)
+           (company-dabbrev-downcase . nil)
            (company-transformers . '(company-sort-by-occurrence)))
-  :global-minor-mode global-company-mode)
+  :global-minor-mode global-company-mode
+  :config
+  (with-eval-after-load 'company
+    (add-to-list 'company-backends '(company-capf :with company-yasnippet)))
+  )
 
 (leaf company-c-headers
   :doc "Company mode backend for C/C++ header files"
@@ -761,8 +771,27 @@
   (web-mode-hook . lsp)
   (typescript-mode-hook . lsp)
   (python-mode . lsp)
+  :custom ((lsp-keymap-prefix . "C-c l")
+           (lsp-completion-provider . :capf)
+           (lsp-idle-delay . 0.5)         ; 補完までの待ち時間
+           (lsp-prefer-capf . t)
+           (lsp-ui-doc-enable . t)       ; ドキュメントの表示
+           (lsp-ui-doc-position . 'at-point))
+
   :config
   (setq lsp-disabled-clients '(tfls))
+;; gopls の詳細設定
+
+  (setq lsp-register-custom-settings
+        '(
+          ("gopls" (
+                    ("completeUnimported" . t)
+                    ("usePlaceeholders" . t)
+                    ("deepCompletion" . t)
+                    ("hoverKind" . "FullDocumentation")))
+          )
+        )
+  
   (leaf lsp-ui
     :ensure t
     :require t
@@ -814,26 +843,22 @@
   )
 
 (leaf golang
+  :doc "Go language development environment"
+  :ensure go-mode
+  :bind (:go-mode-map
+         ("M-." . lsp-find-definition)
+         ("C-c C-d" . lsp-describe-thing-at-point))
+  :hook ((go-mode-hook . lsp-deferred)   ; go-mode起動時にLSPを遅延開始
+         (go-mode-hook . hs-minor-mode))  ; 折りたたみ機能を有効化
+  :custom ((tab-width . 4)
+           (indent-tabs-mode . t))       ; Goの標準はタブ
   :config
-  (leaf go-mode
-    :ensure t
-    :leaf-defer t
-    :commands (gofmt-before-save)
-    :init
-    (add-hook 'before-save-hook 'gofmt-before-save)
-    (setq tab-width 4)
-    :hook
-    (go-mode . (lambda ()
-                 (setq-local indent-tabs-mode t)
-                 (hs-minor-mode 1))))
-  (leaf protobuf-mode
-    :ensure t)
-  (leaf go-impl
-    :ensure t
-    :leaf-defer t
-    :commands go-impl)
-  )
-
+  ;; 保存時に自動で gofmt (または goimports) を実行
+  ;; go-mode-hook 内で実行するのが一般的です
+  (add-hook 'go-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook #'lsp-format-buffer t t)
+              (add-hook 'before-save-hook #'lsp-organize-imports t t))))
 ;;; web-mode
 ;; Web modeの設定
 (leaf web-mode
