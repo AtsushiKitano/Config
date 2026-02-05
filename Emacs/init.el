@@ -1,7 +1,7 @@
 ;;; -*- lexical-binding: t -*-
 
-(add-to-list 'exec-path (expand-file-name "~/dev/bin"))
-(setenv "PATH" (concat (getenv "PATH") ":" (expand-file-name "~/dev/bin")))
+(add-to-list 'exec-path (expand-file-name "~/dev/src/github/bin"))
+(setenv "PATH" (concat (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
 
 (eval-and-compile
   (when (or load-file-name byte-compile-current-file)
@@ -776,7 +776,12 @@
            (lsp-idle-delay . 0.5)         ; 補完までの待ち時間
            (lsp-prefer-capf . t)
            (lsp-ui-doc-enable . t)       ; ドキュメントの表示
-           (lsp-ui-doc-position . 'at-point))
+           (lsp-ui-doc-position . 'at-point)
+           (lsp-go-analyses . '((fieldalignment . t)
+                                (niless . t)
+                                (unusedparams . t)
+                                (unusedwrite . t)
+                                (useany . t))))
 
   :config
   (setq lsp-disabled-clients '(tfls))
@@ -842,9 +847,10 @@
   :hook (terraform-mode-hook . lsp-deferred)
   )
 
-(leaf golang
+(leaf go-mode
   :doc "Go language development environment"
-  :ensure go-mode
+  :ensure t 
+  :mode "\\.go\\'"
   :bind (:go-mode-map
          ("M-." . lsp-find-definition)
          ("C-c C-d" . lsp-describe-thing-at-point))
@@ -853,6 +859,8 @@
   :custom ((tab-width . 4)
            (indent-tabs-mode . t))       ; Goの標準はタブ
   :config
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t)
   ;; 保存時に自動で gofmt (または goimports) を実行
   ;; go-mode-hook 内で実行するのが一般的です
   (add-hook 'go-mode-hook
