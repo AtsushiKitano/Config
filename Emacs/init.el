@@ -1,4 +1,4 @@
-;;; -*- lexical-binding: t -*-
+;; -*- lexical-binding: t -*-
 
 (add-to-list 'exec-path (expand-file-name "~/dev/src/github/bin"))
 (setenv "PATH" (concat (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
@@ -198,20 +198,31 @@
          ("M-k" . sp-kill-sexp))
   :init
   (smartparens-global-mode t)
-  (setq electric-pair-strict-mode nil)
-  (require 'smartparens-config)
-  :custom (
-           (electric-pair-mode . nil)
-           )
+  :custom
+  (electric-pair-mode . nil)
   :config
   (require 'smartparens-config)
-  (smartparens-global-mode t)
 
-  ;; 【追加】改行時の自動挿入を制御する（必要に応じて）
-  ;; 特定のメジャーモードで改行時の動作が干渉する場合は以下を試してください
+  ;; --- モードごとの設定 ---
+
   (sp-with-modes '(go-mode)
-    (sp-local-pair "{" nil :post-handlers '(("||\n[i]" "RET"))))
+    ;; { 押下直後の改行(RET)で、閉じ括弧を下げてインデントする設定
+    (sp-local-pair "{" nil :post-handlers '((:add "||\n[i]")))
+    )
+
+  ;; TSX,JSXの括弧の設定
+  (sp-with-modes '(web-mode typescript-mode tsx-ts-mode)
+    ;; { 押下後にスペースや改行を入れるハンドラ
+    (sp-local-pair "{" nil :post-handlers '((:add "| ")))
+    ;; JSX/TSX 用に < > のペアを有効化
+    (sp-local-pair "<" ">"))
+  ;; ' (シングルクォート) のペアを Lisp 系モードでは無効化するなど
+  (sp-pair "'" nil :unless '(sp-point-after-word-p))
   )
+
+(declare-function sp-pair "smartparens")
+(declare-function sp-local-pair "smartparens")
+(declare-function sp-with-modes "smartparens")
 
 (leaf evil
   :ensure t
@@ -294,7 +305,7 @@
             (menu-bar-mode .  t)
             (tool-bar-mode . nil)
             (scroll-bar-mode . t)
-            (indent-tabs-mode . t)
+            (indent-tabs-mode . nil)
             (auto-save-default . t)
             (auto-save-timeout . 15)
             (auto-save-interval . 60)
@@ -725,6 +736,9 @@
 
   (eat-reload-all-keymaps))
 
+(declare-function ins-eat-skk-settings "eat")
+(declare-function eat-reload-all-keymaps "eat")
+
 ;; Program Configures
 
 ;; Claude Code
@@ -744,21 +758,16 @@
   (reformatter-define web-format
     :program "npx"
     :args `("prettier" "--stdin-filepath" buffer-file-name "--tab-width" "2"))
-  (reformatter-define python-format
-    :program "ruff"
-    :args `("format" "--stdin-filename", buffer-file-name))
   :hook
   (go-ts-mode . go-format-on-save-mode)
   (tsx-ts-mode . web-format-on-save-mode)
   (json-ts-mode . web-format-on-save-mode)
   (graphql-mode . web-format-on-save-mode)
   (prisma-mode . web-format-on-save-mode)
-  (python-ts-mode . python-format-on-save-mode)
   )
 
 (declare-function web-format-region "reformatter")
 (declare-function web-format-on-save-mode "reformatter")
-(declare-function python-format-region "reformatter")
 (declare-function go-format-region "reformatter")
 
 
@@ -777,26 +786,26 @@
            (lsp-prefer-capf . t)
            (lsp-ui-doc-enable . t)       ; ドキュメントの表示
            (lsp-ui-doc-position . 'at-point)
-           (lsp-go-analyses . '((fieldalignment . t)
-                                (niless . t)
+           (lsp-go-analyses . '(
                                 (unusedparams . t)
                                 (unusedwrite . t)
-                                (useany . t))))
+                                ))
+           (lsp-completion-show-detail . t)
+           (lsp-completion-show-kind . t)
+           (lsp-headerline-breadcrumb-enable . t))
 
   :config
+  (add-hook 'before-save-hook #'lsp-eslint-fix-all t t)
   (setq lsp-disabled-clients '(tfls))
 ;; gopls の詳細設定
 
   (setq lsp-register-custom-settings
-        '(
-          ("gopls" (
-                    ("completeUnimported" . t)
+        '(("gopls" (("completeUnimported" . t)
                     ("usePlaceeholders" . t)
                     ("deepCompletion" . t)
-                    ("hoverKind" . "FullDocumentation")))
-          )
+                    ("hoverKind" . "FullDocumentation"))))
         )
-  
+
   (leaf lsp-ui
     :ensure t
     :require t
@@ -838,6 +847,10 @@
     )
   )
 
+(declare-function lsp-eslint-fix-all "lsp")
+(declare-function lsp-organize-imports "lsp")
+
+
 (leaf terraform-mode
   :ensure t
   :mode "\\.tf\\'" "\\.hcl\\'"
@@ -859,13 +872,12 @@
   :custom ((tab-width . 4)
            (indent-tabs-mode . t))       ; Goの標準はタブ
   :config
+  ;; 保存時に自動で gofmt (または goimports) を実行
   (add-hook 'before-save-hook #'lsp-format-buffer t t)
   (add-hook 'before-save-hook #'lsp-organize-imports t t)
-  ;; 保存時に自動で gofmt (または goimports) を実行
   ;; go-mode-hook 内で実行するのが一般的です
   (add-hook 'go-mode-hook
             (lambda ()
-              (add-hook 'before-save-hook #'lsp-format-buffer t t)
               (add-hook 'before-save-hook #'lsp-organize-imports t t))))
 ;;; web-mode
 ;; Web modeの設定
@@ -888,6 +900,9 @@
   (web-mode-engines-alist . '(("php"    . "\\.phtml\\'")
                               ("blade"  . "\\.blade\\.")))
   (web-mode-enable-current-element-highlight . t)
+  (web-mode-markup-indent-offset . 2)
+  (web-mode-code-indent-offset . 2)
+  (web-mode-content-types-alist . '(("jsx" . "\\.[jt]sx?\\'")))
   :config
   (setq web-mode-markup-indent-offset 2
         web-mode-css-indent-offset 2
@@ -901,9 +916,14 @@
   (setq web-mode-auto-close-style 2)
   (setq web-mode-tag-auto-close-style 2)
   (setq indent-tabs-mode nil)
-  (setq tab-width 2)
   )
 
+;; TypeScript
+(leaf typescript-mode
+  :ensure t
+  :mode "\\.ts\\'"
+  :hook (typescript-mode-hook . lsp-deferred)
+  )
 
 (leaf tide
   :ensure t
@@ -943,8 +963,6 @@
   :custom
   (elpy-rpc-python-command . "python3")
   (flycheck-python-flake8-executable . "flake8")
-  :bind (elpy-mode-map
-         ("C-c C-r f" . elpy-format-code))
   :hook (
          (elpy-mode-hook . flycheck-mode)
          )
@@ -998,6 +1016,8 @@
 (with-eval-after-load 'ivy
   ;; Ivyミニバッファ専用のキーマップで C-h をスマートな削除に設定
   (define-key ivy-minibuffer-map (kbd "C-h") #'ivy-backward-delete-char))
+
+(declare-function ivy-backward-delete-char "ivy")
 
 (provide 'init)
 
