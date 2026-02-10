@@ -64,6 +64,7 @@ brew "lua"
 brew "pnpm"
 brew "hashicorp/tap/terraform-ls"
 brew "uv"
+brew "zellij"
 
 cask "chromium"
 cask "google-cloud-sdk"
@@ -88,5 +89,4 @@ cask "claude-code"
 
 tap "d12frosted/emacs-plus"
 tap "railwaycat/emacsmacport"
-brew "emacs-plus@31"
 cask "emacs-plus-app@master"
