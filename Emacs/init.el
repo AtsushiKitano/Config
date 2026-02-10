@@ -1,5 +1,4 @@
 ;; -*- lexical-binding: t -*-
-
 (add-to-list 'exec-path (expand-file-name "~/dev/src/github/bin"))
 (setenv "PATH" (concat (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
 
@@ -207,13 +206,12 @@
 
   (sp-with-modes '(go-mode)
     ;; { 押下直後の改行(RET)で、閉じ括弧を下げてインデントする設定
-    (sp-local-pair "{" nil :post-handlers '((:add "||\n[i]")))
-    )
+    (sp-local-pair "{" nil :post-handlers '(:add "||\n[i]")))
 
   ;; TSX,JSXの括弧の設定
   (sp-with-modes '(web-mode typescript-mode tsx-ts-mode)
     ;; { 押下後にスペースや改行を入れるハンドラ
-    (sp-local-pair "{" nil :post-handlers '((:add "| ")))
+    (sp-local-pair "{" nil :post-handlers '(:add "| "))
     ;; JSX/TSX 用に < > のペアを有効化
     (sp-local-pair "<" ">"))
   ;; ' (シングルクォート) のペアを Lisp 系モードでは無効化するなど
@@ -264,7 +262,7 @@
 (leaf blacken
   :ensure t
   :hook (python-mode . blacken-mode)
-  :custom ((blacken-line-lenght . 119)
+  :custom ((blacken-line-length . 119)
            (blacken-skip-string-normalization . t))
   :config (add-hook 'before-save-hook #'blacken-buffer nil t))
 
@@ -398,15 +396,17 @@
     :global-minor-mode t)
   )
 
-(leaf prescient
-  :doc "Better sorting and filtering"
-  :req "emacs-25.1"
-  :tag "extensions" "emacs>=25.1"
-  :url "https://github.com/raxod502/prescient.el"
-  :emacs>= 25.1
-  :ensure t
-  :custom ((prescient-aggressive-file-save . t))
-  :global-minor-mode prescient-persist-mode)
+;; (leaf prescient
+;;   :ensure t
+;;   :custom ((prescient-aggressive-file-save . t))
+;;   :global-minor-mode prescient-persist-mode
+;;   :config
+;;   ;; ↓【修正ポイント】特定のエラー（lexical-binding）を非表示にする設定を追加
+;;   (setq warning-suppress-types '((files lexical-binding)))
+
+;;   ;; 自動保存ファイルなどで警告ウィンドウがポップアップするのを防ぐ
+;;   (add-to-list 'display-buffer-alist
+;;                '("\\*Warnings\\*" . (display-buffer-no-window))))
 
 (leaf ivy-prescient
   :doc "prescient.el + Ivy"
@@ -444,26 +444,24 @@
     (setq flycheck-display-errors-function #'flycheck-display-error-messages)
     (setq flycheck-display-errors-delay 0.1))
 
-  (with-eval-after-load 'flycheck-python
-    (flycheck-define-checker python-mypy
-      "A Python syntax checker using mypy."
-      :command ("mypy" "--strict" source-original) ; ここで引数を追加
-      :error-patterns
-      ((error line-col-string
-              (info file) ":" line ":" column ":"
-              (message) "(.*\\|\\n)*"
-              ;; For "note: " lines that indicate related locations
-              (file nil) ":[0-9]+:[0-9]+:"
-              " note: " ".*"))
-      :modes python-mode
-      :priority 1) ; 他のPythonチェッカーより優先度を上げる
-    (add-to-list 'flycheck-checkers 'python-mypy t)) ; リストの先頭に追加
+  ;; (with-eval-after-load 'flycheck-python
+  ;;   (flycheck-define-checker python-mypy
+  ;;     "A Python syntax checker using mypy."
+  ;;     :command ("mypy" "--strict" source-original) ; ここで引数を追加
+  ;;     :error-patterns
+  ;;     ((error line-col-string
+  ;;             (info file) ":" line ":" column ":"
+  ;;             (message) "(.*\\|\\n)*"
+  ;;             ;; For "note: " lines that indicate related locations
+  ;;             (file nil) ":[0-9]+:[0-9]+:"
+  ;;             " note: " ".*"))
+  ;;     :modes python-mode
+  ;;     :priority 1) ; 他のPythonチェッカーより優先度を上げる
+  ;;   (add-to-list 'flycheck-checkers 'python-mypy t)) ; リストの先頭に追加
   :bind (("M-n" . flycheck-next-error)
          ("M-p" . flycheck-previous-error))
   :global-minor-mode global-flycheck-mode
   )
-
-(leaf company-lsp)
 
 (leaf company
   :doc "Modular text completion framework"
@@ -483,14 +481,17 @@
           ("C-p" . company-select-previous)))
   :custom ((company-idle-delay . 0)
            (company-minimum-prefix-length . 1)
-           (company-require-match . nil)
-           (company-dabbrev-ignore-case . t)
-           (company-dabbrev-downcase . nil)
-           (company-transformers . '(company-sort-by-occurrence)))
+           ;; (company-require-match . nil)
+           ;; (company-dabbrev-ignore-case . t)
+           ;; (company-dabbrev-downcase . nil)
+           ;; (company-transformers . '(company-sort-by-occurrence))
+           )
   :global-minor-mode global-company-mode
   :config
-  (with-eval-after-load 'company
-    (add-to-list 'company-backends '(company-capf :with company-yasnippet)))
+  (setq company-backends '((company-capf :with company-yasnippet)
+                           (company-dabbrev-all-buffers company-dabbrev)))
+  ;; (with-eval-after-load 'company
+  ;;   (add-to-list 'company-backends '(company-capf :with company-yasnippet)))
   )
 
 (leaf company-c-headers
@@ -513,8 +514,7 @@
    (imenu-list-focus-after-activation . nil)
    (imenu-list-position . 'left))
   :hook
-  (imenyes
-   u-list-major-mode-hook . (lambda ()
+  (imenu-list-major-mode-hook . (lambda ()
                                   (setq mode-line-format nil)
                                   (display-line-numbers-mode 0)))
   )
@@ -667,33 +667,32 @@
 (leaf vterm
   ;; requirements: brew install cmake libvterm libtool
   :ensure t
-  :bind (("M-t" . vterm)
-         (:vterm-mode-map
-          ("C-h" . vterm-send-backspace)
-          ("RET" . (lambda () (interactive) (vterm-send-string "\n")))
-          ("<return>" . (lambda () (interactive) (vterm-send-string "\n")))))
+  :bind (("M-t" . vterm))
   :custom
   (vterm-max-scrollback . 10000)
   (vterm-buffer-name-string . "vterm: %s")
+  (vterm-install-static-modules . t)
     ;; 行の表示しない
   :config
-  (add-to-list 'vterm-keymap-exceptions "M-j")
-
-
-  ;; (setq vterm-keymap-exceptions
-  ;;       '("<f1>" "<f2>" "C-c" "C-x" "C-u" "C-g" "C-l" "M-x" "M-o" "C-v" "M-v" "C-y" "M-y" "M-j"))
-  (setq vterm-keymap-exceptions nil)
-
   (with-eval-after-load 'vterm
     (add-to-list 'vterm-keymap-exceptions "M-j")
+    (define-key vterm-mode-map (kbd "C-m") #'vterm-send-return)
+    (define-key vterm-mode-map (kbd "RET") #'vterm-send-return)
+    (define-key vterm-mode-map (kbd "<return>") #'vterm-send-return)
+    (define-key vterm-mode-map (kbd "C-h") #'vterm-send-backspace)
     )
   :hook (vterm-mode-hook . (lambda ()
                              (setq-local scroll-margin 0)
                              (display-line-numbers-mode -1)
                              (setq-local skk-egg-like-newline nil)
+                             (setq inhibit-read-only t)
+                             (read-only-mode -1)
                              (smartparens-mode -1)
                              (evil-emacs-state)
-
+                             (local-set-key (kbd "RET") 'vterm-send-return)
+                             (local-set-key (kbd "C-m") 'vterm-send-return)
+                             (local-set-key (kbd "<return>") 'vterm-send-return)
+                             (local-set-key (kbd "C-h") 'vterm-send-backspace)
                              ))
   )
 
@@ -727,6 +726,12 @@
 
   :config
   (add-hook 'eat-mode-hook #'ins-eat-skk-settings)
+
+  (with-eval-after-load 'eat
+    (define-key eat-mode-map (kbd "C-h") (lambda ()
+                                           (interactive)
+                                           (eat-self-input 1 ?\177))))
+
   (with-eval-after-load 'evil
     (evil-set-initial-state 'eat-mode 'emacs))
 
@@ -734,7 +739,14 @@
     (when (fboundp 'evil-emacs-state)
       (evil-emacs-state)))
 
-  (eat-reload-all-keymaps))
+  :hook (eat-mode-hook . (lambda ()
+                           (setq-local inhibit-read-only t)
+                           (setq-local scroll-margin 0)
+                           (display-line-numbers-mode -1)
+                           (when (fboundp 'evil-emacs-state)
+                                          (evil-emacs-state))
+                           ))
+  )
 
 (declare-function ins-eat-skk-settings "eat")
 (declare-function eat-reload-all-keymaps "eat")
@@ -850,6 +862,20 @@
 (declare-function lsp-eslint-fix-all "lsp")
 (declare-function lsp-organize-imports "lsp")
 
+(leaf lsp-treemacs
+  :ensure t
+  :after lsp-mode
+  :commands lsp-treemacs-errors-list)
+
+;; LSP Python Configuration
+(leaf lsp-pyright
+  :ensure t
+  :after lsp-mode
+  :custom ((lsp-pyright-multi-root . nil))
+  :hook (python-mode-hook . (lambda ()
+                              (require 'lsp-pyright)
+                              (lsp-deferred))))
+
 
 (leaf terraform-mode
   :ensure t
@@ -953,22 +979,27 @@
 ;; python
 (leaf elpy
   :ensure t
-  :init
-  (elpy-enable)
+  :init (elpy-enable)
   :config
-  (remove-hook 'elpy-modules 'elpy-module-highlight-indentation)
-  (remove-hook 'elpy-modules 'elpy-module-flymake)
-  :init
-  (setq tab-width 2)
-  :custom
-  (elpy-rpc-python-command . "python3")
-  (flycheck-python-flake8-executable . "flake8")
-  :hook (
-         (elpy-mode-hook . flycheck-mode)
-         )
+  (setq elpy-modules (delete 'elpy-module-company elpy-modules))
+  (setq elpy-modules (delete 'elpy-module-eldoc elpy-modules))
+  (setq elpy-rpc-python-command "python3")
+  ;; :init
+  ;; (setq tab-width 2)
+  ;; :custom
+  ;; (elpy-rpc-python-command . "python3")
+  ;; (flycheck-python-flake8-executable . "flake8")
+  ;; :hook (
+  ;;        (elpy-mode-hook . flycheck-mode)
+  ;;        )
   )
 
 (add-hook 'python-mode-hook #'flycheck-mode)
+
+(leaf pyvenv
+  :ensure t
+  :config
+  (pyvenv-mode 1))
 
 (leaf ruby-mode
   ;; :mode "\\.rb\\"
