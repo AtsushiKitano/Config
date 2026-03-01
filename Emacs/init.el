@@ -1,4 +1,8 @@
-;; -*- lexical-binding: t -*-
+;;; package -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
+
+
 (add-to-list 'exec-path (expand-file-name "~/dev/src/github/bin"))
 (setenv "PATH" (concat (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
 
@@ -184,16 +188,12 @@
          ("C-M-p" . sp-previous-sexp)      ;; 現在のカーソルがある階層で前の括弧へ移動する
          ("C-s-f" . sp-forward-sexp)                   ;; カーソルからの次の括弧へ移動する。
          ("C-s-b" . sp-backward-sexp)                  ;; カーソルからの前の括弧へ移動する。
-              ;; カーソルがある位置のワードをその括弧で囲う
          ("C-c ("  . wrap-with-parens)
          ("C-c ["  . wrap-with-brackets)
          ("C-c {"  . wrap-with-braces)
          ("C-c '"  . wrap-with-single-quotes) ;; lisp-modeではシングルクオーはテキストではなく変数のオブジェクト化で使われるので、利用できない
          ("C-c \"" . wrap-with-double-quotes)
-         ;;          ;;("M-<" . sp-backward-unwrap-sexp)  ;; input系のM-[プレフィックスにぶつかり、予期せない挙動が出るのでショートカットを変更する。
          ("M-]" . sp-unwrap-sexp) ;; 現在のカーソルがる位置の括弧を解除する
-              ;;          ("C-<right>" . sp-forward-slurp-sexp) ;; 括弧が囲む範囲を右に拡張する
-              ;;          ("C-<left>" . sp-forward-barf-sexp) ;; 括弧が囲む範囲を左に縮小する。
          ("M-k" . sp-kill-sexp))
   :init
   (smartparens-global-mode t)
@@ -300,8 +300,10 @@
             (truncate-lines . t)
             (use-dialog-box . nil)
             (use-file-dialog . nil)
-            (menu-bar-mode .  t)
-            (tool-bar-mode . nil)
+            ;; メニューバーの非表示
+            (menu-bar-mode -1)
+            ;; ツールバーの非表示
+            (tool-bar-mode -1)
             (scroll-bar-mode . t)
             (indent-tabs-mode . nil)
             (auto-save-default . t)
@@ -309,10 +311,11 @@
             (auto-save-interval . 60)
             (make-backup-files . t)
             (backup-by-copying . t)
+            ;; スクロールバーの非表示
+            (scroll-bar-mode -1)
             )
   :config
   (defalias 'yes-or-no-p 'y-or-n-p)
-  ;; (keyboard-translate ?\C-h ?\C-?)
   )
 
 (leaf autorevert
@@ -396,18 +399,6 @@
     :global-minor-mode t)
   )
 
-;; (leaf prescient
-;;   :ensure t
-;;   :custom ((prescient-aggressive-file-save . t))
-;;   :global-minor-mode prescient-persist-mode
-;;   :config
-;;   ;; ↓【修正ポイント】特定のエラー（lexical-binding）を非表示にする設定を追加
-;;   (setq warning-suppress-types '((files lexical-binding)))
-
-;;   ;; 自動保存ファイルなどで警告ウィンドウがポップアップするのを防ぐ
-;;   (add-to-list 'display-buffer-alist
-;;                '("\\*Warnings\\*" . (display-buffer-no-window))))
-
 (leaf ivy-prescient
   :doc "prescient.el + Ivy"
   :req "emacs-25.1" "prescient-4.0" "ivy-0.11.0"
@@ -444,20 +435,6 @@
     (setq flycheck-display-errors-function #'flycheck-display-error-messages)
     (setq flycheck-display-errors-delay 0.1))
 
-  ;; (with-eval-after-load 'flycheck-python
-  ;;   (flycheck-define-checker python-mypy
-  ;;     "A Python syntax checker using mypy."
-  ;;     :command ("mypy" "--strict" source-original) ; ここで引数を追加
-  ;;     :error-patterns
-  ;;     ((error line-col-string
-  ;;             (info file) ":" line ":" column ":"
-  ;;             (message) "(.*\\|\\n)*"
-  ;;             ;; For "note: " lines that indicate related locations
-  ;;             (file nil) ":[0-9]+:[0-9]+:"
-  ;;             " note: " ".*"))
-  ;;     :modes python-mode
-  ;;     :priority 1) ; 他のPythonチェッカーより優先度を上げる
-  ;;   (add-to-list 'flycheck-checkers 'python-mypy t)) ; リストの先頭に追加
   :bind (("M-n" . flycheck-next-error)
          ("M-p" . flycheck-previous-error))
   :global-minor-mode global-flycheck-mode
@@ -481,17 +458,11 @@
           ("C-p" . company-select-previous)))
   :custom ((company-idle-delay . 0)
            (company-minimum-prefix-length . 1)
-           ;; (company-require-match . nil)
-           ;; (company-dabbrev-ignore-case . t)
-           ;; (company-dabbrev-downcase . nil)
-           ;; (company-transformers . '(company-sort-by-occurrence))
            )
   :global-minor-mode global-company-mode
   :config
   (setq company-backends '((company-capf :with company-yasnippet)
                            (company-dabbrev-all-buffers company-dabbrev)))
-  ;; (with-eval-after-load 'company
-  ;;   (add-to-list 'company-backends '(company-capf :with company-yasnippet)))
   )
 
 (leaf company-c-headers
@@ -769,13 +740,17 @@
     :program "goimports")
   (reformatter-define web-format
     :program "npx"
-    :args `("prettier" "--stdin-filepath" buffer-file-name "--tab-width" "2"))
+    :args `("prettier" "--stdin-filepath" ,buffer-file-name "--tab-width" "2"))
+  (reformatter-define python-format
+    :program "ruff"
+    :args`("format" "--stdin-filename",buffer-file-name))
   :hook
   (go-ts-mode . go-format-on-save-mode)
   (tsx-ts-mode . web-format-on-save-mode)
   (json-ts-mode . web-format-on-save-mode)
   (graphql-mode . web-format-on-save-mode)
   (prisma-mode . web-format-on-save-mode)
+  (python-ts-mode . python-format-on-save-mode)
   )
 
 (declare-function web-format-region "reformatter")
@@ -984,14 +959,6 @@
   (setq elpy-modules (delete 'elpy-module-company elpy-modules))
   (setq elpy-modules (delete 'elpy-module-eldoc elpy-modules))
   (setq elpy-rpc-python-command "python3")
-  ;; :init
-  ;; (setq tab-width 2)
-  ;; :custom
-  ;; (elpy-rpc-python-command . "python3")
-  ;; (flycheck-python-flake8-executable . "flake8")
-  ;; :hook (
-  ;;        (elpy-mode-hook . flycheck-mode)
-  ;;        )
   )
 
 (add-hook 'python-mode-hook #'flycheck-mode)
@@ -1000,10 +967,6 @@
   :ensure t
   :config
   (pyvenv-mode 1))
-
-(leaf ruby-mode
-  ;; :mode "\\.rb\\"
-  )
 
 ;; yamlの設定
 (leaf yaml-mode
