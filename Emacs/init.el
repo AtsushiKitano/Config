@@ -9,6 +9,12 @@
 (add-to-list 'exec-path (expand-file-name "~/dev/src/github/bin"))
 (setenv "PATH" (concat (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
 
+(leaf exec-path-from-shell
+  :ensure t
+  :require t
+  :config
+  (exec-path-from-shell-initialize))
+
 ;;; ========================================================
 ;;; user-emacs-directory
 ;;; ========================================================
@@ -29,7 +35,6 @@
                        ("melpa"  . "https://melpa.org/packages/")
                        ("org"    . "https://orgmode.org/elpa/")
                        ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
-  (package-initialize)
   (unless (package-installed-p 'leaf)
     (package-refresh-contents)
     (package-install 'leaf))
@@ -553,8 +558,8 @@
   :custom
   (treesit-auto-install . 'prompt)
   :config
-  (treesit-auto-add-all-remaps)
-  (global-treesit-auto-mode))
+  (when (fboundp 'global-treesit-auto-mode)
+    (global-treesit-auto-mode)))
 
 ;;; ========================================================
 ;;; Git 管理
@@ -665,6 +670,7 @@
 
 (leaf reformatter
   :ensure t
+  :require t
   :config
   (reformatter-define go-format
     :program "goimports")
@@ -675,8 +681,9 @@
     :program "ruff"
     :args `("format" "--stdin-filename" ,buffer-file-name))
   :hook
-  (go-ts-mode-hook     . go-format-on-save-mode)
-  (tsx-ts-mode-hook    . web-format-on-save-mode)
+  (go-ts-mode-hook          . go-format-on-save-mode)
+  (tsx-ts-mode-hook         . web-format-on-save-mode)
+  (typescript-ts-mode-hook  . web-format-on-save-mode)
   (json-ts-mode-hook   . web-format-on-save-mode)
   (graphql-mode-hook   . web-format-on-save-mode)
   (prisma-mode-hook    . web-format-on-save-mode)
