@@ -2,6 +2,9 @@
 ;;; Commentary:
 ;;; Code:
 
+;;; native compiler の非同期警告を抑制（ddskk/ccc 等の無害な警告対策）
+(setq native-comp-async-report-warnings-errors 'silent)
+
 ;;; ========================================================
 ;;; exec-path / PATH
 ;;; ========================================================
@@ -282,6 +285,12 @@
                     imenu-list-major-mode))
       (evil-set-initial-state mode 'emacs)))
   ;; 挿入モードでも Emacs キーバインドを使う
+  (defun my/kill-region-or-backward-kill-word ()
+    "リージョンがアクティブなら kill-region、そうでなければ backward-kill-word。"
+    (interactive)
+    (if (use-region-p)
+        (kill-region (region-beginning) (region-end))
+      (backward-kill-word 1)))
   (let ((map evil-insert-state-map))
     (define-key map (kbd "C-p") 'previous-line)
     (define-key map (kbd "C-n") 'next-line)
@@ -294,12 +303,14 @@
     (define-key map (kbd "C-d") 'delete-char)
     (define-key map (kbd "C-h") 'backward-delete-char)
     (define-key map (kbd "C-k") 'kill-line)
-    (define-key map (kbd "C-w") 'backward-kill-word)
+    (define-key map (kbd "C-w") 'my/kill-region-or-backward-kill-word)
     (define-key map (kbd "C-y") 'yank)
     (define-key map (kbd "M-d") 'kill-word)
     (define-key map (kbd "C-g") 'evil-normal-state)
     (define-key map (kbd "C-v") 'scroll-up)
-    (define-key map (kbd "M-v") 'scroll-down)))
+    (define-key map (kbd "M-v") 'scroll-down))
+  ;; visual state で C-w → kill-region
+  (define-key evil-visual-state-map (kbd "C-w") 'kill-region))
 
 (declare-function evil-set-initial-state "evil")
 
