@@ -31,4 +31,4 @@ if [ -f $HOME/.zfunc ]; then
 fi
 
 # Created by `pipx` on 2025-06-15 04:00:03
-export PATH="$PATH:/Users/kitanoatsushi/.local/bin"
+export PATH="$PATH:$HOME/.local/bin"
