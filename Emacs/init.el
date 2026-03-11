@@ -121,6 +121,7 @@
 
 (leaf general-setting
   :config
+  (tool-bar-mode -1)
   (define-key global-map (kbd "C-{") 'hs-hide-block)
   (define-key global-map (kbd "C-}") 'hs-show-block)
   (define-key global-map [?¥] [?\\])
@@ -403,7 +404,12 @@
 
 (leaf marginalia
   :ensure t
-  :global-minor-mode marginalia-mode)
+  :global-minor-mode marginalia-mode
+  :config
+  ;; marginalia を minibuffer のみに制限する
+  ;; corfu (in-buffer 補完) では lsp-mode の affixation と二重アノテーションになるため
+  (advice-add 'marginalia--completion-metadata-get :before-while
+              (lambda (&rest _) (minibufferp))))
 
 (leaf consult
   :ensure t
@@ -418,21 +424,74 @@
 (leaf corfu
   :ensure t
   :custom
-  (corfu-auto        . t)
-  (corfu-auto-delay  . 0)
-  (corfu-auto-prefix . 1)
+  (corfu-auto        . nil)
   (corfu-cycle       . t)
   :bind (:corfu-map
          ("C-n"   . corfu-next)
          ("C-p"   . corfu-previous)
          ("<tab>" . corfu-complete))
-  :global-minor-mode global-corfu-mode)
+  :global-minor-mode global-corfu-mode
+  :config
+  ;; フレームの透明度(alpha=85)を引き継がずポップアップを完全不透明にする
+  ;; (alpha-background は Emacs 29+ 向け、alpha は全バージョン向け)
+  (add-to-list 'corfu-frame-parameters '(alpha-background . 100))
+  (add-to-list 'corfu-frame-parameters '(alpha . 100)))
 
 (leaf cape
   :ensure t
   :config
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file))
+  ;; cape-file はグローバルで常に有効
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  ;; cape-dabbrev は LSP を使わないモードのみに限定
+  ;; （LSP バッファでグローバル登録すると補完境界の違いで2つのポップアップが重なる）
+  (dolist (hook '(emacs-lisp-mode-hook
+                  lisp-mode-hook
+                  text-mode-hook
+                  org-mode-hook))
+    (add-hook hook (lambda ()
+                     (add-to-list 'completion-at-point-functions #'cape-dabbrev t))))
+  ;; LSP 有効時は capf を lsp のみに限定（cape-file はファイルパス補完として残す）
+  (add-hook 'lsp-completion-mode-hook
+            (lambda ()
+              (when lsp-completion-mode
+                (setq-local completion-at-point-functions
+                            (list #'lsp-completion-at-point #'cape-file))))))
+
+;;; ========================================================
+;;; 日本語インクリメンタル検索 (migemo)
+;;; ========================================================
+
+(leaf migemo
+  :ensure t
+  :when (executable-find "cmigemo")
+  :require t
+  :custom
+  ((migemo-command          . "cmigemo")
+   (migemo-options          . '("-q" "--emacs"))
+   (migemo-user-dictionary  . nil)
+   (migemo-regex-dictionary . nil)
+   (migemo-coding-system    . 'utf-8-unix))
+  :config
+  ;; ディクショナリのパスを自動検出（Homebrew ARM/Intel / Linux）
+  (setq migemo-dictionary
+        (cl-find-if #'file-exists-p
+                    '("/opt/homebrew/share/migemo/utf-8/migemo-dict"
+                      "/usr/local/share/migemo/utf-8/migemo-dict"
+                      "/usr/share/migemo/utf-8/migemo-dict")))
+  (when migemo-dictionary
+    (migemo-init)
+    ;; consult-line をローマ字で日本語検索できるようにする
+    (with-eval-after-load 'consult
+      (defun my/consult-line-migemo ()
+        "migemo を使ってローマ字で日本語を consult-line 検索する。"
+        (interactive)
+        (let ((consult--regexp-compiler
+               (lambda (input type ignore-case)
+                 (funcall #'consult--default-regexp-compiler
+                          (migemo-get-pattern input)
+                          type ignore-case))))
+          (consult-line)))
+      (global-set-key (kbd "C-s") #'my/consult-line-migemo))))
 
 ;;; ========================================================
 ;;; スニペット (yasnippet)
@@ -494,28 +553,36 @@
   :commands lsp
   :hook
   ((go-ts-mode-hook         . lsp-deferred)
+   (go-mode-hook            . lsp-deferred)
    (typescript-ts-mode-hook . lsp-deferred)
    (tsx-ts-mode-hook        . lsp-deferred)
    (web-mode-hook           . lsp-deferred)
-   (terraform-mode-hook     . lsp-deferred))
+   (terraform-mode-hook     . lsp-deferred)
+   (python-ts-mode-hook     . lsp-deferred)
+   (python-mode-hook        . lsp-deferred))
   :custom ((lsp-keymap-prefix               . "C-c l")
            (lsp-completion-provider         . :capf)
-           (lsp-idle-delay                  . 0.5)
+           (lsp-idle-delay                  . 0.2)
            (lsp-prefer-capf                 . t)
            (lsp-ui-doc-enable               . t)
            (lsp-ui-doc-position             . 'at-point)
            (lsp-go-analyses                 . '((unusedparams . t)
                                                 (unusedwrite  . t)))
-           (lsp-completion-show-detail      . t)
-           (lsp-completion-show-kind        . t)
+           ;; affixation が kind + detail を表示するため annotation 側を無効化
+           ;; （両方有効にすると "flag (Module)"flag (Module)" のように二重表示になる）
+           (lsp-completion-show-detail      . nil)
+           (lsp-completion-show-kind        . nil)
+           (lsp-enable-snippet              . t)
            (lsp-headerline-breadcrumb-enable . t))
   :config
   (setq lsp-disabled-clients '(tfls))
-  (setq lsp-register-custom-settings
-        '(("gopls" (("completeUnimported" . t)
-                    ("usePlaceholders"    . t)
-                    ("deepCompletion"     . t)
-                    ("hoverKind"          . "FullDocumentation")))))
+  ;; gopls の補完設定（ドット記法 "gopls.<key>" が正しいフォーマット）
+  (lsp-register-custom-settings
+   '(("gopls.completeUnimported" t   t)
+     ;; usePlaceholders: net.Listen(${1:network}, ${2:address}) のようなスニペット展開を有効化
+     ("gopls.usePlaceholders"    t   t)
+     ("gopls.staticcheck"        t   t)
+     ("gopls.hoverKind"          "FullDocumentation")))
 
   (leaf lsp-ui
     :ensure t
@@ -601,7 +668,10 @@
   (with-eval-after-load 'eat
     (define-key eat-mode-map (kbd "C-h") (lambda ()
                                            (interactive)
-                                           (eat-self-input 1 ?\177))))
+                                           (eat-self-input 1 ?\177)))
+    ;; semi-char-mode でも M-j / C-x C-j で SKK を起動できるようにする
+    (define-key eat-semi-char-mode-map (kbd "M-j")     #'skk-mode)
+    (define-key eat-semi-char-mode-map (kbd "C-x C-j") #'skk-mode))
   (with-eval-after-load 'evil
     (evil-set-initial-state 'eat-mode 'emacs))
   :hook (eat-mode-hook . (lambda ()
@@ -659,6 +729,16 @@
   :hook
   ((prog-mode-hook . rainbow-delimiters-mode)))
 
+(leaf indent-bars
+  :ensure t
+  :hook
+  ((prog-mode-hook . indent-bars-mode))
+  :custom
+  (indent-bars-treesit-support        . t)
+  (indent-bars-no-descend-string      . t)
+  (indent-bars-treesit-ignore-blank-lines-types . '("module"))
+  (indent-bars-prefer-character       . nil))
+
 (leaf whitespace
   :ensure t
   :commands whitespace-mode
@@ -693,6 +773,7 @@
     :args `("format" "--stdin-filename" ,buffer-file-name))
   :hook
   (go-ts-mode-hook          . go-format-on-save-mode)
+  (go-mode-hook             . go-format-on-save-mode)
   (tsx-ts-mode-hook         . web-format-on-save-mode)
   (typescript-ts-mode-hook  . web-format-on-save-mode)
   (json-ts-mode-hook   . web-format-on-save-mode)
@@ -710,13 +791,32 @@
 
 ;;; --- Go ---
 
-(with-eval-after-load 'go-ts-mode
-  (setq-local tab-width       4)
-  (setq-local indent-tabs-mode t))
+;; go-mode をインストール（treesit-auto が go-mode → go-ts-mode へリマップする依存元）
+(leaf go-mode
+  :ensure t)
 
-(add-hook 'go-ts-mode-hook
-          (lambda ()
-            (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+;; go-ts-mode を gopls クライアントに明示登録（lsp-mode の古いバージョン対策）
+(with-eval-after-load 'lsp-go
+  (add-to-list 'lsp-language-id-configuration '(go-ts-mode . "go")))
+
+;; Go: LSP 起動後は gopls のみに補完を限定（yasnippet 等との重複を防ぐ）
+;; Python の my/python-lsp-only-capf と同じパターン（depth=90 で最後に適用）
+(defun my/go-lsp-only-capf ()
+  "Go バッファで LSP のみの補完に限定する（yasnippet 等を除外）。"
+  (setq-local completion-at-point-functions
+              (list #'lsp-completion-at-point #'cape-file)))
+
+(dolist (hook '(go-ts-mode-hook go-mode-hook))
+  (add-hook hook (lambda ()
+                   (setq-local tab-width       4)
+                   (setq-local indent-tabs-mode t)
+                   ;; 即時適用: Python の my/python-lsp-only-capf と同じパターン
+                   ;; yas-minor-mode がモードフック完了後に CAPF を再追加する前に除去
+                   (my/go-lsp-only-capf)
+                   (add-hook 'before-save-hook #'lsp-organize-imports t t)
+                   ;; LSP 起動後にも再適用（depth=90 で他のフックより後に実行）
+                   (add-hook 'lsp-completion-mode-hook #'my/go-lsp-only-capf 90 t)
+                   (add-hook 'lsp-after-open-hook       #'my/go-lsp-only-capf 90 t))))
 
 ;;; --- TypeScript / TSX ---
 ;; treesit-auto が typescript-mode → typescript-ts-mode / tsx-ts-mode へ自動マッピング
@@ -756,10 +856,29 @@
 (leaf lsp-pyright
   :ensure t
   :after lsp-mode
-  :custom ((lsp-pyright-multi-root . nil))
-  :hook (python-ts-mode-hook . (lambda ()
-                                 (require 'lsp-pyright)
-                                 (lsp-deferred))))
+  :custom ((lsp-pyright-multi-root              . nil)
+           (lsp-pyright-auto-import-completions . nil))
+  :hook ((python-ts-mode-hook . (lambda () (require 'lsp-pyright)))
+         (python-mode-hook    . (lambda () (require 'lsp-pyright)))))
+
+;; Python: LSP 補完のみに限定
+;; python-base-mode がフック実行前に python-completion-at-point を追加するため、
+;; モード起動直後に即時除去し、LSP 起動後にも再適用する
+(defun my/python-lsp-only-capf ()
+  "Python バッファで LSP のみの補完に限定する（python-completion-at-point を除外）。"
+  (setq-local completion-at-point-functions
+              (list #'lsp-completion-at-point)))
+
+(dolist (hook '(python-ts-mode-hook python-mode-hook))
+  (add-hook hook
+            (lambda ()
+              ;; python-base-mode が追加した python-completion-at-point を即時除去
+              (my/python-lsp-only-capf)
+              ;; LSP 起動後にも再適用（lsp-completion--enable の後に実行）
+              (add-hook 'lsp-completion-mode-hook
+                        #'my/python-lsp-only-capf 90 t)
+              (add-hook 'lsp-after-open-hook
+                        #'my/python-lsp-only-capf 90 t))))
 
 (leaf pyvenv
   :ensure t
@@ -833,9 +952,21 @@
     :ensure t))
 
 ;;; ========================================================
-;;; Claude Code IDE
+;;; Claude Code
 ;;; ========================================================
 
+;; Emacs から Claude Code を起動・操作する（C-c c プレフィックス）
+(leaf claude-code
+  :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
+  :hook (claude-code-start-hook . skk-mode)
+  :config
+  (claude-code-mode))
+
+;; claude-code-command-map はパッケージ読み込み後に参照する
+(with-eval-after-load 'claude-code
+  (define-key global-map (kbd "C-c c") claude-code-command-map))
+
+;; Claude Code IDE: Claude Code から Emacs を MCP ツールとして使う
 (leaf claude-code-ide
   :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
   :bind ("C-c C-'" . claude-code-ide-menu)
