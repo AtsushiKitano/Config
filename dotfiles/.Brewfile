@@ -87,6 +87,7 @@ cask "obsidian"
 cask "dbeaver-community"
 cask "hammerspoon"
 cask "claude-code"
+cask "claude"
 
 tap "d12frosted/emacs-plus"
 tap "railwaycat/emacsmacport"
