@@ -430,7 +430,7 @@
          ("C-n"   . corfu-next)
          ("C-p"   . corfu-previous)
          ("<tab>" . corfu-complete))
-  :global-minor-mode global-corfu-mode
+  ;; :global-minor-mode global-corfu-mode
   :config
   ;; フレームの透明度(alpha=85)を引き継がずポップアップを完全不透明にする
   ;; (alpha-background は Emacs 29+ 向け、alpha は全バージョン向け)
@@ -898,7 +898,13 @@
   :mode "\\.tf\\'" "\\.hcl\\'"
   :init
   (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode)
-  (add-hook 'terraform-mode-hook 'hs-minor-mode))
+  (add-hook 'terraform-mode-hook 'hs-minor-mode)
+  (add-hook 'terraform-mode-hook
+            (lambda ()
+              (corfu-mode -1)
+              (setq-local lsp-completion-enable nil)
+              (setq-local completion-at-point-functions nil))
+            90))
 
 ;;; --- GraphQL ---
 
