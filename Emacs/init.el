@@ -16,7 +16,9 @@
   :ensure t
   :require t
   :config
-  (exec-path-from-shell-initialize))
+  ;; GUI 起動時のみ shell から PATH を同期（ターミナルでは既存 PATH を使用）
+  (when (display-graphic-p)
+    (exec-path-from-shell-initialize)))
 
 ;;; ========================================================
 ;;; user-emacs-directory
@@ -143,6 +145,23 @@
   (defvar show-paren-style 'mixed)
   ;; カーソル点滅なし
   (blink-cursor-mode 0)
+  ;; ターミナルモード最適化
+  (unless (display-graphic-p)
+    (xterm-mouse-mode 1)
+    (set-terminal-coding-system 'utf-8)
+    ;; kitty/xterm の Shift+Arrow・Ctrl+Arrow エスケープシーケンスを登録
+    (define-key input-decode-map "\e[1;2A" [S-up])
+    (define-key input-decode-map "\e[1;2B" [S-down])
+    (define-key input-decode-map "\e[1;2C" [S-right])
+    (define-key input-decode-map "\e[1;2D" [S-left])
+    (define-key input-decode-map "\e[1;5A" [C-up])
+    (define-key input-decode-map "\e[1;5B" [C-down])
+    (define-key input-decode-map "\e[1;5C" [C-right])
+    (define-key input-decode-map "\e[1;5D" [C-left])
+    (define-key input-decode-map "\e[1;6A" [S-C-up])
+    (define-key input-decode-map "\e[1;6B" [S-C-down])
+    (define-key input-decode-map "\e[1;6C" [S-C-right])
+    (define-key input-decode-map "\e[1;6D" [S-C-left]))
   ;; 単語での折り返し
   (leaf visual-line-mode
     :require simple
@@ -285,6 +304,11 @@
                     magit-mode
                     imenu-list-major-mode))
       (evil-set-initial-state mode 'emacs)))
+  ;; C-t は tmux prefix (C-t) に捕捉されるため Emacs 側で unbind
+  ;; evil-jump-backward は C-o で代替可能
+  (define-key evil-normal-state-map (kbd "C-t") nil)
+  (define-key evil-insert-state-map (kbd "C-t") nil)
+  (define-key evil-visual-state-map (kbd "C-t") nil)
   ;; 挿入モードでも Emacs キーバインドを使う
   (defun my/kill-region-or-backward-kill-word ()
     "リージョンがアクティブなら kill-region、そうでなければ backward-kill-word。"
@@ -309,7 +333,15 @@
     (define-key map (kbd "M-d") 'kill-word)
     (define-key map (kbd "C-g") 'evil-normal-state)
     (define-key map (kbd "C-v") 'scroll-up)
-    (define-key map (kbd "M-v") 'scroll-down))
+    (define-key map (kbd "M-v") 'scroll-down)
+    ;; Insert モードで Shift+Arrow によるリージョン選択を有効化
+    (define-key map [S-up]    (lambda () (interactive) (setq this-command-keys-shift-translated t) (call-interactively #'previous-line)))
+    (define-key map [S-down]  (lambda () (interactive) (setq this-command-keys-shift-translated t) (call-interactively #'next-line)))
+    (define-key map [S-left]  (lambda () (interactive) (setq this-command-keys-shift-translated t) (call-interactively #'backward-char)))
+    (define-key map [S-right] (lambda () (interactive) (setq this-command-keys-shift-translated t) (call-interactively #'forward-char)))
+    ;; C-@ / C-Space でマークをセットしてリージョン選択を開始
+    (define-key map (kbd "C-@")   #'set-mark-command)
+    (define-key map (kbd "C-SPC") #'set-mark-command))
   ;; visual state で C-w → kill-region
   (define-key evil-visual-state-map (kbd "C-w") 'kill-region))
 
@@ -593,6 +625,10 @@
     (lsp-prefer-flymake     . nil)
     (lsp-print-performance  . t)
     :config
+    ;; ターミナルでは doc popup を無効化（描画コスト削減）
+    (unless (display-graphic-p)
+      (setq lsp-ui-doc-enable nil)
+      (setq lsp-ui-peek-enable nil))
     (define-key lsp-ui-mode-map [remap xref-find-definitions] 'lsp-ui-peek-find-definitions)
     (define-key lsp-ui-mode-map [remap xref-find-references]  'lsp-ui-peek-find-references)
     (define-key lsp-ui-mode-map (kbd "C-c i") 'lsp-ui-imenu)
@@ -732,7 +768,8 @@
 (leaf indent-bars
   :ensure t
   :hook
-  ((prog-mode-hook . indent-bars-mode))
+  ;; ターミナルでは overlay コストが高いため GUI のみ有効
+  ((prog-mode-hook . (lambda () (when (display-graphic-p) (indent-bars-mode)))))
   :custom
   (indent-bars-treesit-support        . t)
   (indent-bars-no-descend-string      . t)
