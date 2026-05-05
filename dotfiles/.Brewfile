@@ -66,6 +66,8 @@ brew "hashicorp/tap/terraform-ls"
 brew "uv"
 brew "zellij"
 brew "cmigemo"
+brew "mise"
+brew "devcontainer"
 
 cask "chromium"
 cask "google-cloud-sdk"

@@ -1,6 +1,5 @@
 path=(\
 	$HOME/local/bin \
-	$HOME/.asdf/shims \
 	/usr/local/bin \
 	/usr/local/sbin \
 	/usr/local/packages/google-cloud-sdk/bin \
@@ -44,3 +43,4 @@ export ZSH_DISABLE_COMPFIX=true
 
 
 bindkey '^J' undefined-key
+eval "$(mise activate zsh)"

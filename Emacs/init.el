@@ -109,8 +109,6 @@
             (truncate-lines                  . t)
             (use-dialog-box                  . nil)
             (use-file-dialog                 . nil)
-            (menu-bar-mode                   . -1)
-            (tool-bar-mode                   . -1)
             (scroll-bar-mode                 . -1)
             (indent-tabs-mode                . nil)
             (auto-save-default               . t)
@@ -579,6 +577,9 @@
 ;;; LSP (lsp-mode)
 ;;; ========================================================
 
+;; lsp-mode 読み込み前に設定（高速 JSON パース）
+(setenv "LSP_USE_PLISTS" "true")
+
 (leaf lsp-mode
   :ensure t
   :require t
@@ -1015,6 +1016,43 @@
   :bind ("C-c C-'" . claude-code-ide-menu)
   :config
   (claude-code-ide-emacs-tools-setup))
+
+;;; ========================================================
+;;; Dev Container
+;;; ========================================================
+
+(leaf devcontainer
+  :ensure t
+  :bind (("C-c d u" . devcontainer-up)
+         ("C-c d f" . devcontainer-tramp-dired)
+         ("C-c d o" . devcontainer-term)
+         ("C-c d e" . devcontainer-execute-command)
+         ("C-c d s" . devcontainer-kill-container)))
+
+;; devcontainer.el は tramp-docker-program を --docker-path に渡す。
+;; デフォルト値 "docker" だと Node.js プロセスが見つけられないためフルパスを指定。
+(with-eval-after-load 'tramp-container
+  (setq tramp-docker-program "/usr/local/bin/docker"))
+
+;; Docker / Dev Container へのファイルアクセス（TRAMP 経由）
+;; /docker:コンテナ名:/パス で開くと直接編集可能
+(with-eval-after-load 'tramp
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+  ;; Docker コンテナへの接続タイムアウト延長
+  (setq tramp-connection-timeout 30)
+  ;; 自動保存をローカルに退避（TRAMP 経由の書き込みコスト削減）
+  (setq tramp-auto-save-directory (locate-user-emacs-file "backup/tramp-auto-save/")))
+
+;; TRAMP 経由（devcontainer）のバッファのみファイル監視を無効化
+;; ローカルの Go / Python 等の LSP には影響しない
+(add-hook 'find-file-hook
+          (lambda ()
+            (when (file-remote-p default-directory)
+              (setq-local lsp-enable-file-watchers nil))))
+
+;; コンテナ内 LSP の応答タイムアウトをデフォルト（10s）から延長
+(with-eval-after-load 'lsp-mode
+  (setq lsp-response-timeout 30))
 
 ;;; ========================================================
 
