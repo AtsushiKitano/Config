@@ -10,7 +10,8 @@
 ;;; ========================================================
 
 (add-to-list 'exec-path (expand-file-name "~/dev/src/github/bin"))
-(setenv "PATH" (concat (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
+(add-to-list 'exec-path "/usr/local/bin")
+(setenv "PATH" (concat "/usr/local/bin:" (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
 
 (leaf exec-path-from-shell
   :ensure t
@@ -454,18 +455,16 @@
 (leaf corfu
   :ensure t
   :custom
-  (corfu-auto        . nil)
+  (corfu-auto        . t)
+  (corfu-auto-delay  . 0.2)
+  (corfu-auto-prefix . 2)
   (corfu-cycle       . t)
   :bind (:corfu-map
          ("C-n"   . corfu-next)
          ("C-p"   . corfu-previous)
          ("<tab>" . corfu-complete))
-  ;; :global-minor-mode global-corfu-mode
-  :config
-  ;; フレームの透明度(alpha=85)を引き継がずポップアップを完全不透明にする
-  ;; (alpha-background は Emacs 29+ 向け、alpha は全バージョン向け)
-  (add-to-list 'corfu-frame-parameters '(alpha-background . 100))
-  (add-to-list 'corfu-frame-parameters '(alpha . 100)))
+  :global-minor-mode global-corfu-mode
+  )
 
 (leaf cape
   :ensure t
@@ -577,9 +576,6 @@
 ;;; LSP (lsp-mode)
 ;;; ========================================================
 
-;; lsp-mode 読み込み前に設定（高速 JSON パース）
-(setenv "LSP_USE_PLISTS" "true")
-
 (leaf lsp-mode
   :ensure t
   :require t
@@ -588,13 +584,14 @@
   ((go-ts-mode-hook         . lsp-deferred)
    (go-mode-hook            . lsp-deferred)
    (typescript-ts-mode-hook . lsp-deferred)
+   (typescript-mode-hook    . lsp-deferred)
    (tsx-ts-mode-hook        . lsp-deferred)
    (web-mode-hook           . lsp-deferred)
    (terraform-mode-hook     . lsp-deferred)
    (python-ts-mode-hook     . lsp-deferred)
    (python-mode-hook        . lsp-deferred))
   :custom ((lsp-keymap-prefix               . "C-c l")
-           (lsp-completion-provider         . :capf)
+           (lsp-completion-provider         . :none)
            (lsp-idle-delay                  . 0.2)
            (lsp-prefer-capf                 . t)
            (lsp-ui-doc-enable               . t)
@@ -841,6 +838,7 @@
 ;; Python の my/python-lsp-only-capf と同じパターン（depth=90 で最後に適用）
 (defun my/go-lsp-only-capf ()
   "Go バッファで LSP のみの補完に限定する（yasnippet 等を除外）。"
+  (when (fboundp 'company-mode) (company-mode -1))
   (setq-local completion-at-point-functions
               (list #'lsp-completion-at-point #'cape-file)))
 
@@ -858,6 +856,18 @@
 
 ;;; --- TypeScript / TSX ---
 ;; treesit-auto が typescript-mode → typescript-ts-mode / tsx-ts-mode へ自動マッピング
+
+(defun my/typescript-lsp-only-capf ()
+  "TypeScript バッファで LSP のみの補完に限定し company-mode を無効化する。"
+  (when (fboundp 'company-mode) (company-mode -1))
+  (setq-local completion-at-point-functions
+              (list #'lsp-completion-at-point #'cape-file)))
+
+(dolist (hook '(typescript-ts-mode-hook typescript-mode-hook tsx-ts-mode-hook))
+  (add-hook hook (lambda ()
+                   (my/typescript-lsp-only-capf)
+                   (add-hook 'lsp-completion-mode-hook #'my/typescript-lsp-only-capf 90 t)
+                   (add-hook 'lsp-after-open-hook       #'my/typescript-lsp-only-capf 90 t))))
 
 ;;; --- Web ---
 
@@ -904,6 +914,7 @@
 ;; モード起動直後に即時除去し、LSP 起動後にも再適用する
 (defun my/python-lsp-only-capf ()
   "Python バッファで LSP のみの補完に限定する（python-completion-at-point を除外）。"
+  (when (fboundp 'company-mode) (company-mode -1))
   (setq-local completion-at-point-functions
               (list #'lsp-completion-at-point)))
 
@@ -939,9 +950,11 @@
   (add-hook 'terraform-mode-hook 'hs-minor-mode)
   (add-hook 'terraform-mode-hook
             (lambda ()
-              (corfu-mode -1)
               (setq-local lsp-completion-enable nil)
-              (setq-local completion-at-point-functions nil))
+              (when (fboundp 'company-mode) (company-mode -1))
+              ;; company-terraform を cape 経由で capf に変換して corfu で表示
+              (setq-local completion-at-point-functions
+                          (list (cape-company-to-capf #'company-terraform))))
             90))
 
 ;;; --- GraphQL ---
@@ -1023,6 +1036,8 @@
 
 (leaf devcontainer
   :ensure t
+  :custom
+  (devcontainer-term-function . #'eat)
   :bind (("C-c d u" . devcontainer-up)
          ("C-c d f" . devcontainer-tramp-dired)
          ("C-c d o" . devcontainer-term)
