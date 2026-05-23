@@ -380,9 +380,9 @@
   ;; Go: { 後の改行でインデント
   (sp-with-modes '(go-mode go-ts-mode)
     (sp-local-pair "{" nil :post-handlers '(:add "||\n[i]")))
-  ;; TSX/JSX: { 後スペース挿入、< > ペア有効
+  ;; TSX/JSX: { 後に改行+インデント展開、< > ペア有効
   (sp-with-modes '(web-mode typescript-mode tsx-ts-mode typescript-ts-mode)
-    (sp-local-pair "{" nil :post-handlers '(:add "| "))
+    (sp-local-pair "{" nil :post-handlers '("||\n[i]"))
     (sp-local-pair "<" ">"))
   (sp-pair "'" nil :unless '(sp-point-after-word-p)))
 
@@ -856,6 +856,12 @@
 
 ;;; --- TypeScript / TSX ---
 ;; treesit-auto が typescript-mode → typescript-ts-mode / tsx-ts-mode へ自動マッピング
+
+(dolist (hook '(typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook))
+  (add-hook hook (lambda ()
+                   (setq-local typescript-indent-level 2)
+                   (setq-local tab-width 2)
+                   (setq-local indent-tabs-mode nil))))
 
 (defun my/typescript-lsp-only-capf ()
   "TypeScript バッファで LSP のみの補完に限定し company-mode を無効化する。"
