@@ -11,14 +11,16 @@
 
 (add-to-list 'exec-path (expand-file-name "~/dev/src/github/bin"))
 (add-to-list 'exec-path "/usr/local/bin")
-(setenv "PATH" (concat "/usr/local/bin:" (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
+;; mise shims（terraform 等のバージョン管理ツール）
+(add-to-list 'exec-path (expand-file-name "~/.local/share/mise/shims"))
+(setenv "PATH" (concat (expand-file-name "~/.local/share/mise/shims") ":/usr/local/bin:" (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
 
 (leaf exec-path-from-shell
   :ensure t
   :require t
   :config
-  ;; GUI 起動時のみ shell から PATH を同期（ターミナルでは既存 PATH を使用）
-  (when (display-graphic-p)
+  ;; GUI 起動時またはデーモン起動時に shell から PATH を同期
+  (when (or (display-graphic-p) (daemonp))
     (exec-path-from-shell-initialize)))
 
 ;;; ========================================================
@@ -184,7 +186,8 @@
 (leaf autorevert
   :doc "revert buffers when files on disk change"
   :tag "builtin"
-  :custom ((auto-revert-interval . 1))
+  :custom ((auto-revert-interval . 1)
+           (auto-revert-verbose  . nil))
   :global-minor-mode global-auto-revert-mode)
 
 (leaf delsel
@@ -950,11 +953,9 @@
   (add-hook 'terraform-mode-hook 'hs-minor-mode)
   (add-hook 'terraform-mode-hook
             (lambda ()
-              (setq-local lsp-completion-enable nil)
               (when (fboundp 'company-mode) (company-mode -1))
-              ;; company-terraform を cape 経由で capf に変換して corfu で表示
               (setq-local completion-at-point-functions
-                          (list (cape-company-to-capf #'company-terraform))))
+                          (list #'lsp-completion-at-point #'cape-file)))
             90))
 
 ;;; --- GraphQL ---
