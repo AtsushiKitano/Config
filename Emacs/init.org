@@ -1,0 +1,966 @@
+#+title: Emacs Configuration
+#+date: 2026-02-15
+
+* early-init.el
+
+[early-init.el](https://ayatakesi.github.io/emacs/28.1/html/Early-Init-File.html) は、
+
+** header
+
+#+begin_src emacs-lisp :tangle early-init.el
+  ;;; early-init.el -*- coding: utf-8 ; lexical-binding: t -*-
+#+end_src
+
+** init処理中
+
+[debug-on-error](https://ayatakesi.github.io/emacs/24.5/elisp_html/Error-Debugging.html) により、エラー発生を気づけるようにする。
+
+#+begin_src emacs-lisp :tangle early-init.el
+  (setq debug-on-error t)
+#+end_src
+
+** init.orgのみの編集
+
+#+begin_src emacs-lisp :tangle early-init.el
+  (let ((x-init-org (concat user-emacs-directory "init.org"))
+  		(x-init-el (concat user-emacs-directory "init.el")))
+  (when (file-newer-than-file-p x-init-org x-init-el)
+  	(message "WARN: init.el is old.\n")))
+#+end_src
+
+
+** 見た目の設定
+
+#+begin_src emacs-lisp :tangle early-init.el
+  ;; ツールバー非表示
+  (tool-bar-mode 0)
+
+  ;; スクロールバーの非表示
+  (set-scroll-bar-mode nil)
+
+  ;;  行番号の表示
+  (global-display-line-numbers-mode t)
+  (custom-set-variables '(display-line-numbers-width-start t))
+
+  ;; タブの表示
+  (tab-bar-mode t)
+
+  ;; native-comp ワーニングの抑制
+  (custom-set-variables '(warning-suppress-types '((comp))))
+#+end_src
+
+** フレーム
+
+#+begin_src emacs-lisp :tangle early-init.el
+  (setq default-frame-alist
+  		(append '((width . 140) ;フレーム幅
+  				  (height . 40) ; フレーム高
+  				  (left . 170) ; 配置左
+  				  (top . 30) ; 配置上
+  				  (line-spacing . 0) ; 文字間隔
+  				  (left-fringe . 12) ; 左フリンジ幅
+  				  (right-fringe . 12) ; 右フリンジ幅
+  				  (menu-bar-lines . 1) ; メニューバー
+  				  (cursor-type . box) ; カーソル種別
+  				  (alpha . 90) ; 透明度
+  			  )
+  			default-frame-alist))
+  (setq initial-frame-alist default-frame-alist)
+#+end_src
+
+
+** footer
+
+#+begin_src emacs-lisp :tangle early-init.el
+  ;;; early-init.el ends here
+#+end_src
+
+* init.el
+
+** header
+
+#+begin_src emacs-lisp :tangle yes
+;;; init.el -*-config: utf-8 ; lexical-binding: t -*-
+#+end_src
+
+** パッケージマネージャ
+
+leaf, leaf-keywords, leaf-convert を使ってパッケージを管理する。gcmh でメモリ管理も行う。
+
+#+begin_src emacs-lisp :tangle yes
+(eval-and-compile
+  (customize-set-variable
+   'package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+      		("melpa" . "https://melpa.org/packages/")
+      		("org" . "https://orgmode.org/elpa/")
+      		("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+  (package-initialize)
+  (use-package leaf :ensure t)
+
+(leaf leaf-keywords
+  :ensure t
+  :init
+  (leaf blackout :ensure t)
+  :config
+  ;; optional パッケージ
+  (leaf hydra :ensure t)
+  (leaf el-get :ensure t)
+  (leaf blackout :ensure t)
+
+  ;; leaf-keywordsの初期化
+  (leaf-keywords-init)))
+
+(leaf leaf-convert
+  :doc "Convert many format to leaf format"
+  :ensure t)
+#+end_src
+
+** メモリ管理
+
+#+begin_src emacs-lisp :tangle yes
+(leaf gcmh
+  :ensure t
+  :global-minor-mode t
+  :custom
+  (gcmh-verbose . t))
+#+end_src
+
+** 全体設定
+
+一般的な設定をまとめる。auto-save の保存先も設定する。
+
+- [Lockfile](https://ayatakesi.github.io/emacs/26.2/html/Interlocking.html)による多数のユーザーによる書き込みを防ぐことはしない
+- [](https://ayatakesi.github.io/emacs/24.5/elisp_html/Minibuffer-History.html)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf general-settings
+  :config
+  (prefer-coding-system 'utf-8-unix)
+  (global-set-key [mouse-2] 'mouse-yank-at-click)
+  (global-unset-key "\C-z")
+  (delete-selection-mode t)
+  (electric-pair-mode t)
+  (define-key global-map (kbd "C-{") 'hs-hide-block)
+  (define-key global-map (kbd "C-}") 'hs-show-block)
+  (define-key global-map (kbd "C-d") 'delete-forward-char)
+  (define-key global-map (kbd "C-f") 'forward-char)
+  (define-key global-map (kbd "C-k") 'kill-line)
+  (define-key global-map (kbd "C-e") 'move-end-of-line)
+  (define-key global-map [?¥] [?\\])
+  (prefer-coding-system 'utf-8-unix)
+
+  :setq
+  (read-answer-short . t)
+  (create-lockfiles . nil)
+  (history-length . 500)
+  (history-delete-duplicates . t)
+  (line-move-visual . nil)
+  (mouse-drag-copy-region . t)
+  (backup-inhibited . t)
+  (require-final-newline . t)
+  (auto-save-file-name-transforms . `((".*" ,(expand-file-name "auto-save/" user-emacs-directory) t))))
+#+end_src
+
+** 外観
+
+*** フォント
+
+フレーム生成後にフォントを設定する。グラフィック環境のみで適用する。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf :font
+  :config
+  (leaf nerd-icons
+	:ensure t)
+  (defun my/setup-fonts (&optional frame)
+	(with-selected-frame (or frame (selected-frame))
+	  (when (display-graphic-p)
+		(let* ((family "Fira Code")
+			   (fontspec (font-spec :family family :weight 'normal)))
+		  (set-face-attribute 'default nil :family family :height 180)
+		  (set-fontset-font nil 'ascii fontspec nil 'append)
+		  (set-fontset-font nil 'japanese-jisx0208 fontspec nil 'append)))))
+  (add-hook 'after-make-frame-functions #'my/setup-fonts)
+  (when (display-graphic-p)
+	(my/setup-fonts)))
+#+end_src
+
+*** Icon
+
+#+begin_src emacs-lisp :tangle yes
+(leaf all-the-icons
+  :ensure t
+  :init (leaf memoize :ensure t)
+  :require t
+)
+#+end_src
+
+*** テーマ
+
+テーマの見た目に `doom-themes` を使う。このとき、テーマに `doom-vibrant` を使う。
+また、ベルが鳴ったとき、モードラインを点滅させる。`doom-themes-org-config`で、org-modeのネイティブなフォント問題の修正をする。
+
+- [doom-themes](https://github.com/doomemacs/themes)
+- [emacs-neotree](https://github.com/jaypei/emacs-neotree?tab=readme-ov-file)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf doom-themes
+  :ensure t
+  :defun (doom-themes-visual-bell-config)
+  :config
+  (load-theme 'doom-vibrant t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-neotree-config)
+  (doom-themes-org-config))
+#+end_src
+
+*** モードライン
+
+モードラインは、現在のバッファで起っている内容を表示する。Doom Modelineにより、表示させるようにする。
+
+- [GNU Mode Line](https://www.gnu.org/software/emacs/manual/html_node/emacs/Mode-Line.html)
+- [doom-modeline](https://github.com/seagle0128/doom-modeline)
+- [モードラインについて考える](https://zenn.dev/lambdagonbei/articles/0bf693abee6e71)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf doom-modeline
+  :ensure t
+  :global-minor-mode t
+  :custom
+  (doom-modeline-bar-width . 4)
+  (doom-modeline-hub . t))
+#+end_src
+
+*** ポップアップ
+
+ポップアップされるウィンドウを `shackle-mode` を使い調整する。
+
+- [shackle](https://depp.brause.cc/shackle/)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf shackle
+  :ensure t
+  :global-minor-mode t
+  :custom
+  (shackle-rules . '(("*Backtrace*" :popup t)
+					 ("*Leaf Expand*" :popup t)
+					 ("Shell Command Output*" :popup t))))
+#+end_src
+
+*** ハイライト
+
+`beacon` によって、カーソル位置をハイライトする。
+`volatile-highlights` によって、ヤンクした内容をハイライトする。
+
+- [beacon](https://github.com/Malabarba/beacon)
+- [volatile-highlights](https://github.com/k-talo/volatile-highlights.el)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf beacon
+  :ensure t
+  :global-minor-mode t)
+
+(leaf volatile-highlights
+  :ensure t
+  :global-minor-mode t)
+#+end_src
+
+*** 検索・置換
+
+`anzu` を使って、モードラインに検索中のバッファ内の個数と現在の位置を(`n/m`)で表わす。
+
+- [anzu: 検索情報をモードラインに表示](https://emacs-jp.github.io/packages/anzu)
+- [anzu](https://github.com/emacsorphanage/anzu)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf anzu
+  :ensure t
+  :global-minor-mode global-anzu-mode
+  :bind
+  (("M-%" . anzu-query-replace)))
+#+end_src
+
+*** ローマ字での日本語検索
+
+migemoを使い、ローマ字で漢字など検索できるようにする。
+
+- [migemo](https://github.com/emacs-jp/migemo)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf migemo
+  :ensure t
+  :require t
+  :defun
+  (migemo-init)
+  :custom
+  (migemo-command . "cmigemo")
+  (migemo-options . '("-q" "--emacs"))
+  (migemo-dictionary . "/usr/share/cmigemo/utf-8/migemo-dict")
+  (migemo-user-dictionary . nil)
+  (migemo-regex-dictionary . nil)
+  (migemo-coding-system . 'utf-8-unix)
+  :config
+  (migemo-init))
+#+end_src
+
+** Evil モード
+
+Vim キーバインドを evil で使う。挿入モードでも Emacs キーバインドを維持する。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf evil
+  :ensure t
+  :custom
+  (evil-want-integration . t)
+  (evil-want-keybinding . nil)
+  (evil-want-C-u-scroll . t)
+  :config
+  (evil-mode 1)
+  ;; insert モードで Emacs キーバインドを使えるようにする
+  (with-eval-after-load 'evil
+    (define-key evil-insert-state-map (kbd "C-p") #'previous-line)
+    (define-key evil-insert-state-map (kbd "C-n") #'next-line)
+    (define-key evil-insert-state-map (kbd "C-b") #'backward-char)
+    (define-key evil-insert-state-map (kbd "C-f") #'forward-char)
+    (define-key evil-insert-state-map (kbd "C-a") #'move-beginning-of-line)
+    (define-key evil-insert-state-map (kbd "C-e") #'move-end-of-line)
+    (define-key evil-insert-state-map (kbd "M-f") #'forward-word)
+    (define-key evil-insert-state-map (kbd "M-b") #'backward-word)
+    (define-key evil-insert-state-map (kbd "C-d") #'delete-forward-char)
+    (define-key evil-insert-state-map (kbd "C-h") #'backward-delete-char)
+    (define-key evil-insert-state-map (kbd "C-k") #'kill-line)
+    (define-key evil-insert-state-map (kbd "C-w") #'backward-kill-word)
+    (define-key evil-insert-state-map (kbd "C-y") #'yank)
+    (define-key evil-insert-state-map (kbd "M-d") #'kill-word)
+    (define-key evil-insert-state-map (kbd "C-g") #'evil-normal-state)
+    ;; emacs state で起動するモード
+    (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode))
+      (evil-set-initial-state mode 'emacs))))
+#+end_src
+
+** ターミナル
+
+eat を使う。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf eat
+  :ensure t
+  :bind (("C-c t" . eat))
+  :custom
+  (eat-kill-buffer-on-exit . t)
+  (eat-enable-mouse . t)
+
+  :defun
+  (ins-eat-skk-settings)
+  (eat-reload-all-keymaps)
+
+  :config
+  (add-hook 'eat-mode-hook #'ins-eat-skk-settings)
+
+  (with-eval-after-load 'eat
+    (define-key eat-mode-map (kbd "C-h") (lambda ()
+                                           (interactive)
+                                           (eat-self-input 1 ?\177))))
+
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'eat-mode 'emacs))
+
+  (defun ins-eat-skk-settings ()
+    (when (fboundp 'evil-emacs-state)
+      (evil-emacs-state)))
+
+  :hook (eat-mode-hook . (lambda ()
+                           (setq-local inhibit-read-only t)
+                           (setq-local scroll-margin 0)
+                           (display-line-numbers-mode -1)
+                           (when (fboundp 'evil-emacs-state)
+                                          (evil-emacs-state))
+                           ))
+  )
+#+end_src
+
+** 編集
+
+*** 日本語入力
+
+SKKで入力する。入力方式は、AZIKにする。
+
+- [ddskk](https://github.com/skk-dev/ddskk/tree/master)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf ddskk
+  :ensure t
+  :bind
+  (("C-x C-j" . skk-mode)
+   ("C-x j"   . skk-mode))
+  :init
+  (defvar dired-bind-jump nil) ; dired-xに `C-x C-j` が奪われてしまうので対処
+  :custom
+  (skk-use-azik                      . t) ; AZIKを使用
+  (skk-azik-keyboard-type            . 'jp106)
+  (skk-server-host                   . "localhost")
+  (skk-server-portnum                . 1178)
+  (skk-egg-like-newline              . t) ; 変換時にはリータンで改行しない
+  (skk-japanese-message-and-error    . t)
+  (skk-auto-insert-paren             . t)
+  (skk-check-okurigata-on-touroku    . t)
+  (skk-show-annotation               . t)
+  (skk-annotation-show-wikipedia-url . t)
+  (skk-show-tooltip                  . nil)
+  (skk-isearch-start-mode            . 'latin)
+  (skk-henkan-okuri-strictly         . nil)
+  (skk-process-okuri-early           . nil)
+  (skk-status-indicator              . 'minior-mode))
+#+end_src
+
+*** 選択範囲の拡大
+
+`C-.` で、選択している領域を広げていく。
+
+- [expand-region](https://github.com/magnars/expand-region.el)
+- [expand-region.elの紹介](https://syohex.hatenablog.com/entry/20120117/1326814127)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf expand-region
+  :ensure t
+  :bind (("C-." . er/expand-region))
+  )
+#+end_src
+
+*** 括弧などの領域
+
+puniにより、括弧の閉じ、開き部分を簡潔に扱えるようにする。
+
+- [puni](https://github.com/AmaiKinono/puni)
+- [Puni の汎用 Structured editing は現代エディタの標準機能](https://apribase.net/2024/06/17/emacs-puni/)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf puni
+  :ensure t
+  :global-minor-mode puni-global-mode)
+#+end_src
+
+*** スマート改行（括弧展開）
+
+括弧の内側でEnterを押したとき、カーソルをインデントした新しい行に置き、閉じ括弧をその下の適切な位置に移動する。prog-mode でキーバインドを設定する。
+
+#+begin_src emacs-lisp :tangle yes
+(defun my/newline-and-indent-pair ()
+  "括弧の間でEnterを押したとき、括弧を展開してインデントする。"
+  (interactive)
+  (let ((close (char-after)))
+    (if (member (list (char-before) close)
+                '((?{ ?}) (?\( ?\)) (?\[ ?\])))
+        (progn
+          (delete-char 1)
+          (newline-and-indent)
+          (let ((pos (point)))
+            (newline)
+            (insert close)
+            (indent-according-to-mode)
+            (goto-char pos)))
+      (newline-and-indent))))
+
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (local-set-key (kbd "RET") #'my/newline-and-indent-pair)
+            (when (fboundp 'evil-local-set-key)
+              (evil-local-set-key 'insert (kbd "RET") #'my/newline-and-indent-pair))))
+#+end_src
+
+** 補完
+
+*** ミニバッファの補完
+
+verticoを使いミニバッファの補完をする。
+
+- [vertico](https://github.com/minad/vertico)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf vertico
+  :ensure t
+  :global-minor-mode t
+  :bind
+  ((:vertico-map
+    ("C-z" . vertico-insert)
+    ("C-l" . grugrut/up-dir)))
+  :preface
+  (defun grugrut/up-dir ()
+    "ひとつ上のディレクトリ階層に移動する."
+    (interactive)
+    (let* ((orig (minibuffer-contents))
+           (orig-dir (file-name-directory orig))
+           (up-dir (if orig-dir (file-name-directory (directory-file-name orig-dir))))
+           (target (if (and up-dir orig-dir) up-dir orig)))
+      (delete-minibuffer-contents)
+      (insert target)))
+  :custom
+  (vertico-count . 20)
+  (vertico-cycle . t))
+#+end_src
+
+*** 履歴の保存
+
+#+begin_src emacs-lisp :tangle yes
+(leaf savehist
+  :global-minor-mode t)
+#+end_src
+
+*** Undo履歴
+
+- [vundo](https://github.com/casouri/vundo)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf vundo
+  :ensure t
+)
+#+end_src
+
+*** orderless
+
+- [orderless](https://github.com/oantolin/orderless/blob/master/README.org)
+- [vertico や consult で実現されるモダンなライブプレビューミニバッファ](https://apribase.net/2024/07/18/emacs-vertico-consult/)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf orderless
+  :ensure t
+  :custom
+  (completion-styles . '(orderless)))
+#+end_src
+
+*** marginalia
+
+- [marginalia](https://github.com/minad/marginalia)
+- [vertico や consult で実現されるモダンなライブプレビューミニバッファ](https://apribase.net/2024/07/18/emacs-vertico-consult/)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf marginalia
+  :ensure t
+  :global-minor-mode t)
+#+end_src
+
+*** 関数候補の絞り込み
+
+consultを使いミニバッファで利用可能な関数を表示するようにする。
+
+- [consult](https://github.com/minad/consult)
+- [vertico や consult で実現されるモダンなライブプレビューミニバッファ](https://apribase.net/2024/07/18/emacs-vertico-consult/)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf consult
+  :ensure t
+  :bind
+  (([remap switch-to-buffer] . consult-buffer)
+   ([remap goto-line] . consult-goto-line)
+   ([remap yank-pop] . consult-yank-pop)
+   ("C-;" . consult-buffer)))
+#+end_src
+
+** ナビゲーション
+
+*** avy
+
+- [avy](https://karthinks.com/software/avy-can-do-anything/)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf avy
+  :ensure t
+  :bind
+  (("C-:" . avy-goto-char-timer)
+   ("C-*" . avy-resume)
+   ("M-g M-g" . avy-goto-line))
+  :config
+  (leaf avy-zap
+    :ensure t
+    :bind
+    ([remap zap-to-char] . avy-zap-to-char)))
+#+end_src
+
+*** Window移動
+
+ace-windowによりwindow間を移動させる。
+
+- [ace-window](https://mugijiru.github.io/.emacs.d/nav/ace-window/)
+- [ace-window.el](https://github.com/abo-abo/ace-window)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf ace-window
+  :ensure t
+  :bind
+  (("C-x o" . ace-window))
+  :config
+  (setopt aw-keys '(?a ?s ?d ?f ?g ?h ?i ?j ?k ?l))
+  :custom-face
+  (aw-leading-char-face . '((t (:height 3.0)))))
+#+end_src
+
+*** キーバインディング
+
+#+begin_src emacs-lisp :tangle yes
+(leaf-keys (("C-h" . backward-delete-char)
+            ("M-h" . previous-multiframe-window)
+            ("M-l" . next-multiframe-window)
+            ("M-z" . delete-other-windows)))
+#+end_src
+
+*** キーバインディングの表示
+
+which-keyにより、割り当てているキーを表示させる。
+
+- [which-key](https://github.com/justbur/emacs-which-key)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf which-key
+  :global-minor-mode t)
+#+end_src
+
+** Git
+
+*** magit
+
+#+begin_src emacs-lisp :tangle yes
+(leaf magit
+  :ensure t
+  :bind
+  (("C-x g" . magit-status)))
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+(leaf recentf
+  :init
+  (recentf-mode)
+  :config
+  (setopt recentf-max-saved-items 5000)
+  (setopt recentf-auto-cleanup 'never))
+#+end_src
+
+*** ファイルの変更箇所の強調
+
+#+begin_src emacs-lisp :tangle yes
+(leaf git-gutter
+  :ensure t
+  :global-minor-mode global-git-gutter-mode
+  :custom
+  ((git-gutter:added-sign . "++")
+   (git-gutter:deleted-sign . "--")
+   (git-gutter:modified-sign . "==")))
+#+end_src
+
+** LSP
+
+*** シンタックスハイライト
+
+Tree-Sitterを使いシンタックスハイライトをする。
+
+- [Emacs Tree-Sitter による新しいモード達を使う](https://apribase.net/2024/06/12/emacs-treesit-ts-mode/)
+- [EmacsでTree-Sitterによる新しいモードを利用する方法](https://zenn.dev/glassonion1/articles/20752bb8d2cf98)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf treesit
+  :config
+  (setopt treesit-font-lock-level 4)
+  (setopt treesit-language-source-alist
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+)
+#+end_src
+
+*** eglot
+
+eglot で LSP を利用する。terraform-ls も設定する。
+
+- [Emacs で LSP を活用してみる](https://qiita.com/blue0513/items/acc962738c7f4da26656)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf eglot
+  :config
+  (dolist (hook '(typescript-mode-hook
+                  tsx-ts-mode-hook
+                  go-mode-hook
+                  go-ts-mode-hook
+                  python-mode-hook
+                  python-ts-mode-hook
+                  html-mode-hook
+                  terraform-mode-hook))
+    (add-hook hook #'eglot-ensure))
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '(terraform-mode . ("terraform-ls" "serve")))))
+#+end_src
+
+** インライン補完
+
+*** corfu-terminal
+
+Emacs 31 未満のターミナル環境で corfu を動作させる。
+
+#+begin_src emacs-lisp :tangle yes
+(when (< emacs-major-version 31)
+  (leaf corfu-terminal
+    :ensure t
+    :config
+    (defun my/corfu-terminal-update (frame)
+      (if (display-graphic-p frame)
+          (corfu-terminal-mode -1)
+        (corfu-terminal-mode +1)))
+    (add-hook 'after-make-frame-functions #'my/corfu-terminal-update)
+    (unless (display-graphic-p)
+      (corfu-terminal-mode +1))))
+#+end_src
+
+*** corfu
+
+corfuを使い補完させる。
+
+- [CompanyからCorfuに移行する](https://qiita.com/nobuyuki86/items/7c65456ad07b555dd67d)
+- [corfu](https://github.com/minad/corfu)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf corfu
+  :custom ((corfu-auto . t)
+           (corfu-auto-delay . 0)
+           (corfu-auto-prefix . 1)
+           (corfu-cycle . t)
+           (corfu-on-exact-match . nil)
+           (tab-always-indent . 'complete))
+  :init
+  (global-corfu-mode +1)
+
+  :config
+  (define-key corfu-map (kbd "TAB") #'corfu-insert)
+  (define-key corfu-map (kbd "<tab>") #'corfu-insert)
+  (define-key corfu-map (kbd "RET") nil)
+  (define-key corfu-map (kbd "<return>") nil)
+
+  ;; java-mode などの一部のモードではタブに `c-indent-line-or-region` が割り当てられているので、
+  ;; 補完が出るように `indent-for-tab-command` に置き換える
+  (defun my/corfu-remap-tab-command ()
+    (global-set-key [remap c-indent-line-or-region] #'indent-for-tab-command))
+  (add-hook 'java-mode-hook #'my/corfu-remap-tab-command)
+
+  ;; ミニバッファー上でverticoによる補完が行われない場合、corfuの補完が出るようにします。
+  ;; https://github.com/minad/corfu#completing-in-the-minibuffer
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active)
+                (bound-and-true-p vertico--input))
+      ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
+      (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+                  corfu-popupinfo-delay nil)
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+
+  ;; lsp-modeでcorfuが起動するように設定する
+  (with-eval-after-load 'lsp-mode
+    (setq lsp-completion-provider :none)))
+#+end_src
+
+*** cape
+
+補完ソースを追加する。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf cape
+  :ensure t
+  :hook (((prog-mode
+           text-mode
+           conf-mode
+           eglot-managed-mode) . my/set-super-capf))
+  :config
+  (setq cape-dabbrev-check-other-buffers nil)
+
+  (defun my/set-super-capf (&optional arg)
+    (setq-local completion-at-point-functions
+                (list (cape-capf-noninterruptible
+                       (cape-capf-buster
+                        (cape-capf-properties
+                         (cape-capf-super
+                          (if arg arg (car completion-at-point-functions))
+                          #'cape-dabbrev
+                          #'cape-file)
+                         :sort t
+                         :exclusive 'no))))))
+
+  (add-to-list 'completion-at-point-functions #'cape-file t)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
+  (add-to-list 'completion-at-point-functions #'cape-keyword t))
+#+end_src
+
+** スニペット
+
+yasnippet でスニペットを管理する。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf yasnippet
+  :ensure t
+  :blackout yas-minor-mode
+  :global-minor-mode yas-global-mode
+  :custom ((yas-indent-line . 'fixed))
+  :config
+  (define-key yas-keymap (kbd "<tab>") nil)
+  (define-key yas-minor-mode-map (kbd "C-c y i") #'yas-insert-snippet)
+  (define-key yas-minor-mode-map (kbd "C-c y n") #'yas-new-snippet)
+  (define-key yas-minor-mode-map (kbd "C-c y v") #'yas-visit-snippet-file)
+  (define-key yas-minor-mode-map (kbd "C-c y l") #'yas-describe-tables)
+  (define-key yas-minor-mode-map (kbd "C-c y g") #'yas-reload-all)
+  (leaf yasnippet-snippets :ensure t)
+  (leaf yatemplate
+    :commands (yatemplate-fill-alist)
+    :ensure t
+    :config
+    (yatemplate-fill-alist))
+  (defvar company-mode/enable-yas t
+    "Enable yasnippet for all backends.")
+  (defun company-mode/backend-with-yas (backend)
+    (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
+        backend
+      (append (if (consp backend) backend (list backend))
+              '(:with company-yasnippet)))))
+#+end_src
+
+** その他
+
+*** エラーチェック
+
+flymakeを使い構文エラーを見つけるようにする。
+
+- [Flymake](https://ayatakesi.github.io/emacs/27.1/html/Flymake.html)
+- [Elpa flymake](https://elpa.gnu.org/packages/flymake.html)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf flymake
+  :global-minor-mode t)
+#+end_src
+
+*** Project
+
+- [Project](https://ayatakesi.github.io/emacs/27.2/html/Projects.html)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf project
+  :custom
+  (project-vc-merge-submodules . nil) ; Git Submoduleは別のプロジェクトとして扱う
+  )
+#+end_src
+
+*** EditorConfig
+
+- [EditorConfig Support](https://www.gnu.org/software/emacs/manual/html_node/emacs/EditorConfig-support.html)
+- [Emacs での EditorConfig の利用に editorconfig-core-c のインストールが不要になりました](https://qiita.com/10sr/articles/5e5d9519874ea3602d96)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf editorconfig
+  :global-minor-mode t)
+#+end_src
+
+*** インデントの表示
+
+indent-bars を使いインデントを表示させる。
+
+- [indent-bars](https://github.com/jdtsmith/indent-bars)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf indent-bars
+  :vc (:url "https://github.com/jdtsmith/indent-bars")
+  :hook
+  prog-mode-hook cc-mode-hook org-mode-hook
+  :config
+  (require 'indent-bars-ts)
+  :custom
+  (indent-bars-treesit-support . t)
+  (indent-bars-treesit-ignore-blank-lines-types . '("module"))
+  (indent-bars-pattern . ".")
+  (indent-bars-width-frac . 0.2)
+  (indent-bars-pad-frac . 0.2)
+  (indent-bars-color-by-depth . '(:regexp "outline-\\([0-9]+\\)" :blend 1))
+  (indent-bars-highlight-current-depth . '(:pattern "." :pad 0.1 :width 0.45)))
+#+end_src
+
+** AI/LLM
+
+llm + ellama で Gemini API を利用する。
+
+- [最強ローカルLLM実行環境としてのEmacs](https://blog.tomoya.dev/posts/emacs-on-local-llm/)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf llm
+  :vc (:url "https://github.com/ahyatt/llm/tree/main")
+  :require llm-gemini
+  :config
+  (when (file-exists-p "~/.emacs.d/secrets.el")
+    (load "~/.emacs.d/secrets.el")
+    (setq llm-gemini (make-llm-gemini :key gemini-api-key))
+    (setq ellama-provider llm-gemini)))
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+(leaf ellama
+  :ensure t
+  :bind
+  ("C-c e" . ellama-transient-main-menu)
+  :custom
+  (ellama-language . "Japanese"))
+#+end_src
+
+** フォーマッタ
+
+reformatter を使い、保存時に自動フォーマットする。prettier を TypeScript / JavaScript に適用する。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf reformatter
+  :ensure t
+  :config
+  (reformatter-define prettier-ts-format
+    :program "prettier"
+    :args (list "--stdin-filepath" (or (buffer-file-name) "dummy.ts")))
+  (dolist (hook '(typescript-mode-hook
+                  tsx-ts-mode-hook
+                  typescript-ts-mode-hook
+                  js-mode-hook
+                  js-ts-mode-hook))
+    (add-hook hook #'prettier-ts-format-on-save-mode)))
+#+end_src
+
+** 言語設定
+
+*** TypeScript
+
+#+begin_src emacs-lisp :tangle yes
+(leaf typescript-mode
+  :ensure t
+  :mode
+  (("\\.ts\\'" . typescript-mode)
+   ("\\.tsx\\'" . tsx-ts-mode))
+  :custom
+  (typescript-indent-level . 2)
+  (js-indent-level . 2))
+#+end_src
+
+*** Terraform
+
+#+begin_src emacs-lisp :tangle yes
+(leaf terraform-mode
+  :ensure t
+  :mode ("\\.tf\\'" . terraform-mode)
+  :hook (terraform-mode-hook . terraform-format-on-save-mode))
+#+end_src
+
+*** Markdown
+
+#+begin_src emacs-lisp :tangle yes
+(leaf markdown-mode
+  :ensure t
+  :mode
+  (("\\.md\\'" . gfm-mode))
+  )
+#+end_src
