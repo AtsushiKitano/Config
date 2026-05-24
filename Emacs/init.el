@@ -46,7 +46,7 @@
   (define-key global-map (kbd "C-k") 'kill-line)
   (define-key global-map (kbd "C-e") 'move-end-of-line)
   (define-key global-map [?¥] [?\\])
-  (prefer-coding-system 'utf-8-unix)
+(prefer-coding-system 'utf-8-unix)
 
   :setq
   (read-answer-short . t)
@@ -170,7 +170,10 @@
   (evil-define-key 'insert 'global (kbd "C-g") #'evil-normal-state)
   ;; normal/motion モードでも C-n/C-p を evil-paste-pop-next から上書き
   (evil-define-key '(normal motion) 'global (kbd "C-n") #'next-line)
-  (evil-define-key '(normal motion) 'global (kbd "C-p") #'previous-line))
+  (evil-define-key '(normal motion) 'global (kbd "C-p") #'previous-line)
+  ;; ターミナルでは C-Space が C-@ (NUL) として届くため全ステートで set-mark-command に割り当て
+  (evil-define-key '(normal insert motion visual) 'global (kbd "C-@") #'set-mark-command)
+  (evil-define-key '(normal insert motion visual) 'global (kbd "C-SPC") #'set-mark-command))
 
 (leaf eat
   :ensure t
@@ -414,8 +417,8 @@
   :config
   (define-key corfu-map (kbd "TAB") #'corfu-insert)
   (define-key corfu-map (kbd "<tab>") #'corfu-insert)
-  (define-key corfu-map (kbd "RET") nil)
-  (define-key corfu-map (kbd "<return>") nil)
+  (define-key corfu-map (kbd "RET") #'corfu-insert)
+  (define-key corfu-map (kbd "<return>") #'corfu-insert)
 
   ;; java-mode などの一部のモードではタブに `c-indent-line-or-region` が割り当てられているので、
   ;; 補完が出るように `indent-for-tab-command` に置き換える
@@ -552,7 +555,15 @@
    ("\\.tsx\\'" . tsx-ts-mode))
   :custom
   (typescript-indent-level . 2)
-  (js-indent-level . 2))
+  (js-indent-level . 2)
+  :config
+  (defun my/ts-electric-pair-angle-bracket ()
+    (setq-local electric-pair-pairs
+                (append electric-pair-pairs '((?< . ?>))))
+    (setq-local electric-pair-text-pairs electric-pair-pairs))
+  (dolist (hook '(typescript-mode-hook tsx-ts-mode-hook typescript-ts-mode-hook
+                  js-mode-hook js-ts-mode-hook))
+    (add-hook hook #'my/ts-electric-pair-angle-bracket)))
 
 (leaf terraform-mode
   :ensure t
