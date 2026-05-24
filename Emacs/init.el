@@ -142,26 +142,35 @@
   (evil-want-C-u-scroll . t)
   :config
   (evil-mode 1)
-  ;; insert モードで Emacs キーバインドを使えるようにする
-  (with-eval-after-load 'evil
-    (define-key evil-insert-state-map (kbd "C-p") #'previous-line)
-    (define-key evil-insert-state-map (kbd "C-n") #'next-line)
-    (define-key evil-insert-state-map (kbd "C-b") #'backward-char)
-    (define-key evil-insert-state-map (kbd "C-f") #'forward-char)
-    (define-key evil-insert-state-map (kbd "C-a") #'move-beginning-of-line)
-    (define-key evil-insert-state-map (kbd "C-e") #'move-end-of-line)
-    (define-key evil-insert-state-map (kbd "M-f") #'forward-word)
-    (define-key evil-insert-state-map (kbd "M-b") #'backward-word)
-    (define-key evil-insert-state-map (kbd "C-d") #'delete-forward-char)
-    (define-key evil-insert-state-map (kbd "C-h") #'backward-delete-char)
-    (define-key evil-insert-state-map (kbd "C-k") #'kill-line)
-    (define-key evil-insert-state-map (kbd "C-w") #'backward-kill-word)
-    (define-key evil-insert-state-map (kbd "C-y") #'yank)
-    (define-key evil-insert-state-map (kbd "M-d") #'kill-word)
-    (define-key evil-insert-state-map (kbd "C-g") #'evil-normal-state)
-    ;; emacs state で起動するモード
-    (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode))
-      (evil-set-initial-state mode 'emacs))))
+  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode))
+    (evil-set-initial-state mode 'emacs)))
+
+(leaf evil-collection
+  :ensure t
+  :after evil
+  :custom
+  (evil-collection-unimpaired-mode . nil)
+  :config
+  (evil-collection-init)
+  ;; evil-collection 初期化後に insert モードの Emacs キーバインドを上書き
+  (evil-define-key 'insert 'global (kbd "C-p") #'previous-line)
+  (evil-define-key 'insert 'global (kbd "C-n") #'next-line)
+  (evil-define-key 'insert 'global (kbd "C-b") #'backward-char)
+  (evil-define-key 'insert 'global (kbd "C-f") #'forward-char)
+  (evil-define-key 'insert 'global (kbd "C-a") #'move-beginning-of-line)
+  (evil-define-key 'insert 'global (kbd "C-e") #'move-end-of-line)
+  (evil-define-key 'insert 'global (kbd "M-f") #'forward-word)
+  (evil-define-key 'insert 'global (kbd "M-b") #'backward-word)
+  (evil-define-key 'insert 'global (kbd "C-d") #'delete-forward-char)
+  (evil-define-key 'insert 'global (kbd "C-h") #'backward-delete-char)
+  (evil-define-key 'insert 'global (kbd "C-k") #'kill-line)
+  (evil-define-key 'insert 'global (kbd "C-w") #'backward-kill-word)
+  (evil-define-key 'insert 'global (kbd "C-y") #'yank)
+  (evil-define-key 'insert 'global (kbd "M-d") #'kill-word)
+  (evil-define-key 'insert 'global (kbd "C-g") #'evil-normal-state)
+  ;; normal/motion モードでも C-n/C-p を evil-paste-pop-next から上書き
+  (evil-define-key '(normal motion) 'global (kbd "C-n") #'next-line)
+  (evil-define-key '(normal motion) 'global (kbd "C-p") #'previous-line))
 
 (leaf eat
   :ensure t

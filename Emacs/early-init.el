@@ -21,7 +21,8 @@
 (tab-bar-mode t)
 
 ;; native-comp ワーニングの抑制
-(custom-set-variables '(warning-suppress-types '((comp))))
+(custom-set-variables '(warning-suppress-types '((comp) (native-compiler))))
+(setq native-comp-async-report-warnings-errors nil)
 
 (setq default-frame-alist
 		(append '((width . 140) ;フレーム幅

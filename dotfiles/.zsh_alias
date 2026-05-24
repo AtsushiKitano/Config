@@ -26,6 +26,7 @@ alias gtree='git log --graph --branches --pretty="format:%C(yellow)%h%Creset %s 
 
 alias e='emacsclient -nw'
 alias ec='emacsclient -nw --create-frame'
+alias er='emacsclient -e "(kill-emacs)" ; emacs --bg-daemon'
 
 alias virginia='export AWS_DEFAULT_REGION=us-east-1'
 alias tokyo='export AWS_DEFAULT_REGION=ap-northeast-1'
