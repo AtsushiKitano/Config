@@ -376,19 +376,21 @@
                   html-mode-hook
                   terraform-mode-hook))
     (add-hook hook #'eglot-ensure))
-  (add-to-list 'eglot-server-programs
-               '(terraform-mode . ("terraform-ls" "serve"))))
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '(terraform-mode . ("terraform-ls" "serve")))))
 
-(leaf corfu-terminal
-  :ensure t
-  :config
-  (defun my/corfu-terminal-update (frame)
-    (if (display-graphic-p frame)
-        (corfu-terminal-mode -1)
-      (corfu-terminal-mode +1)))
-  (add-hook 'after-make-frame-functions #'my/corfu-terminal-update)
-  (unless (display-graphic-p)
-    (corfu-terminal-mode +1)))
+(when (< emacs-major-version 31)
+  (leaf corfu-terminal
+    :ensure t
+    :config
+    (defun my/corfu-terminal-update (frame)
+      (if (display-graphic-p frame)
+          (corfu-terminal-mode -1)
+        (corfu-terminal-mode +1)))
+    (add-hook 'after-make-frame-functions #'my/corfu-terminal-update)
+    (unless (display-graphic-p)
+      (corfu-terminal-mode +1))))
 
 (leaf corfu
   :custom ((corfu-auto . t)
@@ -526,16 +528,22 @@
   :config
   (reformatter-define prettier-ts-format
     :program "prettier"
-    :args (list "--stdin-filepath" (or (buffer-file-name) "dummy.ts"))))
+    :args (list "--stdin-filepath" (or (buffer-file-name) "dummy.ts")))
+  (dolist (hook '(typescript-mode-hook
+                  tsx-ts-mode-hook
+                  typescript-ts-mode-hook
+                  js-mode-hook
+                  js-ts-mode-hook))
+    (add-hook hook #'prettier-ts-format-on-save-mode)))
 
 (leaf typescript-mode
   :ensure t
   :mode
   (("\\.ts\\'" . typescript-mode)
    ("\\.tsx\\'" . tsx-ts-mode))
-  :hook
-  ((typescript-mode . prettier-ts-format-on-save-mode)
-   (tsx-ts-mode . prettier-ts-format-on-save-mode)))
+  :custom
+  (typescript-indent-level . 2)
+  (js-indent-level . 2))
 
 (leaf terraform-mode
   :ensure t

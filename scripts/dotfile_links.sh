@@ -15,3 +15,6 @@ fi
 if type emacs > /dev/null 2>&1; then
 	ln -fnsv $SCRIPT_DIR/Emacs/init.el $HOME/.emacs.d/
 fi
+
+mkdir -p $HOME/.config/mise
+ln -fnsv $SCRIPT_DIR/dotfiles/mise/config.toml $HOME/.config/mise/config.toml
