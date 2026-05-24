@@ -21,8 +21,9 @@ zshの設定は複数に分ける
 
 ### Emacs
 
-- init.org に 定義を管理し、init.elにコンパイルする
-- init.el は直接編集しない
+- init.org のみ編集
+- init.el は修正しない
+- init.el は emacs --batch --eval でコンパイルにより生成
 
 ## よく使う関数
 
