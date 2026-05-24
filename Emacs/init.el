@@ -1,1101 +1,549 @@
-;;; init.el --- Emacs configuration -*- lexical-binding: t -*-
-;;; Commentary:
-;;; Code:
-
-;;; native compiler の非同期警告を抑制（ddskk/ccc 等の無害な警告対策）
-(setq native-comp-async-report-warnings-errors 'silent)
-
-;;; ========================================================
-;;; exec-path / PATH
-;;; ========================================================
-
-(add-to-list 'exec-path (expand-file-name "~/dev/src/github/bin"))
-(add-to-list 'exec-path "/usr/local/bin")
-;; mise shims（terraform 等のバージョン管理ツール）
-(add-to-list 'exec-path (expand-file-name "~/.local/share/mise/shims"))
-(setenv "PATH" (concat (expand-file-name "~/.local/share/mise/shims") ":/usr/local/bin:" (getenv "PATH") ":" (expand-file-name "~/dev/src/github/bin")))
-
-(leaf exec-path-from-shell
-  :ensure t
-  :require t
-  :config
-  ;; GUI 起動時またはデーモン起動時に shell から PATH を同期
-  (when (or (display-graphic-p) (daemonp))
-    (exec-path-from-shell-initialize)))
-
-;;; ========================================================
-;;; user-emacs-directory
-;;; ========================================================
-
-(eval-and-compile
-  (when (or load-file-name byte-compile-current-file)
-    (setq user-emacs-directory
-          (expand-file-name
-           (file-name-directory (or load-file-name byte-compile-current-file))))))
-
-;;; ========================================================
-;;; パッケージ管理 (leaf)
-;;; ========================================================
+;;; init.el -*-config: utf-8 ; lexical-binding: t -*-
 
 (eval-and-compile
   (customize-set-variable
-   'package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
-                       ("melpa"  . "https://melpa.org/packages/")
-                       ("org"    . "https://orgmode.org/elpa/")
-                       ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
-  (unless (package-installed-p 'leaf)
-    (package-refresh-contents)
-    (package-install 'leaf))
+   'package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+      		("melpa" . "https://melpa.org/packages/")
+      		("org" . "https://orgmode.org/elpa/")
+      		("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+  (package-initialize)
+  (use-package leaf :ensure t)
 
-  (leaf leaf-keywords
-    :ensure t
-    :init
-    (leaf hydra    :ensure t)
-    (leaf el-get   :ensure t)
-    (leaf blackout :ensure t)
-    :config
-    (leaf-keywords-init)))
-
-(leaf leaf
-  :config
-  (leaf leaf-convert :ensure t)
-  (leaf leaf-tree
-    :ensure t
-    :custom ((imenu-list-size     . 30)
-             (imenu-list-position . 'left))))
-
-(leaf macrostep
+(leaf leaf-keywords
   :ensure t
-  :bind (("C-c e" . macrostep-expand)))
-
-(leaf cus-edit
-  :doc "tools for customizing Emacs and Lisp packages"
-  :tag "builtin" "faces" "help"
-  :custom `((custom-file . ,(locate-user-emacs-file "custom.el"))))
-
-;;; ========================================================
-;;; 一般設定
-;;; ========================================================
-
-(setq mac-command-modifier      'meta)
-(setq mac-option-key-is-meta    nil)
-(setq ns-right-alternate-modifier nil)
-
-(setq default-frame-alist
-      (append '((alpha . 85)) default-frame-alist))
-(setq initial-frame-alist default-frame-alist)
-
-(leaf cus-start
-  :doc "起動時の設定"
-  :tag "builtin" "internal"
-  :preface
-  (defun c/redraw-frame nil
-    (interactive)
-    (redraw-frame))
-  :bind (("M-ESC ESC" . c/redraw-frame))
-  :custom '((user-full-name                  . "Atsushi Kitano")
-            (user-mail-address               . "atsushi@aquamarine-cloud.net")
-            (user-login-name                 . "atsushi")
-            (fill-column                     . 72)
-            (create-lockfiles                . nil)
-            (debug-on-error                  . nil)
-            (init-file-debug                 . nil)
-            (frame-resize-pixelwise          . t)
-            (enable-recursive-minibuffers    . t)
-            (history-length                  . 1000)
-            (history-delete-duplicates       . t)
-            (scroll-preserve-screen-position . t)
-            (scroll-conservatively           . 100)
-            (mouse-wheel-scroll-amount       . '(1 ((control) . 5)))
-            (ring-bell-function              . 'ignore)
-            (text-quoting-style              . 'straight)
-            (truncate-lines                  . t)
-            (use-dialog-box                  . nil)
-            (use-file-dialog                 . nil)
-            (scroll-bar-mode                 . -1)
-            (indent-tabs-mode                . nil)
-            (auto-save-default               . t)
-            (auto-save-timeout               . 15)
-            (auto-save-interval              . 60)
-            (make-backup-files               . t)
-            (backup-by-copying               . t))
+  :init
+  (leaf blackout :ensure t)
   :config
-  (defalias 'yes-or-no-p 'y-or-n-p))
+  ;; optional パッケージ
+  (leaf hydra :ensure t)
+  (leaf el-get :ensure t)
+  (leaf blackout :ensure t)
 
-(leaf general-setting
+  ;; leaf-keywordsの初期化
+  (leaf-keywords-init)))
+
+(leaf leaf-convert
+  :doc "Convert many format to leaf format"
+  :ensure t)
+
+(leaf gcmh
+  :ensure t
+  :global-minor-mode t
+  :custom
+  (gcmh-verbose . t))
+
+(leaf general-settings
   :config
-  (tool-bar-mode -1)
+  (prefer-coding-system 'utf-8-unix)
+  (global-set-key [mouse-2] 'mouse-yank-at-click)
+  (global-unset-key "\C-z")
+  (delete-selection-mode t)
+  (electric-pair-mode t)
   (define-key global-map (kbd "C-{") 'hs-hide-block)
   (define-key global-map (kbd "C-}") 'hs-show-block)
+  (define-key global-map (kbd "C-d") 'delete-forward-char)
+  (define-key global-map (kbd "C-f") 'forward-char)
+  (define-key global-map (kbd "C-k") 'kill-line)
+  (define-key global-map (kbd "C-e") 'move-end-of-line)
   (define-key global-map [?¥] [?\\])
   (prefer-coding-system 'utf-8-unix)
-  (defvar recentf-max-saved-items 1000)
-  (defvar recentf-auto-cleanup 'never)
-  ;; フォント
-  (add-to-list 'default-frame-alist '(font . "Monospace-18"))
-  ;; リージョンの色
-  (set-face-attribute 'region nil :background "#ca6500")
-  ;; マウスを避けさせる
-  (mouse-avoidance-mode 'jump)
-  (setq frame-title-format "%f")
-  ;; 行番号
-  (global-display-line-numbers-mode t)
-  (set-face-attribute 'line-number-current-line nil :foreground "gold")
-  ;; 括弧ハイライト
-  (show-paren-mode t)
-  (defvar show-paren-style 'mixed)
-  ;; カーソル点滅なし
-  (blink-cursor-mode 0)
-  ;; ターミナルモード最適化
-  (unless (display-graphic-p)
-    (xterm-mouse-mode 1)
-    (set-terminal-coding-system 'utf-8)
-    ;; kitty/xterm の Shift+Arrow・Ctrl+Arrow エスケープシーケンスを登録
-    (define-key input-decode-map "\e[1;2A" [S-up])
-    (define-key input-decode-map "\e[1;2B" [S-down])
-    (define-key input-decode-map "\e[1;2C" [S-right])
-    (define-key input-decode-map "\e[1;2D" [S-left])
-    (define-key input-decode-map "\e[1;5A" [C-up])
-    (define-key input-decode-map "\e[1;5B" [C-down])
-    (define-key input-decode-map "\e[1;5C" [C-right])
-    (define-key input-decode-map "\e[1;5D" [C-left])
-    (define-key input-decode-map "\e[1;6A" [S-C-up])
-    (define-key input-decode-map "\e[1;6B" [S-C-down])
-    (define-key input-decode-map "\e[1;6C" [S-C-right])
-    (define-key input-decode-map "\e[1;6D" [S-C-left]))
-  ;; 単語での折り返し
-  (leaf visual-line-mode
-    :require simple
-    :config
-    (global-visual-line-mode t))
+
   :setq
-  `((large-file-warning-threshold  . ,(* 25 1024 1024))
-    (read-file-name-completion-ignore-case . t)
-    (line-move-visual               . nil)
-    (mouse-drag-copy-region         . t)
-    (inhibit-startup-message        . t)
-    (require-final-newline          . t)
-    (next-line-add-newlines         . nil)
-    (truncate-lines                 . t)
-    (read-process-output-max        . ,(* 1024 1024)))
-  :setq-default
-  (indent-tabs-mode      . nil)
-  (tab-width             . 2)
-  (require-final-newline . t))
+  (read-answer-short . t)
+  (create-lockfiles . nil)
+  (history-length . 500)
+  (history-delete-duplicates . t)
+  (line-move-visual . nil)
+  (mouse-drag-copy-region . t)
+  (backup-inhibited . t)
+  (require-final-newline . t)
+  (auto-save-file-name-transforms . `((".*" ,(expand-file-name "auto-save/" user-emacs-directory) t))))
 
-(leaf autorevert
-  :doc "revert buffers when files on disk change"
-  :tag "builtin"
-  :custom ((auto-revert-interval . 1)
-           (auto-revert-verbose  . nil))
-  :global-minor-mode global-auto-revert-mode)
-
-(leaf delsel
-  :doc "delete selection if you insert"
-  :tag "builtin"
-  :global-minor-mode delete-selection-mode)
-
-(leaf paren
-  :doc "highlight matching paren"
-  :tag "builtin"
-  :custom ((show-paren-delay . 0.1))
-  :global-minor-mode show-paren-mode)
-
-(leaf simple
-  :doc "basic editing commands for Emacs"
-  :tag "builtin" "internal"
-  :custom ((kill-ring-max                . 100)
-           (kill-read-only-ok            . t)
-           (kill-whole-line              . t)
-           (eval-expression-print-length . nil)
-           (eval-expression-print-level  . nil)))
-
-(leaf files
-  :doc "file input and output commands for Emacs"
-  :tag "builtin"
-  :custom `((auto-save-timeout             . 15)
-            (auto-save-interval            . 60)
-            (auto-save-file-name-transforms . '((".*" ,(locate-user-emacs-file "backup/") t)))
-            (backup-directory-alist        . '((".*" . ,(locate-user-emacs-file "backup"))
-                                               (,tramp-file-name-regexp . nil)))
-            (version-control               . t)
-            (delete-old-versions           . t)))
-
-(leaf startup
-  :doc "process Emacs shell arguments"
-  :tag "builtin" "internal"
-  :custom `((auto-save-list-file-prefix . ,(locate-user-emacs-file "backup/.saves-"))))
-
-(leaf electric
-  :doc "electric modes"
-  :tag "builtin"
-  :config (electric-pair-mode 0))
-
-;;; ========================================================
-;;; UI / テーマ
-;;; ========================================================
-
-(leaf doom-themes
-  :ensure t
-  :custom
-  (doom-themes-enable-italic . nil)
-  (doom-themes-enable-bold   . nil)
+(leaf :font
   :config
-  (load-theme 'doom-tomorrow-night t)
-  (doom-themes-org-config))
-
-(leaf mood-line
-  :ensure t
-  :config
-  (mood-line-mode))
+  (leaf nerd-icons
+	:ensure t)
+  (defun my/setup-fonts (&optional frame)
+	(with-selected-frame (or frame (selected-frame))
+	  (when (display-graphic-p)
+		(let* ((family "Fira Code")
+			   (fontspec (font-spec :family family :weight 'normal)))
+		  (set-face-attribute 'default nil :family family :height 180)
+		  (set-fontset-font nil 'ascii fontspec nil 'append)
+		  (set-fontset-font nil 'japanese-jisx0208 fontspec nil 'append)))))
+  (add-hook 'after-make-frame-functions #'my/setup-fonts)
+  (when (display-graphic-p)
+	(my/setup-fonts)))
 
 (leaf all-the-icons
   :ensure t
   :init (leaf memoize :ensure t)
-  :require t)
+  :require t
+)
 
-(leaf imenu
-  :tag "builtin"
+(leaf doom-themes
+  :ensure t
+  :defun (doom-themes-visual-bell-config)
+  :config
+  (load-theme 'doom-vibrant t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-neotree-config)
+  (doom-themes-org-config))
+
+(leaf doom-modeline
+  :ensure t
+  :global-minor-mode t
   :custom
-  (imenu-auto-rescan . t))
+  (doom-modeline-bar-width . 4)
+  (doom-modeline-hub . t))
 
-(leaf imenu-list
+(leaf shackle
+  :ensure t
+  :global-minor-mode t
+  :custom
+  (shackle-rules . '(("*Backtrace*" :popup t)
+					 ("*Leaf Expand*" :popup t)
+					 ("Shell Command Output*" :popup t))))
+
+(leaf beacon
+  :ensure t
+  :global-minor-mode t)
+
+(leaf volatile-highlights
+  :ensure t
+  :global-minor-mode t)
+
+(leaf anzu
+  :ensure t
+  :global-minor-mode global-anzu-mode
+  :bind
+  (("M-%" . anzu-query-replace)))
+
+(leaf migemo
+  :ensure t
+  :require t
+  :defun
+  (migemo-init)
+  :custom
+  (migemo-command . "cmigemo")
+  (migemo-options . '("-q" "--emacs"))
+  (migemo-dictionary . "/usr/share/cmigemo/utf-8/migemo-dict")
+  (migemo-user-dictionary . nil)
+  (migemo-regex-dictionary . nil)
+  (migemo-coding-system . 'utf-8-unix)
+  :config
+  (migemo-init))
+
+(leaf evil
   :ensure t
   :custom
-  ((imenu-list-auto-resize           . nil)
-   (imenu-list-focus-after-activation . nil)
-   (imenu-list-position              . 'left))
-  :hook
-  (imenu-list-major-mode-hook . (lambda ()
-                                  (setq mode-line-format nil)
-                                  (display-line-numbers-mode 0))))
+  (evil-want-integration . t)
+  (evil-want-keybinding . nil)
+  (evil-want-C-u-scroll . t)
+  :config
+  (evil-mode 1)
+  ;; insert モードで Emacs キーバインドを使えるようにする
+  (with-eval-after-load 'evil
+    (define-key evil-insert-state-map (kbd "C-p") #'previous-line)
+    (define-key evil-insert-state-map (kbd "C-n") #'next-line)
+    (define-key evil-insert-state-map (kbd "C-b") #'backward-char)
+    (define-key evil-insert-state-map (kbd "C-f") #'forward-char)
+    (define-key evil-insert-state-map (kbd "C-a") #'move-beginning-of-line)
+    (define-key evil-insert-state-map (kbd "C-e") #'move-end-of-line)
+    (define-key evil-insert-state-map (kbd "M-f") #'forward-word)
+    (define-key evil-insert-state-map (kbd "M-b") #'backward-word)
+    (define-key evil-insert-state-map (kbd "C-d") #'delete-forward-char)
+    (define-key evil-insert-state-map (kbd "C-h") #'backward-delete-char)
+    (define-key evil-insert-state-map (kbd "C-k") #'kill-line)
+    (define-key evil-insert-state-map (kbd "C-w") #'backward-kill-word)
+    (define-key evil-insert-state-map (kbd "C-y") #'yank)
+    (define-key evil-insert-state-map (kbd "M-d") #'kill-word)
+    (define-key evil-insert-state-map (kbd "C-g") #'evil-normal-state)
+    ;; emacs state で起動するモード
+    (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode))
+      (evil-set-initial-state mode 'emacs))))
 
-(leaf hide-mode-line
+(leaf eat
   :ensure t
-  :hook
-  ((imenu-list-minor-mode) . hide-mode-line-mode))
+  :bind (("C-c t" . eat))
+  :custom
+  (eat-kill-buffer-on-exit . t)
+  (eat-enable-mouse . t)
 
-;;; ========================================================
-;;; グローバルキーバインド
-;;; ========================================================
+  :defun
+  (ins-eat-skk-settings)
+  (eat-reload-all-keymaps)
+
+  :config
+  (add-hook 'eat-mode-hook #'ins-eat-skk-settings)
+
+  (with-eval-after-load 'eat
+    (define-key eat-mode-map (kbd "C-h") (lambda ()
+                                           (interactive)
+                                           (eat-self-input 1 ?\177))))
+
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'eat-mode 'emacs))
+
+  (defun ins-eat-skk-settings ()
+    (when (fboundp 'evil-emacs-state)
+      (evil-emacs-state)))
+
+  :hook (eat-mode-hook . (lambda ()
+                           (setq-local inhibit-read-only t)
+                           (setq-local scroll-margin 0)
+                           (display-line-numbers-mode -1)
+                           (when (fboundp 'evil-emacs-state)
+                                          (evil-emacs-state))
+                           ))
+  )
+
+(leaf ddskk
+  :ensure t
+  :bind
+  (("C-x C-j" . skk-mode)
+   ("C-x j"   . skk-mode))
+  :init
+  (defvar dired-bind-jump nil) ; dired-xに `C-x C-j` が奪われてしまうので対処
+  :custom
+  (skk-use-azik                      . t) ; AZIKを使用
+  (skk-azik-keyboard-type            . 'jp106)
+  (skk-server-host                   . "localhost")
+  (skk-server-portnum                . 1178)
+  (skk-egg-like-newline              . t) ; 変換時にはリータンで改行しない
+  (skk-japanese-message-and-error    . t)
+  (skk-auto-insert-paren             . t)
+  (skk-check-okurigata-on-touroku    . t)
+  (skk-show-annotation               . t)
+  (skk-annotation-show-wikipedia-url . t)
+  (skk-show-tooltip                  . nil)
+  (skk-isearch-start-mode            . 'latin)
+  (skk-henkan-okuri-strictly         . nil)
+  (skk-process-okuri-early           . nil)
+  (skk-status-indicator              . 'minior-mode))
+
+(leaf expand-region
+  :ensure t
+  :bind (("C-." . er/expand-region))
+  )
+
+(leaf puni
+  :ensure t
+  :global-minor-mode puni-global-mode)
+
+(defun my/newline-and-indent-pair ()
+  "括弧の間でEnterを押したとき、括弧を展開してインデントする。"
+  (interactive)
+  (let ((close (char-after)))
+    (if (member (list (char-before) close)
+                '((?{ ?}) (?\( ?\)) (?\[ ?\])))
+        (progn
+          (delete-char 1)
+          (newline-and-indent)
+          (let ((pos (point)))
+            (newline)
+            (insert close)
+            (indent-according-to-mode)
+            (goto-char pos)))
+      (newline-and-indent))))
+
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (local-set-key (kbd "RET") #'my/newline-and-indent-pair)
+            (when (fboundp 'evil-local-set-key)
+              (evil-local-set-key 'insert (kbd "RET") #'my/newline-and-indent-pair))))
+
+(leaf vertico
+  :ensure t
+  :global-minor-mode t
+  :bind
+  ((:vertico-map
+    ("C-z" . vertico-insert)
+    ("C-l" . grugrut/up-dir)))
+  :preface
+  (defun grugrut/up-dir ()
+    "ひとつ上のディレクトリ階層に移動する."
+    (interactive)
+    (let* ((orig (minibuffer-contents))
+           (orig-dir (file-name-directory orig))
+           (up-dir (if orig-dir (file-name-directory (directory-file-name orig-dir))))
+           (target (if (and up-dir orig-dir) up-dir orig)))
+      (delete-minibuffer-contents)
+      (insert target)))
+  :custom
+  (vertico-count . 20)
+  (vertico-cycle . t))
+
+(leaf savehist
+  :global-minor-mode t)
+
+(leaf vundo
+  :ensure t
+)
+
+(leaf orderless
+  :ensure t
+  :custom
+  (completion-styles . '(orderless)))
+
+(leaf marginalia
+  :ensure t
+  :global-minor-mode t)
+
+(leaf consult
+  :ensure t
+  :bind
+  (([remap switch-to-buffer] . consult-buffer)
+   ([remap goto-line] . consult-goto-line)
+   ([remap yank-pop] . consult-yank-pop)
+   ("C-;" . consult-buffer)))
+
+(leaf avy
+  :ensure t
+  :bind
+  (("C-:" . avy-goto-char-timer)
+   ("C-*" . avy-resume)
+   ("M-g M-g" . avy-goto-line))
+  :config
+  (leaf avy-zap
+    :ensure t
+    :bind
+    ([remap zap-to-char] . avy-zap-to-char)))
+
+(leaf ace-window
+  :ensure t
+  :bind
+  (("C-x o" . ace-window))
+  :config
+  (setopt aw-keys '(?a ?s ?d ?f ?g ?h ?i ?j ?k ?l))
+  :custom-face
+  (aw-leading-char-face . '((t (:height 3.0)))))
 
 (leaf-keys (("C-h" . backward-delete-char)
             ("M-h" . previous-multiframe-window)
             ("M-l" . next-multiframe-window)
             ("M-z" . delete-other-windows)))
 
-(leaf mwim
-  :ensure t
-  :bind (("C-a" . mwim-beginning-of-code-or-line)
-         ("C-e" . mwim-end-of-code-or-line)))
+(leaf which-key
+  :global-minor-mode t)
 
-;;; ========================================================
-;;; Evil モード
-;;; ========================================================
-
-(leaf evil
-  :ensure t
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  :config
-  (evil-mode 1)
-  ;; 特定モードで emacs state を初期状態に
-  (with-eval-after-load 'evil
-    (dolist (mode '(dired-mode
-                    magit-mode
-                    imenu-list-major-mode))
-      (evil-set-initial-state mode 'emacs)))
-  ;; C-t は tmux prefix (C-t) に捕捉されるため Emacs 側で unbind
-  ;; evil-jump-backward は C-o で代替可能
-  (define-key evil-normal-state-map (kbd "C-t") nil)
-  (define-key evil-insert-state-map (kbd "C-t") nil)
-  (define-key evil-visual-state-map (kbd "C-t") nil)
-  ;; 挿入モードでも Emacs キーバインドを使う
-  (defun my/kill-region-or-backward-kill-word ()
-    "リージョンがアクティブなら kill-region、そうでなければ backward-kill-word。"
-    (interactive)
-    (if (use-region-p)
-        (kill-region (region-beginning) (region-end))
-      (backward-kill-word 1)))
-  (let ((map evil-insert-state-map))
-    (define-key map (kbd "C-p") 'previous-line)
-    (define-key map (kbd "C-n") 'next-line)
-    (define-key map (kbd "C-b") 'backward-char)
-    (define-key map (kbd "C-f") 'forward-char)
-    (define-key map (kbd "C-a") 'move-beginning-of-line)
-    (define-key map (kbd "C-e") 'move-end-of-line)
-    (define-key map (kbd "M-f") 'forward-word)
-    (define-key map (kbd "M-b") 'backward-word)
-    (define-key map (kbd "C-d") 'delete-char)
-    (define-key map (kbd "C-h") 'backward-delete-char)
-    (define-key map (kbd "C-k") 'kill-line)
-    (define-key map (kbd "C-w") 'my/kill-region-or-backward-kill-word)
-    (define-key map (kbd "C-y") 'yank)
-    (define-key map (kbd "M-d") 'kill-word)
-    (define-key map (kbd "C-g") 'evil-normal-state)
-    (define-key map (kbd "C-v") 'scroll-up)
-    (define-key map (kbd "M-v") 'scroll-down)
-    ;; Insert モードで Shift+Arrow によるリージョン選択を有効化
-    (define-key map [S-up]    (lambda () (interactive) (setq this-command-keys-shift-translated t) (call-interactively #'previous-line)))
-    (define-key map [S-down]  (lambda () (interactive) (setq this-command-keys-shift-translated t) (call-interactively #'next-line)))
-    (define-key map [S-left]  (lambda () (interactive) (setq this-command-keys-shift-translated t) (call-interactively #'backward-char)))
-    (define-key map [S-right] (lambda () (interactive) (setq this-command-keys-shift-translated t) (call-interactively #'forward-char)))
-    ;; C-@ / C-Space でマークをセットしてリージョン選択を開始
-    (define-key map (kbd "C-@")   #'set-mark-command)
-    (define-key map (kbd "C-SPC") #'set-mark-command))
-  ;; visual state で C-w → kill-region
-  (define-key evil-visual-state-map (kbd "C-w") 'kill-region))
-
-(declare-function evil-set-initial-state "evil")
-
-;;; ========================================================
-;;; 括弧管理 (smartparens)
-;;; ========================================================
-
-(leaf smartparens
-  :ensure t
-  :require smartparens-config
-  :bind (("C-M-a" . sp-beginning-of-sexp)
-         ("C-M-e" . sp-end-of-sexp)
-         ("C-M-d" . sp-down-sexp)
-         ("C-M-u" . sp-up-sexp)
-         ("C-M-w" . sp-backward-down-sexp)
-         ("C-M-q" . sp-backward-up-sexp)
-         ("C-M-f" . sp-forward-symbol)
-         ("C-M-b" . sp-backward-symbol)
-         ("C-M-n" . sp-next-sexp)
-         ("C-M-p" . sp-previous-sexp)
-         ("C-s-f" . sp-forward-sexp)
-         ("C-s-b" . sp-backward-sexp)
-         ("C-c ("  . wrap-with-parens)
-         ("C-c ["  . wrap-with-brackets)
-         ("C-c {"  . wrap-with-braces)
-         ("C-c \""  . wrap-with-double-quotes)
-         ("M-]"   . sp-unwrap-sexp)
-         ("M-k"   . sp-kill-sexp))
-  :init
-  (smartparens-global-mode t)
-  :custom
-  (electric-pair-mode . nil)
-  :config
-  (require 'smartparens-config)
-  ;; Go: { 後の改行でインデント
-  (sp-with-modes '(go-mode go-ts-mode)
-    (sp-local-pair "{" nil :post-handlers '(:add "||\n[i]")))
-  ;; TSX/JSX: { 後に改行+インデント展開、< > ペア有効
-  (sp-with-modes '(web-mode typescript-mode tsx-ts-mode typescript-ts-mode)
-    (sp-local-pair "{" nil :post-handlers '("||\n[i]"))
-    (sp-local-pair "<" ">"))
-  (sp-pair "'" nil :unless '(sp-point-after-word-p)))
-
-(declare-function sp-pair "smartparens")
-(declare-function sp-local-pair "smartparens")
-(declare-function sp-with-modes "smartparens")
-
-;;; ========================================================
-;;; 日本語入力 (ddskk)
-;;; ========================================================
-
-(leaf ddskk
+(leaf magit
   :ensure t
   :bind
-  (("C-x C-j" . skk-mode)
-   ("M-j"     . skk-mode))
+  (("C-x g" . magit-status)))
+
+(leaf recentf
   :init
-  (defvar dired-bind-jump nil)
-  :custom
-  (skk-use-azik                       . t)
-  (skk-azik-keyboard-type             . 'jp106)
-  (skk-preload                        . t)
-  (skk-byte-compile-init-file         . t)
-  (skk-indicator-use-cursor-color     . nil)
-  (skk-indicator-prefix               . "")
-  (skk-egg-like-newline               . t)
-  (skk-show-annotation                . nil)
-  (skk-undo-kakutei-word-only         . t)
-  (skk-henkan-strict-okuri-precedence . t)
-  (default-input-method               . "japanese-skk")
-  (skk-show-inline                    . t)
-  (skk-use-look                       . t))
-
-;;; ========================================================
-;;; 補完フレームワーク（vertico + consult + corfu + orderless）
-;;; ========================================================
-
-(leaf vertico
-  :ensure t
-  :global-minor-mode vertico-mode
+  (recentf-mode)
   :config
-  (with-eval-after-load 'vertico
-    (define-key vertico-map (kbd "C-h") #'backward-delete-char)))
+  (setopt recentf-max-saved-items 5000)
+  (setopt recentf-auto-cleanup 'never))
 
-(leaf orderless
+(leaf git-gutter
   :ensure t
+  :global-minor-mode global-git-gutter-mode
   :custom
-  (completion-styles             . '(orderless basic))
-  (completion-category-overrides . '((file (styles basic partial-completion)))))
+  ((git-gutter:added-sign . "++")
+   (git-gutter:deleted-sign . "--")
+   (git-gutter:modified-sign . "==")))
 
-(leaf marginalia
-  :ensure t
-  :global-minor-mode marginalia-mode
+(leaf treesit
   :config
-  ;; marginalia を minibuffer のみに制限する
-  ;; corfu (in-buffer 補完) では lsp-mode の affixation と二重アノテーションになるため
-  (advice-add 'marginalia--completion-metadata-get :before-while
-              (lambda (&rest _) (minibufferp))))
+  (setopt treesit-font-lock-level 4)
+  (setopt treesit-language-source-alist
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+)
 
-(leaf consult
+(leaf eglot
+  :config
+  (dolist (hook '(typescript-mode-hook
+                  tsx-ts-mode-hook
+                  go-mode-hook
+                  go-ts-mode-hook
+                  python-mode-hook
+                  python-ts-mode-hook
+                  html-mode-hook
+                  terraform-mode-hook))
+    (add-hook hook #'eglot-ensure))
+  (add-to-list 'eglot-server-programs
+               '(terraform-mode . ("terraform-ls" "serve"))))
+
+(leaf corfu-terminal
   :ensure t
-  :bind (("C-s"     . consult-line)
-         ("C-x C-r" . consult-recent-file)
-         ("C-S-s"   . consult-imenu)
-         ("C-x b"   . consult-buffer)
-         ("M-y"     . consult-yank-pop))
-  :custom
-  (consult-async-min-input . 2))
+  :config
+  (defun my/corfu-terminal-update (frame)
+    (if (display-graphic-p frame)
+        (corfu-terminal-mode -1)
+      (corfu-terminal-mode +1)))
+  (add-hook 'after-make-frame-functions #'my/corfu-terminal-update)
+  (unless (display-graphic-p)
+    (corfu-terminal-mode +1)))
 
 (leaf corfu
-  :ensure t
-  :custom
-  (corfu-auto        . t)
-  (corfu-auto-delay  . 0.2)
-  (corfu-auto-prefix . 2)
-  (corfu-cycle       . t)
-  :bind (:corfu-map
-         ("C-n"   . corfu-next)
-         ("C-p"   . corfu-previous)
-         ("<tab>" . corfu-complete))
-  :global-minor-mode global-corfu-mode
-  )
+  :custom ((corfu-auto . t)
+           (corfu-auto-delay . 0)
+           (corfu-auto-prefix . 1)
+           (corfu-cycle . t)
+           (corfu-on-exact-match . nil)
+           (tab-always-indent . 'complete))
+  :init
+  (global-corfu-mode +1)
+
+  :config
+  (define-key corfu-map (kbd "TAB") #'corfu-insert)
+  (define-key corfu-map (kbd "<tab>") #'corfu-insert)
+  (define-key corfu-map (kbd "RET") nil)
+  (define-key corfu-map (kbd "<return>") nil)
+
+  ;; java-mode などの一部のモードではタブに `c-indent-line-or-region` が割り当てられているので、
+  ;; 補完が出るように `indent-for-tab-command` に置き換える
+  (defun my/corfu-remap-tab-command ()
+    (global-set-key [remap c-indent-line-or-region] #'indent-for-tab-command))
+  (add-hook 'java-mode-hook #'my/corfu-remap-tab-command)
+
+  ;; ミニバッファー上でverticoによる補完が行われない場合、corfuの補完が出るようにします。
+  ;; https://github.com/minad/corfu#completing-in-the-minibuffer
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active)
+                (bound-and-true-p vertico--input))
+      ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
+      (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+                  corfu-popupinfo-delay nil)
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+
+  ;; lsp-modeでcorfuが起動するように設定する
+  (with-eval-after-load 'lsp-mode
+    (setq lsp-completion-provider :none)))
 
 (leaf cape
   :ensure t
+  :hook (((prog-mode
+           text-mode
+           conf-mode
+           eglot-managed-mode) . my/set-super-capf))
   :config
-  ;; cape-file はグローバルで常に有効
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  ;; cape-dabbrev は LSP を使わないモードのみに限定
-  ;; （LSP バッファでグローバル登録すると補完境界の違いで2つのポップアップが重なる）
-  (dolist (hook '(emacs-lisp-mode-hook
-                  lisp-mode-hook
-                  text-mode-hook
-                  org-mode-hook))
-    (add-hook hook (lambda ()
-                     (add-to-list 'completion-at-point-functions #'cape-dabbrev t))))
-  ;; LSP 有効時は capf を lsp のみに限定（cape-file はファイルパス補完として残す）
-  (add-hook 'lsp-completion-mode-hook
-            (lambda ()
-              (when lsp-completion-mode
-                (setq-local completion-at-point-functions
-                            (list #'lsp-completion-at-point #'cape-file))))))
+  (setq cape-dabbrev-check-other-buffers nil)
 
-;;; ========================================================
-;;; 日本語インクリメンタル検索 (migemo)
-;;; ========================================================
+  (defun my/set-super-capf (&optional arg)
+    (setq-local completion-at-point-functions
+                (list (cape-capf-noninterruptible
+                       (cape-capf-buster
+                        (cape-capf-properties
+                         (cape-capf-super
+                          (if arg arg (car completion-at-point-functions))
+                          #'cape-dabbrev
+                          #'cape-file)
+                         :sort t
+                         :exclusive 'no))))))
 
-(leaf migemo
-  :ensure t
-  :when (executable-find "cmigemo")
-  :require t
-  :custom
-  ((migemo-command          . "cmigemo")
-   (migemo-options          . '("-q" "--emacs"))
-   (migemo-user-dictionary  . nil)
-   (migemo-regex-dictionary . nil)
-   (migemo-coding-system    . 'utf-8-unix))
-  :config
-  ;; ディクショナリのパスを自動検出（Homebrew ARM/Intel / Linux）
-  (setq migemo-dictionary
-        (cl-find-if #'file-exists-p
-                    '("/opt/homebrew/share/migemo/utf-8/migemo-dict"
-                      "/usr/local/share/migemo/utf-8/migemo-dict"
-                      "/usr/share/migemo/utf-8/migemo-dict")))
-  (when migemo-dictionary
-    (migemo-init)
-    ;; consult-line をローマ字で日本語検索できるようにする
-    (with-eval-after-load 'consult
-      (defun my/consult-line-migemo ()
-        "migemo を使ってローマ字で日本語を consult-line 検索する。"
-        (interactive)
-        (let ((consult--regexp-compiler
-               (lambda (input type ignore-case)
-                 (funcall #'consult--default-regexp-compiler
-                          (migemo-get-pattern input)
-                          type ignore-case))))
-          (consult-line)))
-      (global-set-key (kbd "C-s") #'my/consult-line-migemo))))
-
-;;; ========================================================
-;;; スニペット (yasnippet)
-;;; ========================================================
+  (add-to-list 'completion-at-point-functions #'cape-file t)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
+  (add-to-list 'completion-at-point-functions #'cape-keyword t))
 
 (leaf yasnippet
   :ensure t
   :blackout yas-minor-mode
-  :custom ((yas-indent-line . 'fixed)
-           (yas-global-mode . t))
-  :bind ((yas-keymap
-          ("<tab>" . nil))
-         (yas-minor-mode-map
-          ("C-c y i" . yas-insert-snippet)
-          ("C-c y n" . yas-new-snippet)
-          ("C-c y v" . yas-visit-snippet-file)
-          ("C-c y l" . yas-describe-tables)
-          ("C-c y g" . yas-reload-all)))
+  :global-minor-mode yas-global-mode
+  :custom ((yas-indent-line . 'fixed))
   :config
+  (define-key yas-keymap (kbd "<tab>") nil)
+  (define-key yas-minor-mode-map (kbd "C-c y i") #'yas-insert-snippet)
+  (define-key yas-minor-mode-map (kbd "C-c y n") #'yas-new-snippet)
+  (define-key yas-minor-mode-map (kbd "C-c y v") #'yas-visit-snippet-file)
+  (define-key yas-minor-mode-map (kbd "C-c y l") #'yas-describe-tables)
+  (define-key yas-minor-mode-map (kbd "C-c y g") #'yas-reload-all)
   (leaf yasnippet-snippets :ensure t)
   (leaf yatemplate
     :commands (yatemplate-fill-alist)
     :ensure t
     :config
-    (yatemplate-fill-alist)))
+    (yatemplate-fill-alist))
+  (defvar company-mode/enable-yas t
+    "Enable yasnippet for all backends.")
+  (defun company-mode/backend-with-yas (backend)
+    (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
+        backend
+      (append (if (consp backend) backend (list backend))
+              '(:with company-yasnippet)))))
 
-;;; ========================================================
-;;; 文法チェック (flycheck)
-;;; ========================================================
+(leaf flymake
+  :global-minor-mode t)
 
-(leaf flycheck
-  :ensure t
-  :init (global-flycheck-mode)
-  :hook (prog-mode-hook . flycheck-mode)
-  :custom ((flycheck-display-errors-delay . 0.3))
-  :config
-  (leaf flycheck-inline
-    :ensure t
-    :hook (flycheck-mode-hook . flycheck-inline-mode))
-  (leaf flycheck-color-mode-line
-    :ensure t
-    :hook (flycheck-mode-hook . flycheck-color-mode-line-mode))
-  (unless (display-graphic-p)
-    (remove-hook 'flycheck-mode-hook #'flycheck-inline-mode)
-    (setq flycheck-inline-mode nil)
-    (setq flycheck-display-errors-function #'flycheck-display-error-messages)
-    (setq flycheck-display-errors-delay 0.1))
-  :bind (("M-n" . flycheck-next-error)
-         ("M-p" . flycheck-previous-error))
-  :global-minor-mode global-flycheck-mode)
-
-;;; ========================================================
-;;; LSP (lsp-mode)
-;;; ========================================================
-
-(leaf lsp-mode
-  :ensure t
-  :require t
-  :commands lsp
-  :hook
-  ((go-ts-mode-hook         . lsp-deferred)
-   (go-mode-hook            . lsp-deferred)
-   (typescript-ts-mode-hook . lsp-deferred)
-   (typescript-mode-hook    . lsp-deferred)
-   (tsx-ts-mode-hook        . lsp-deferred)
-   (web-mode-hook           . lsp-deferred)
-   (terraform-mode-hook     . lsp-deferred)
-   (python-ts-mode-hook     . lsp-deferred)
-   (python-mode-hook        . lsp-deferred))
-  :custom ((lsp-keymap-prefix               . "C-c l")
-           (lsp-completion-provider         . :none)
-           (lsp-idle-delay                  . 0.2)
-           (lsp-prefer-capf                 . t)
-           (lsp-ui-doc-enable               . t)
-           (lsp-ui-doc-position             . 'at-point)
-           (lsp-go-analyses                 . '((unusedparams . t)
-                                                (unusedwrite  . t)))
-           ;; affixation が kind + detail を表示するため annotation 側を無効化
-           ;; （両方有効にすると "flag (Module)"flag (Module)" のように二重表示になる）
-           (lsp-completion-show-detail      . nil)
-           (lsp-completion-show-kind        . nil)
-           (lsp-enable-snippet              . t)
-           (lsp-headerline-breadcrumb-enable . t))
-  :config
-  (setq lsp-disabled-clients '(tfls))
-  ;; gopls の補完設定（ドット記法 "gopls.<key>" が正しいフォーマット）
-  (lsp-register-custom-settings
-   '(("gopls.completeUnimported" t   t)
-     ;; usePlaceholders: net.Listen(${1:network}, ${2:address}) のようなスニペット展開を有効化
-     ("gopls.usePlaceholders"    t   t)
-     ("gopls.staticcheck"        t   t)
-     ("gopls.hoverKind"          "FullDocumentation")))
-
-  (leaf lsp-ui
-    :ensure t
-    :require t
-    :hook (lsp-mode-hook . lsp-ui-mode)
-    :custom
-    (lsp-ui-sideline-enable . nil)
-    (lsp-prefer-flymake     . nil)
-    (lsp-print-performance  . t)
-    :config
-    ;; ターミナルでは doc popup を無効化（描画コスト削減）
-    (unless (display-graphic-p)
-      (setq lsp-ui-doc-enable nil)
-      (setq lsp-ui-peek-enable nil))
-    (define-key lsp-ui-mode-map [remap xref-find-definitions] 'lsp-ui-peek-find-definitions)
-    (define-key lsp-ui-mode-map [remap xref-find-references]  'lsp-ui-peek-find-references)
-    (define-key lsp-ui-mode-map (kbd "C-c i") 'lsp-ui-imenu)
-    (define-key lsp-ui-mode-map (kbd "s-l")   'hydra-lsp/body)
-    (setq lsp-ui-doc-position 'bottom)
-    :hydra (hydra-lsp (:exit t :hint nil)
-                      "
- Buffer^^               Server^^                   Symbol
--------------------------------------------------------------------------------------
- [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
- [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
- [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
-                      ("d" lsp-find-declaration)
-                      ("D" lsp-ui-peek-find-definitions)
-                      ("R" lsp-ui-peek-find-references)
-                      ("i" lsp-ui-peek-find-implementation)
-                      ("t" lsp-find-type-definition)
-                      ("s" lsp-signature-help)
-                      ("o" lsp-describe-thing-at-point)
-                      ("r" lsp-rename)
-                      ("f" lsp-format-buffer)
-                      ("m" lsp-ui-imenu)
-                      ("x" lsp-execute-code-action)
-                      ("M-s" lsp-describe-session)
-                      ("M-r" lsp-restart-workspace)
-                      ("S" lsp-shutdown-workspace))))
-
-(declare-function lsp-organize-imports "lsp")
-
-(leaf lsp-treemacs
-  :ensure t
-  :after lsp-mode
-  :commands lsp-treemacs-errors-list)
-
-;;; ========================================================
-;;; TreeSitter
-;;; ========================================================
-
-(leaf treesit-auto
-  :ensure t
+(leaf project
   :custom
-  (treesit-auto-install . 'prompt)
-  :config
-  (when (fboundp 'global-treesit-auto-mode)
-    (global-treesit-auto-mode)))
+  (project-vc-merge-submodules . nil) ; Git Submoduleは別のプロジェクトとして扱う
+  )
 
-;;; ========================================================
-;;; Git 管理
-;;; ========================================================
-
-(leaf magit
-  :ensure t
-  :bind (("C-x g"   . magit-status)
-         ("C-x M-g" . magit-dispatch)))
-
-(leaf git-gutter-fringe
-  :ensure t
-  :custom ((git-gutter:lighter     . "")
-           (global-git-gutter-mode . t)))
-
-;;; ========================================================
-;;; ターミナル
-;;; ========================================================
-
-;; eat（メイン）
-(leaf eat
-  :ensure t
-  :bind (("C-c t" . eat))
-  :custom
-  (eat-kill-buffer-on-exit . t)
-  (eat-enable-mouse        . t)
-  :config
-  (with-eval-after-load 'eat
-    (define-key eat-mode-map (kbd "C-h") (lambda ()
-                                           (interactive)
-                                           (eat-self-input 1 ?\177)))
-    ;; semi-char-mode でも M-j / C-x C-j で SKK を起動できるようにする
-    (define-key eat-semi-char-mode-map (kbd "M-j")     #'skk-mode)
-    (define-key eat-semi-char-mode-map (kbd "C-x C-j") #'skk-mode))
-  (with-eval-after-load 'evil
-    (evil-set-initial-state 'eat-mode 'emacs))
-  :hook (eat-mode-hook . (lambda ()
-                           (setq-local inhibit-read-only t)
-                           (setq-local scroll-margin 0)
-                           (display-line-numbers-mode -1)
-                           (when (fboundp 'evil-emacs-state)
-                             (evil-emacs-state)))))
-
-;; vterm（補助）
-(leaf vterm
-  :ensure t
-  :bind (("M-t" . vterm))
-  :custom
-  (vterm-max-scrollback         . 10000)
-  (vterm-buffer-name-string     . "vterm: %s")
-  (vterm-install-static-modules . t)
-  :config
-  (with-eval-after-load 'vterm
-    (add-to-list 'vterm-keymap-exceptions "M-j")
-    (define-key vterm-mode-map (kbd "C-m")      #'vterm-send-return)
-    (define-key vterm-mode-map (kbd "RET")      #'vterm-send-return)
-    (define-key vterm-mode-map (kbd "<return>") #'vterm-send-return)
-    (define-key vterm-mode-map (kbd "C-h")      #'vterm-send-backspace))
-  :hook (vterm-mode-hook . (lambda ()
-                             (setq-local scroll-margin 0)
-                             (display-line-numbers-mode -1)
-                             (setq-local skk-egg-like-newline nil)
-                             (setq inhibit-read-only t)
-                             (read-only-mode -1)
-                             (smartparens-mode -1)
-                             (when (fboundp 'evil-emacs-state)
-                               (evil-emacs-state)))))
-
-(leaf vterm-toggle
-  :ensure t
-  :custom
-  (vterm-toggle-scope . 'project)
-  :config
-  (add-to-list 'display-buffer-alist
-               '((lambda (bufname _)
-                   (with-current-buffer bufname
-                     (equal major-mode 'vterm-mode)))
-                 (display-buffer-reuse-window display-buffer-in-direction)
-                 (direction       . bottom)
-                 (reusable-frames . visible)
-                 (window-height   . 0.4))))
-
-;;; ========================================================
-;;; UI 補助
-;;; ========================================================
-
-(leaf rainbow-delimiters
-  :ensure t
-  :hook
-  ((prog-mode-hook . rainbow-delimiters-mode)))
+(leaf editorconfig
+  :global-minor-mode t)
 
 (leaf indent-bars
-  :ensure t
+  :vc (:url "https://github.com/jdtsmith/indent-bars")
   :hook
-  ;; ターミナルでは overlay コストが高いため GUI のみ有効
-  ((prog-mode-hook . (lambda () (when (display-graphic-p) (indent-bars-mode)))))
-  :custom
-  (indent-bars-treesit-support        . t)
-  (indent-bars-no-descend-string      . t)
-  (indent-bars-treesit-ignore-blank-lines-types . '("module"))
-  (indent-bars-prefer-character       . nil))
-
-(leaf whitespace
-  :ensure t
-  :commands whitespace-mode
-  :bind ("C-c W" . whitespace-cleanup)
-  :custom ((whitespace-style            . '(face trailing tabs spaces empty space-mark tab-mark))
-           (whitespace-display-mappings . '((space-mark ?\u3000 [?\u25a1])
-                                            (tab-mark   ?\t     [?\u00BB ?\t] [?\\ ?\t])))
-           (whitespace-space-regexp     . "\\(\u3000+\\)")
-           (whitespace-global-modes     . '(emacs-lisp-mode shell-script-mode sh-mode python-mode org-mode))
-           (global-whitespace-mode      . t))
+  prog-mode-hook cc-mode-hook org-mode-hook
   :config
-  (set-face-attribute 'whitespace-trailing nil :background "Black" :foreground "DeepPink"    :underline t)
-  (set-face-attribute 'whitespace-tab      nil :background "Black" :foreground "LightSkyBlue" :underline t)
-  (set-face-attribute 'whitespace-space    nil :background "Black" :foreground "GreenYellow"  :weight 'bold)
-  (set-face-attribute 'whitespace-empty    nil :background "Black"))
+  (require 'indent-bars-ts)
+  :custom
+  (indent-bars-treesit-support . t)
+  (indent-bars-treesit-ignore-blank-lines-types . '("module"))
+  (indent-bars-pattern . ".")
+  (indent-bars-width-frac . 0.2)
+  (indent-bars-pad-frac . 0.2)
+  (indent-bars-color-by-depth . '(:regexp "outline-\\([0-9]+\\)" :blend 1))
+  (indent-bars-highlight-current-depth . '(:pattern "." :pad 0.1 :width 0.45)))
 
-;;; ========================================================
-;;; コードフォーマット (reformatter)
-;;; ========================================================
+(leaf llm
+  :vc (:url "https://github.com/ahyatt/llm/tree/main")
+  :require llm-gemini
+  :config
+  (when (file-exists-p "~/.emacs.d/secrets.el")
+    (load "~/.emacs.d/secrets.el")
+    (setq llm-gemini (make-llm-gemini :key gemini-api-key))
+    (setq ellama-provider llm-gemini)))
+
+(leaf ellama
+  :ensure t
+  :bind
+  ("C-c e" . ellama-transient-main-menu)
+  :custom
+  (ellama-language . "Japanese"))
 
 (leaf reformatter
   :ensure t
-  :require t
   :config
-  (reformatter-define go-format
-    :program "goimports")
-  (reformatter-define web-format
-    :program "npx"
-    :args `("prettier" "--stdin-filepath" ,buffer-file-name "--tab-width" "2"))
-  (reformatter-define python-format
-    :program "ruff"
-    :args `("format" "--stdin-filename" ,buffer-file-name))
+  (reformatter-define prettier-ts-format
+    :program "prettier"
+    :args (list "--stdin-filepath" (or (buffer-file-name) "dummy.ts"))))
+
+(leaf typescript-mode
+  :ensure t
+  :mode
+  (("\\.ts\\'" . typescript-mode)
+   ("\\.tsx\\'" . tsx-ts-mode))
   :hook
-  (go-ts-mode-hook          . go-format-on-save-mode)
-  (go-mode-hook             . go-format-on-save-mode)
-  (tsx-ts-mode-hook         . web-format-on-save-mode)
-  (typescript-ts-mode-hook  . web-format-on-save-mode)
-  (json-ts-mode-hook   . web-format-on-save-mode)
-  (graphql-mode-hook   . web-format-on-save-mode)
-  (prisma-mode-hook    . web-format-on-save-mode)
-  (python-ts-mode-hook . python-format-on-save-mode))
-
-(declare-function web-format-region "reformatter")
-(declare-function web-format-on-save-mode "reformatter")
-(declare-function go-format-region "reformatter")
-
-;;; ========================================================
-;;; プログラミング言語
-;;; ========================================================
-
-;;; --- Go ---
-
-;; go-mode をインストール（treesit-auto が go-mode → go-ts-mode へリマップする依存元）
-(leaf go-mode
-  :ensure t)
-
-;; go-ts-mode を gopls クライアントに明示登録（lsp-mode の古いバージョン対策）
-(with-eval-after-load 'lsp-go
-  (add-to-list 'lsp-language-id-configuration '(go-ts-mode . "go")))
-
-;; Go: LSP 起動後は gopls のみに補完を限定（yasnippet 等との重複を防ぐ）
-;; Python の my/python-lsp-only-capf と同じパターン（depth=90 で最後に適用）
-(defun my/go-lsp-only-capf ()
-  "Go バッファで LSP のみの補完に限定する（yasnippet 等を除外）。"
-  (when (fboundp 'company-mode) (company-mode -1))
-  (setq-local completion-at-point-functions
-              (list #'lsp-completion-at-point #'cape-file)))
-
-(dolist (hook '(go-ts-mode-hook go-mode-hook))
-  (add-hook hook (lambda ()
-                   (setq-local tab-width       4)
-                   (setq-local indent-tabs-mode t)
-                   ;; 即時適用: Python の my/python-lsp-only-capf と同じパターン
-                   ;; yas-minor-mode がモードフック完了後に CAPF を再追加する前に除去
-                   (my/go-lsp-only-capf)
-                   (add-hook 'before-save-hook #'lsp-organize-imports t t)
-                   ;; LSP 起動後にも再適用（depth=90 で他のフックより後に実行）
-                   (add-hook 'lsp-completion-mode-hook #'my/go-lsp-only-capf 90 t)
-                   (add-hook 'lsp-after-open-hook       #'my/go-lsp-only-capf 90 t))))
-
-;;; --- TypeScript / TSX ---
-;; treesit-auto が typescript-mode → typescript-ts-mode / tsx-ts-mode へ自動マッピング
-
-(dolist (hook '(typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook))
-  (add-hook hook (lambda ()
-                   (setq-local typescript-indent-level 2)
-                   (setq-local tab-width 2)
-                   (setq-local indent-tabs-mode nil))))
-
-(defun my/typescript-lsp-only-capf ()
-  "TypeScript バッファで LSP のみの補完に限定し company-mode を無効化する。"
-  (when (fboundp 'company-mode) (company-mode -1))
-  (setq-local completion-at-point-functions
-              (list #'lsp-completion-at-point #'cape-file)))
-
-(dolist (hook '(typescript-ts-mode-hook typescript-mode-hook tsx-ts-mode-hook))
-  (add-hook hook (lambda ()
-                   (my/typescript-lsp-only-capf)
-                   (add-hook 'lsp-completion-mode-hook #'my/typescript-lsp-only-capf 90 t)
-                   (add-hook 'lsp-after-open-hook       #'my/typescript-lsp-only-capf 90 t))))
-
-;;; --- Web ---
-
-(leaf web-mode
-  :ensure t
-  :mode (("\\.phtml\\'"    . web-mode)
-         ("\\.tpl\\.php\\'" . web-mode)
-         ("\\.[gj]sp\\'"   . web-mode)
-         ("\\.as[cp]x\\'"  . web-mode)
-         ("\\.erb\\'"      . web-mode)
-         ("\\.mustache\\'" . web-mode)
-         ("\\.djhtml\\'"   . web-mode)
-         ("\\.html?\\'"    . web-mode))
-  :custom
-  (web-mode-engines-alist                    . '(("php"   . "\\.phtml\\'")
-                                                 ("blade" . "\\.blade\\.")))
-  (web-mode-enable-current-element-highlight . t)
-  (web-mode-markup-indent-offset             . 2)
-  (web-mode-code-indent-offset               . 2)
-  :config
-  (setq web-mode-css-indent-offset    2
-        web-mode-comment-style        2
-        web-mode-style-padding        1
-        web-mode-script-padding       1
-        web-mode-attr-indent-offset   nil
-        web-mode-enable-auto-closing  t
-        web-mode-enable-auto-pairing  t
-        web-mode-auto-close-style     2
-        web-mode-tag-auto-close-style 2
-        indent-tabs-mode              nil))
-
-;;; --- Python ---
-
-(leaf lsp-pyright
-  :ensure t
-  :after lsp-mode
-  :custom ((lsp-pyright-multi-root              . nil)
-           (lsp-pyright-auto-import-completions . nil))
-  :hook ((python-ts-mode-hook . (lambda () (require 'lsp-pyright)))
-         (python-mode-hook    . (lambda () (require 'lsp-pyright)))))
-
-;; Python: LSP 補完のみに限定
-;; python-base-mode がフック実行前に python-completion-at-point を追加するため、
-;; モード起動直後に即時除去し、LSP 起動後にも再適用する
-(defun my/python-lsp-only-capf ()
-  "Python バッファで LSP のみの補完に限定する（python-completion-at-point を除外）。"
-  (when (fboundp 'company-mode) (company-mode -1))
-  (setq-local completion-at-point-functions
-              (list #'lsp-completion-at-point)))
-
-(dolist (hook '(python-ts-mode-hook python-mode-hook))
-  (add-hook hook
-            (lambda ()
-              ;; python-base-mode が追加した python-completion-at-point を即時除去
-              (my/python-lsp-only-capf)
-              ;; LSP 起動後にも再適用（lsp-completion--enable の後に実行）
-              (add-hook 'lsp-completion-mode-hook
-                        #'my/python-lsp-only-capf 90 t)
-              (add-hook 'lsp-after-open-hook
-                        #'my/python-lsp-only-capf 90 t))))
-
-(leaf pyvenv
-  :ensure t
-  :config
-  (pyvenv-mode 1))
-
-(leaf blacken
-  :ensure t
-  :hook (python-ts-mode-hook . blacken-mode)
-  :custom ((blacken-line-length               . 119)
-           (blacken-skip-string-normalization . t)))
-
-;;; --- Terraform ---
+  ((typescript-mode . prettier-ts-format-on-save-mode)
+   (tsx-ts-mode . prettier-ts-format-on-save-mode)))
 
 (leaf terraform-mode
   :ensure t
-  :mode "\\.tf\\'" "\\.hcl\\'"
-  :init
-  (add-hook 'terraform-mode-hook 'terraform-format-on-save-mode)
-  (add-hook 'terraform-mode-hook 'hs-minor-mode)
-  (add-hook 'terraform-mode-hook
-            (lambda ()
-              (when (fboundp 'company-mode) (company-mode -1))
-              (setq-local completion-at-point-functions
-                          (list #'lsp-completion-at-point #'cape-file)))
-            90))
+  :mode ("\\.tf\\'" . terraform-mode)
+  :hook (terraform-mode-hook . terraform-format-on-save-mode))
 
-;;; --- GraphQL ---
-
-(leaf graphql-mode
+(leaf markdown-mode
   :ensure t
-  :mode ("\\.graphql\\'" "\\.gql\\'")
-  :custom
-  (graphql-indent-level . 2))
-
-;;; --- Prisma ---
-
-(use-package prisma-mode
-  :vc (:url "https://github.com/pimeys/emacs-prisma-mode" :rev :newest))
-
-;;; --- YAML ---
-
-(leaf yaml-mode
-  :ensure t
-  :leaf-defer t)
-
-;;; --- Dockerfile ---
-
-(leaf dockerfile-mode
-  :ensure t
-  :mode (("Dockerfile" . dockerfile-mode)))
-
-;;; --- JSON ---
-
-(leaf json-mode
-  :package t
-  :mode (("\\.json\\'" . json-mode))
-  :hook ((json-mode-hook . my-json-mode-initialize))
-  :init
-  (defun my-json-mode-initialize ()
-    (setq-local indent-tabs-mode nil)
-    (setq-local tab-width        2)
-    (setq-local js-indent-level  tab-width)))
-
-;;; --- Markdown ---
-
-(leaf markdown
-  :config
-  (leaf markdown-mode
-    :ensure t
-    :leaf-defer t
-    :mode ("\\.md\\'" . gfm-mode)
-    :custom
-    (markdown-command              . "github-markup")
-    (markdown-command-needs-filename . t))
-  (leaf markdown-preview-mode
-    :ensure t))
-
-;;; ========================================================
-;;; Claude Code
-;;; ========================================================
-
-;; Emacs から Claude Code を起動・操作する（C-c c プレフィックス）
-(leaf claude-code
-  :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
-  :hook (claude-code-start-hook . skk-mode)
-  :config
-  (claude-code-mode))
-
-;; claude-code-command-map はパッケージ読み込み後に参照する
-(with-eval-after-load 'claude-code
-  (define-key global-map (kbd "C-c c") claude-code-command-map))
-
-;; Claude Code IDE: Claude Code から Emacs を MCP ツールとして使う
-(leaf claude-code-ide
-  :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
-  :bind ("C-c C-'" . claude-code-ide-menu)
-  :config
-  (claude-code-ide-emacs-tools-setup))
-
-;;; ========================================================
-;;; Dev Container
-;;; ========================================================
-
-(leaf devcontainer
-  :ensure t
-  :custom
-  (devcontainer-term-function . #'eat)
-  :bind (("C-c d u" . devcontainer-up)
-         ("C-c d f" . devcontainer-tramp-dired)
-         ("C-c d o" . devcontainer-term)
-         ("C-c d e" . devcontainer-execute-command)
-         ("C-c d s" . devcontainer-kill-container)))
-
-;; devcontainer.el は tramp-docker-program を --docker-path に渡す。
-;; デフォルト値 "docker" だと Node.js プロセスが見つけられないためフルパスを指定。
-(with-eval-after-load 'tramp-container
-  (setq tramp-docker-program "/usr/local/bin/docker"))
-
-;; Docker / Dev Container へのファイルアクセス（TRAMP 経由）
-;; /docker:コンテナ名:/パス で開くと直接編集可能
-(with-eval-after-load 'tramp
-  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-  ;; Docker コンテナへの接続タイムアウト延長
-  (setq tramp-connection-timeout 30)
-  ;; 自動保存をローカルに退避（TRAMP 経由の書き込みコスト削減）
-  (setq tramp-auto-save-directory (locate-user-emacs-file "backup/tramp-auto-save/")))
-
-;; TRAMP 経由（devcontainer）のバッファのみファイル監視を無効化
-;; ローカルの Go / Python 等の LSP には影響しない
-(add-hook 'find-file-hook
-          (lambda ()
-            (when (file-remote-p default-directory)
-              (setq-local lsp-enable-file-watchers nil))))
-
-;; コンテナ内 LSP の応答タイムアウトをデフォルト（10s）から延長
-(with-eval-after-load 'lsp-mode
-  (setq lsp-response-timeout 30))
-
-;;; ========================================================
-
-(provide 'init)
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(terraform-mode evil ddskk blackout el-get hydra leaf-keywords leaf)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-;; Local Variables:
-;; indent-tabs-mode: nil
-;; End:
-
-;;; init.el ends here
-(put 'erase-buffer 'disabled nil)
+  :mode
+  (("\\.md\\'" . gfm-mode))
+  )

@@ -1,23 +1,41 @@
-;;; early-init.el --- Early initialization -*- lexical-binding: t -*-
-;;; Commentary:
-;; フレーム生成前に実行される設定。
-;; ツールバー等の UI 要素をここで無効化することで起動時の一瞬表示を防ぐ。
-;;; Code:
+;;; early-init.el -*- coding: utf-8 ; lexical-binding: t -*-
 
-;;; native-comp ワーニングを抑制
-(setq native-comp-async-report-warnings-errors 'silent)
+(setq debug-on-error t)
 
-;;; フレームパラメータ（フレーム生成前に適用）
-;;; tool-bar-lines / menu-bar-lines を 0 にすることで起動時のフラッシュを防ぐ
+(let ((x-init-org (concat user-emacs-directory "init.org"))
+		(x-init-el (concat user-emacs-directory "init.el")))
+(when (file-newer-than-file-p x-init-org x-init-el)
+	(message "WARN: init.el is old.\n")))
+
+;; ツールバー非表示
+(tool-bar-mode 0)
+
+;; スクロールバーの非表示
+(set-scroll-bar-mode nil)
+
+;;  行番号の表示
+(global-display-line-numbers-mode t)
+(custom-set-variables '(display-line-numbers-width-start t))
+
+;; タブの表示
+(tab-bar-mode t)
+
+;; native-comp ワーニングの抑制
+(custom-set-variables '(warning-suppress-types '((comp))))
+
 (setq default-frame-alist
-      (append '((tool-bar-lines       . 0)
-                (menu-bar-lines       . 0)
-                (vertical-scroll-bars . nil)
-                (left-fringe          . 12)
-                (right-fringe         . 12)
-                (line-spacing         . 0)
-                (cursor-type          . box))
-              default-frame-alist))
+		(append '((width . 140) ;フレーム幅
+				  (height . 40) ; フレーム高
+				  (left . 170) ; 配置左
+				  (top . 30) ; 配置上
+				  (line-spacing . 0) ; 文字間隔
+				  (left-fringe . 12) ; 左フリンジ幅
+				  (right-fringe . 12) ; 右フリンジ幅
+				  (menu-bar-lines . 1) ; メニューバー
+				  (cursor-type . box) ; カーソル種別
+				  (alpha . 90) ; 透明度
+			  )
+			default-frame-alist))
 (setq initial-frame-alist default-frame-alist)
 
 ;;; early-init.el ends here
