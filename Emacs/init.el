@@ -152,6 +152,11 @@
   (evil-collection-unimpaired-mode . nil)
   :config
   (evil-collection-init)
+  (defun my/kill-region-or-backward-kill-word ()
+    (interactive)
+    (if (use-region-p)
+        (kill-region (region-beginning) (region-end))
+      (backward-kill-word 1)))
   ;; evil-collection 初期化後に insert モードの Emacs キーバインドを上書き
   (evil-define-key 'insert 'global (kbd "C-p") #'previous-line)
   (evil-define-key 'insert 'global (kbd "C-n") #'next-line)
@@ -164,7 +169,8 @@
   (evil-define-key 'insert 'global (kbd "C-d") #'delete-forward-char)
   (evil-define-key 'insert 'global (kbd "C-h") #'backward-delete-char)
   (evil-define-key 'insert 'global (kbd "C-k") #'kill-line)
-  (evil-define-key 'insert 'global (kbd "C-w") #'backward-kill-word)
+  (evil-define-key 'insert 'global (kbd "C-w") #'my/kill-region-or-backward-kill-word)
+  (evil-define-key '(normal motion visual) 'global (kbd "C-w") #'my/kill-region-or-backward-kill-word)
   (evil-define-key 'insert 'global (kbd "C-y") #'yank)
   (evil-define-key 'insert 'global (kbd "M-d") #'kill-word)
   (evil-define-key 'insert 'global (kbd "C-g") #'evil-normal-state)
