@@ -417,7 +417,18 @@
     (add-hook hook #'eglot-ensure))
   (with-eval-after-load 'eglot
     (add-to-list 'eglot-server-programs
-                 '(terraform-mode . ("terraform-ls" "serve")))))
+                 '(terraform-mode . ("terraform-ls" "serve")))
+    ;; TypeScript: プロジェクト内エクスポートの補完とauto-importを有効化
+    (defun my/eglot-ts-workspace-config ()
+      (setq-local eglot-workspace-configuration
+                  '(:typescript (:suggest (:autoImports t
+                                           :includeCompletionsForModuleExports t
+                                           :completeFunctionCalls t))
+                    :javascript (:suggest (:autoImports t
+                                           :includeCompletionsForModuleExports t)))))
+    (dolist (hook '(typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook
+                    js-mode-hook js-ts-mode-hook))
+      (add-hook hook #'my/eglot-ts-workspace-config))))
 
 (when (< emacs-major-version 31)
   (leaf corfu-terminal

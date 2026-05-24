@@ -737,7 +737,18 @@ eglot で LSP を利用する。terraform-ls も設定する。
     (add-hook hook #'eglot-ensure))
   (with-eval-after-load 'eglot
     (add-to-list 'eglot-server-programs
-                 '(terraform-mode . ("terraform-ls" "serve")))))
+                 '(terraform-mode . ("terraform-ls" "serve")))
+    ;; TypeScript: プロジェクト内エクスポートの補完とauto-importを有効化
+    (defun my/eglot-ts-workspace-config ()
+      (setq-local eglot-workspace-configuration
+                  '(:typescript (:suggest (:autoImports t
+                                           :includeCompletionsForModuleExports t
+                                           :completeFunctionCalls t))
+                    :javascript (:suggest (:autoImports t
+                                           :includeCompletionsForModuleExports t)))))
+    (dolist (hook '(typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook
+                    js-mode-hook js-ts-mode-hook))
+      (add-hook hook #'my/eglot-ts-workspace-config))))
 #+end_src
 
 ** インライン補完
@@ -816,8 +827,8 @@ corfuを使い補完させる。
   :ensure t
   :hook (((prog-mode
            text-mode
-           conf-mode
-           eglot-managed-mode) . my/set-super-capf))
+           conf-mode) . my/set-super-capf)
+         (eglot-managed-mode . my/set-eglot-capf))
   :config
   (setq cape-dabbrev-check-other-buffers nil)
 
@@ -832,6 +843,14 @@ corfuを使い補完させる。
                           #'cape-file)
                          :sort t
                          :exclusive 'no))))))
+
+  ;; eglot管理バッファ専用: eglotのexit-function（additionalTextEdits）を保持するため
+  ;; cape-capf-superでラップせずeglot capfを先頭に独立させる
+  (defun my/set-eglot-capf ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-noninterruptible #'eglot-completion-at-point)
+                      #'cape-dabbrev
+                      #'cape-file)))
 
   (add-to-list 'completion-at-point-functions #'cape-file t)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
