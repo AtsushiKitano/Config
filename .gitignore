@@ -1,0 +1,41 @@
+# 認証情報・APIキー
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+id_rsa
+id_ed25519
+id_ecdsa
+*.pub
+
+# 環境変数ファイル
+.env
+.env.*
+!.env.example
+
+# AWS
+.aws/credentials
+.aws/config
+
+# GCP
+*-credentials.json
+application_default_credentials.json
+gcloud/credentials.db
+gcloud/credentials
+
+# シークレット・パスワード
+*secret*
+*password*
+*passwd*
+*token*
+*apikey*
+*api_key*
+
+# その他の機密ファイル
+*.gpg
+*.asc
+authinfo
+.authinfo
+.netrc
