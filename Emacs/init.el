@@ -41,6 +41,10 @@
   (electric-pair-mode t)
   (define-key global-map (kbd "C-{") 'hs-hide-block)
   (define-key global-map (kbd "C-}") 'hs-show-block)
+  (define-key global-map (kbd "<C-tab>") 'hs-toggle-hiding)
+  (add-hook 'prog-mode-hook 'hs-minor-mode)
+  (setq-default bidi-paragraph-direction 'left-to-right)
+  (setq bidi-inhibit-bpa t)
   (define-key global-map (kbd "C-d") 'delete-forward-char)
   (define-key global-map (kbd "C-f") 'forward-char)
   (define-key global-map (kbd "C-k") 'kill-line)
@@ -107,11 +111,26 @@
 
 (leaf beacon
   :ensure t
-  :global-minor-mode t)
+  :config
+  (when (display-graphic-p)
+    (beacon-mode 1))
+  (add-hook 'after-make-frame-functions
+            (lambda (frame)
+              (with-selected-frame frame
+                (if (display-graphic-p)
+                    (beacon-mode 1)
+                  (beacon-mode -1))))))
 
 (leaf volatile-highlights
   :ensure t
-  :global-minor-mode t)
+  :config
+  (when (display-graphic-p)
+    (volatile-highlights-mode 1))
+  (add-hook 'after-make-frame-functions
+            (lambda (frame)
+              (with-selected-frame frame
+                (when (display-graphic-p)
+                  (volatile-highlights-mode 1))))))
 
 (leaf anzu
   :ensure t
@@ -179,7 +198,9 @@
   (evil-define-key '(normal motion) 'global (kbd "C-p") #'previous-line)
   ;; ターミナルでは C-Space が C-@ (NUL) として届くため全ステートで set-mark-command に割り当て
   (evil-define-key '(normal insert motion visual) 'global (kbd "C-@") #'set-mark-command)
-  (evil-define-key '(normal insert motion visual) 'global (kbd "C-SPC") #'set-mark-command))
+  (evil-define-key '(normal insert motion visual) 'global (kbd "C-SPC") #'set-mark-command)
+  ;; C-TAB で括弧ブロックの折り畳みトグル
+  (evil-define-key '(normal insert motion visual) 'global (kbd "<C-tab>") #'hs-toggle-hiding))
 
 (leaf eat
   :ensure t
@@ -510,20 +531,21 @@
 (leaf editorconfig
   :global-minor-mode t)
 
-(leaf indent-bars
-  :vc (:url "https://github.com/jdtsmith/indent-bars")
-  :hook
-  prog-mode-hook cc-mode-hook org-mode-hook
-  :config
-  (require 'indent-bars-ts)
-  :custom
-  (indent-bars-treesit-support . t)
-  (indent-bars-treesit-ignore-blank-lines-types . '("module"))
-  (indent-bars-pattern . ".")
-  (indent-bars-width-frac . 0.2)
-  (indent-bars-pad-frac . 0.2)
-  (indent-bars-color-by-depth . '(:regexp "outline-\\([0-9]+\\)" :blend 1))
-  (indent-bars-highlight-current-depth . '(:pattern "." :pad 0.1 :width 0.45)))
+(when (display-graphic-p)
+  (leaf indent-bars
+    :vc (:url "https://github.com/jdtsmith/indent-bars")
+    :hook
+    prog-mode-hook cc-mode-hook org-mode-hook
+    :config
+    (require 'indent-bars-ts)
+    :custom
+    (indent-bars-treesit-support . t)
+    (indent-bars-treesit-ignore-blank-lines-types . '("module"))
+    (indent-bars-pattern . ".")
+    (indent-bars-width-frac . 0.2)
+    (indent-bars-pad-frac . 0.2)
+    (indent-bars-color-by-depth . '(:regexp "outline-\\([0-9]+\\)" :blend 1))
+    (indent-bars-highlight-current-depth . '(:pattern "." :pad 0.1 :width 0.45))))
 
 (leaf llm
   :vc (:url "https://github.com/ahyatt/llm/tree/main")
