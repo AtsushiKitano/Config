@@ -32,6 +32,13 @@
   :custom
   (gcmh-verbose . t))
 
+;; mise (asdf-compatible version manager) のshimsパスをEmacsのPATHに追加
+;; これにより terraform など mise 管理のツールを Emacs から利用できる
+(let ((mise-shims (expand-file-name "~/.local/share/mise/shims")))
+  (when (file-directory-p mise-shims)
+    (add-to-list 'exec-path mise-shims)
+    (setenv "PATH" (concat mise-shims ":" (getenv "PATH")))))
+
 (leaf general-settings
   :config
   (prefer-coding-system 'utf-8-unix)
@@ -62,6 +69,8 @@
   (backup-inhibited . t)
   (require-final-newline . t)
   (auto-save-file-name-transforms . `((".*" ,(expand-file-name "auto-save/" user-emacs-directory) t))))
+  :config
+  (make-directory (expand-file-name "auto-save/" user-emacs-directory) t)
 
 (leaf :font
   :config
@@ -172,10 +181,20 @@
   :config
   (evil-collection-init)
   (defun my/kill-region-or-backward-kill-word ()
+    "リージョンが選択されていれば切り取り、そうでなければ単語を後退削除する。"
     (interactive)
     (if (use-region-p)
         (kill-region (region-beginning) (region-end))
       (backward-kill-word 1)))
+  (defun my/kill-ring-save-region ()
+    "リージョンが選択されていればコピー（kill-ring-save）する。"
+    (interactive)
+    (if (use-region-p)
+        (progn
+          (kill-ring-save (region-beginning) (region-end))
+          (deactivate-mark)
+          (message "Copied region"))
+      (message "No region selected")))
   ;; evil-collection 初期化後に insert モードの Emacs キーバインドを上書き
   (evil-define-key 'insert 'global (kbd "C-p") #'previous-line)
   (evil-define-key 'insert 'global (kbd "C-n") #'next-line)
@@ -188,8 +207,12 @@
   (evil-define-key 'insert 'global (kbd "C-d") #'delete-forward-char)
   (evil-define-key 'insert 'global (kbd "C-h") #'backward-delete-char)
   (evil-define-key 'insert 'global (kbd "C-k") #'kill-line)
+  ;; C-w: リージョン切り取り / 単語後退削除 (insert・normal・motion・visual)
   (evil-define-key 'insert 'global (kbd "C-w") #'my/kill-region-or-backward-kill-word)
   (evil-define-key '(normal motion visual) 'global (kbd "C-w") #'my/kill-region-or-backward-kill-word)
+  ;; M-w: リージョンコピー (insert・normal・motion・visual)
+  (evil-define-key 'insert 'global (kbd "M-w") #'my/kill-ring-save-region)
+  (evil-define-key '(normal motion visual) 'global (kbd "M-w") #'my/kill-ring-save-region)
   (evil-define-key 'insert 'global (kbd "C-y") #'yank)
   (evil-define-key 'insert 'global (kbd "M-d") #'kill-word)
   (evil-define-key 'insert 'global (kbd "C-g") #'evil-normal-state)
@@ -201,6 +224,14 @@
   (evil-define-key '(normal insert motion visual) 'global (kbd "C-SPC") #'set-mark-command)
   ;; C-TAB で括弧ブロックの折り畳みトグル
   (evil-define-key '(normal insert motion visual) 'global (kbd "<C-tab>") #'hs-toggle-hiding))
+
+(leaf isearch
+  :doc "isearch 中の次／前候補ナビゲーション"
+  :bind
+  (:isearch-mode-map
+   ;; C-n: 次のヒットへ / C-b: 前のヒットへ
+   ("C-n" . isearch-repeat-forward)
+   ("C-b" . isearch-repeat-backward)))
 
 (leaf eat
   :ensure t
@@ -606,7 +637,8 @@
 
 (leaf terraform-mode
   :ensure t
-  :mode ("\\.tf\\'" . terraform-mode)
+  :mode (("\\.tf\\'" . terraform-mode)
+         ("\\.hcl\\'" . terraform-mode))
   :hook (terraform-mode-hook . terraform-format-on-save-mode))
 
 (leaf markdown-mode
