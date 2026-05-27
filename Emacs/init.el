@@ -461,6 +461,22 @@
                     js-mode-hook js-ts-mode-hook))
       (add-hook hook #'my/eglot-ts-workspace-config))))
 
+(leaf dumb-jump
+  :ensure t
+  :config
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+
+(leaf xref
+  :config
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref))
+
+(with-eval-after-load 'evil
+  (evil-define-key 'normal 'global
+    (kbd "gd") #'xref-find-definitions
+    (kbd "gr") #'xref-find-references
+    (kbd "C-t") #'xref-go-back))
+
 (when (< emacs-major-version 31)
   (leaf corfu-terminal
     :ensure t

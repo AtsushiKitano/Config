@@ -792,6 +792,63 @@ eglot で LSP を利用する。terraform-ls も設定する。
       (add-hook hook #'my/eglot-ts-workspace-config))))
 #+end_src
 
+*** タグジャンプ (xref)
+
+xref のバックエンドに dumb-jump を追加し、LSP が使えないファイルでも定義ジャンプができるようにする。
+consult-xref で候補表示を vertico UI に統合し、evil の =gd= / =gr= にもバインドする。
+
+**** 使い方
+
+**基本操作（Emacs / evil normal モード共通）**
+
+| キー           | コマンド                   | 説明                                         |
+|--------------|--------------------------|----------------------------------------------|
+| =M-.=          | =xref-find-definitions=    | カーソル下の識別子の定義へジャンプ             |
+| =M-?=          | =xref-find-references=     | カーソル下の識別子が使われている箇所を一覧表示 |
+| =M-,=          | =xref-go-back=             | ジャンプ前の位置へ戻る                         |
+
+**evil normal モード専用**
+
+| キー   | コマンド                  | 説明                                         |
+|-------|-------------------------|----------------------------------------------|
+| =gd=   | =xref-find-definitions=   | 定義へジャンプ（=M-.= と同じ）                 |
+| =gr=   | =xref-find-references=    | 参照を一覧表示（=M-?= と同じ）                 |
+| =C-t=  | =xref-go-back=            | ジャンプ前の位置へ戻る（=M-,= と同じ）         |
+
+**候補が複数あるとき（vertico ミニバッファ内）**
+
+| キー     | 説明                             |
+|---------|----------------------------------|
+| =C-n/p=  | 候補を上下に移動                 |
+| =RET=    | 選択した候補へジャンプ           |
+| =C-g=    | キャンセル                       |
+
+**** バックエンドの優先順位
+
+1. *eglot（LSP）* — Go・TypeScript・Python など LSP が有効なバッファでは LSP の情報を使う
+2. *dumb-jump* — LSP がない言語や設定されていないバッファでは ripgrep/grep でソースを走査して定義を探す
+
+- [dumb-jump](https://github.com/jacktasia/dumb-jump)
+- [consult](https://github.com/minad/consult)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf dumb-jump
+  :ensure t
+  :config
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+
+(leaf xref
+  :config
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref))
+
+(with-eval-after-load 'evil
+  (evil-define-key 'normal 'global
+    (kbd "gd") #'xref-find-definitions
+    (kbd "gr") #'xref-find-references
+    (kbd "C-t") #'xref-go-back))
+#+end_src
+
 ** インライン補完
 
 *** corfu-terminal
