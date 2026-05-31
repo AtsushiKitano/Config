@@ -432,10 +432,27 @@
   :config
   (with-no-warnings (winum-mode 1)))
 
+(defvar my/zoom-window-config nil
+  "Saved window configuration before zoom.")
+
+(defun my/toggle-zoom-window ()
+  "Toggle zoom of current window like tmux C-z."
+  (interactive)
+  (if my/zoom-window-config
+      (progn
+        (set-window-configuration my/zoom-window-config)
+        (setq my/zoom-window-config nil))
+    (setq my/zoom-window-config (current-window-configuration))
+    (delete-other-windows)))
+
+(global-set-key (kbd "M-z") #'my/toggle-zoom-window)
+(with-eval-after-load 'evil
+  (evil-define-key '(normal insert visual motion emacs) 'global
+    (kbd "M-z") #'my/toggle-zoom-window))
+
 (leaf-keys (("C-h" . backward-delete-char)
             ("M-h" . previous-multiframe-window)
-            ("M-l" . next-multiframe-window)
-            ("M-z" . delete-other-windows)))
+            ("M-l" . next-multiframe-window)))
 
 (leaf which-key
   :global-minor-mode t)
