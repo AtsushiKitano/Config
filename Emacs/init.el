@@ -77,13 +77,14 @@
   (leaf nerd-icons
 	:ensure t)
   (defun my/setup-fonts (&optional frame)
-	(with-selected-frame (or frame (selected-frame))
-	  (when (display-graphic-p)
-		(let* ((family "Fira Code")
-			   (fontspec (font-spec :family family :weight 'normal)))
-		  (set-face-attribute 'default nil :family family :height 180)
-		  (set-fontset-font nil 'ascii fontspec nil 'append)
-		  (set-fontset-font nil 'japanese-jisx0208 fontspec nil 'append)))))
+	(let ((target-frame (or frame (selected-frame))))
+	  (with-selected-frame target-frame
+		(when (display-graphic-p)
+		  (let* ((family "HackGen Console NF")
+				 (fontspec (font-spec :family family :weight 'normal)))
+			(set-face-attribute 'default target-frame :family family :height 180)
+			(set-fontset-font nil 'ascii fontspec target-frame 'append)
+			(set-fontset-font nil 'japanese-jisx0208 fontspec target-frame 'append))))))
   (add-hook 'after-make-frame-functions #'my/setup-fonts)
   (when (display-graphic-p)
 	(my/setup-fonts)))
@@ -167,7 +168,10 @@
   :bind
   (("C-c A" . agent-shell))
   :hook
-  (agent-shell-mode-hook . (lambda () (display-line-numbers-mode -1)))
+  (agent-shell-mode-hook . (lambda ()
+                             (when (fboundp 'evil-emacs-state)
+                               (evil-emacs-state))
+			     (display-line-numbers-mode -1)))
   :config
   (setq agent-shell-anthropic-authentication
         (agent-shell-anthropic-make-authentication :login t))
@@ -182,7 +186,7 @@
   (evil-want-C-u-scroll . t)
   :config
   (evil-mode 1)
-  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode))
+  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode agent-shell-mode))
     (evil-set-initial-state mode 'emacs)))
 
 (leaf evil-collection
@@ -199,14 +203,22 @@
         (kill-region (region-beginning) (region-end))
       (backward-kill-word 1)))
   (defun my/kill-ring-save-region ()
-    "リージョンが選択されていればコピー（kill-ring-save）する。"
+    "リージョンまたは evil visual 選択範囲をコピーする。"
     (interactive)
-    (if (use-region-p)
-        (progn
-          (kill-ring-save (region-beginning) (region-end))
-          (deactivate-mark)
-          (message "Copied region"))
-      (message "No region selected")))
+    (cond
+     ((and (bound-and-true-p evil-local-mode) (evil-visual-state-p))
+      (let* ((range (evil-visual-range))
+             (beg (nth 0 range))
+             (end (nth 1 range)))
+        (kill-ring-save beg end)
+        (evil-normal-state)
+        (message "Copied region")))
+     ((use-region-p)
+      (kill-ring-save (region-beginning) (region-end))
+      (deactivate-mark)
+      (message "Copied region"))
+     (t
+      (message "No region selected"))))
   ;; evil-collection 初期化後に insert モードの Emacs キーバインドを上書き
   (evil-define-key 'insert 'global (kbd "C-p") #'previous-line)
   (evil-define-key 'insert 'global (kbd "C-n") #'next-line)
