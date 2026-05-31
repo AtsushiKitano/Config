@@ -167,6 +167,10 @@
   :ensure t
   :bind
   (("C-c A" . agent-shell))
+  :hook
+  (agent-shell-mode-hook . (lambda ()
+                             (when (fboundp 'evil-emacs-state)
+                               (evil-emacs-state))))
   :config
   (setq agent-shell-anthropic-authentication
         (agent-shell-anthropic-make-authentication :login t))
@@ -181,7 +185,7 @@
   (evil-want-C-u-scroll . t)
   :config
   (evil-mode 1)
-  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode))
+  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode agent-shell-mode))
     (evil-set-initial-state mode 'emacs)))
 
 (leaf evil-collection
