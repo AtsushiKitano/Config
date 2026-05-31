@@ -92,6 +92,7 @@ cask "dbeaver-community"
 cask "hammerspoon"
 cask "claude-code"
 cask "claude"
+cask "kindle-previewer"
 
 tap "d12frosted/emacs-plus"
 tap "railwaycat/emacsmacport"
