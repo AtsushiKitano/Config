@@ -163,6 +163,16 @@
   :config
   (migemo-init))
 
+(leaf agent-shell
+  :ensure t
+  :bind
+  (("C-c A" . agent-shell))
+  :config
+  (setq agent-shell-anthropic-authentication
+        (agent-shell-anthropic-make-authentication :login t))
+  (setq agent-shell-preferred-agent-config
+        (agent-shell-anthropic-make-claude-code-config)))
+
 (leaf evil
   :ensure t
   :custom
@@ -240,7 +250,9 @@
   (:isearch-mode-map
    ;; C-n: 次のヒットへ / C-b: 前のヒットへ
    ("C-n" . isearch-repeat-forward)
-   ("C-b" . isearch-repeat-backward)))
+   ("C-b" . isearch-repeat-backward)
+   ;; evil の C-y 上書きに対して明示的に kill-ring から貼り付け
+   ("C-y" . isearch-yank-kill)))
 
 (leaf eat
   :ensure t
