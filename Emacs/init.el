@@ -417,6 +417,21 @@
   :custom-face
   (aw-leading-char-face . '((t (:height 3.0)))))
 
+(leaf winum
+  :ensure t
+  :bind
+  (("M-1" . winum-select-window-1)
+   ("M-2" . winum-select-window-2)
+   ("M-3" . winum-select-window-3)
+   ("M-4" . winum-select-window-4)
+   ("M-5" . winum-select-window-5)
+   ("M-6" . winum-select-window-6)
+   ("M-7" . winum-select-window-7)
+   ("M-8" . winum-select-window-8)
+   ("M-9" . winum-select-window-9))
+  :config
+  (with-no-warnings (winum-mode 1)))
+
 (leaf-keys (("C-h" . backward-delete-char)
             ("M-h" . previous-multiframe-window)
             ("M-l" . next-multiframe-window)
