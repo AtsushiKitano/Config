@@ -166,6 +166,8 @@
   :ensure t
   :bind
   (("C-c A" . agent-shell))
+  :hook
+  (agent-shell-mode-hook . (lambda () (display-line-numbers-mode -1)))
   :config
   (setq agent-shell-anthropic-authentication
         (agent-shell-anthropic-make-authentication :login t))
