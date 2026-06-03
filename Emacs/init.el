@@ -168,7 +168,10 @@
 (leaf agent-shell
   :ensure t
   :bind
-  (("C-c A" . agent-shell))
+  (("C-c A" . agent-shell)
+   (:agent-shell-mode-map
+    ("C-c s" . agent-shell-send-screenshot)
+    ("C-c i" . agent-shell-send-clipboard-image)))
   :hook
   (agent-shell-mode-hook . (lambda ()
                              (when (fboundp 'evil-emacs-state)
