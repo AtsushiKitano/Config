@@ -519,7 +519,21 @@
                                            :includeCompletionsForModuleExports t)))))
     (dolist (hook '(typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook
                     js-mode-hook js-ts-mode-hook))
-      (add-hook hook #'my/eglot-ts-workspace-config))))
+      (add-hook hook #'my/eglot-ts-workspace-config))
+    ;; Python: uv .venv の自動検出と Pyright への通知
+    (defun my/eglot-python-workspace-config ()
+      (when-let* ((project (project-current))
+                  (root (project-root project))
+                  (venv (expand-file-name ".venv" root))
+                  (_ (file-directory-p venv))
+                  (python (expand-file-name "bin/python" venv)))
+        (setq-local eglot-workspace-configuration
+                    `(:python (:defaultInterpreterPath ,python
+                               :pythonPath ,python
+                               :venvPath ,root
+                               :venv ".venv")))))
+    (dolist (hook '(python-mode-hook python-ts-mode-hook))
+      (add-hook hook #'my/eglot-python-workspace-config))))
 
 (leaf dumb-jump
   :ensure t
@@ -644,7 +658,7 @@
 (leaf project
   :custom
   (project-vc-merge-submodules . nil) ; Git Submoduleは別のプロジェクトとして扱う
-  )
+  (project-vc-extra-root-markers . '("pyproject.toml" "uv.lock" "setup.py" "Pipfile")))
 
 (leaf editorconfig
   :global-minor-mode t)
@@ -722,3 +736,27 @@
   :mode
   (("\\.md\\'" . gfm-mode))
   )
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(display-line-numbers-width-start t)
+ '(package-selected-packages
+   '(ace-window agent-shell all-the-icons anzu avy avy-zap beacon
+		blackout cape claude-code claude-code-ide consult
+		ddskk devcontainer doom-modeline doom-themes dumb-jump
+		eat el-get ellama evil evil-collection expand-region
+		gcmh git-gutter hydra indent-bars leaf-convert
+		leaf-keywords magit marginalia markdown-mode memoize
+		migemo nerd-icons orderless prisma-mode puni
+		reformatter shackle terraform-mode typescript-mode
+		vertico volatile-highlights vundo winum yasnippet
+		yasnippet-snippets yatemplate))
+ '(warning-suppress-types '((comp) (native-compiler))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(aw-leading-char-face ((t (:height 3.0))) nil "Customized with leaf in `ace-window' block at `/Users/kitanoatsushi/.emacs.d/init.el'"))
