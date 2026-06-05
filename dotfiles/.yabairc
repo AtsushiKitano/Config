@@ -38,4 +38,7 @@ yabai -m rule --add app=PDF\ Viewer manage=on
 yabai -m rule --add app=LINE manage=on
 yabai -m rule --add app=App\ for\ Google\ Calendar manage=on
 
+# Emacs フォーカス時に英字入力、それ以外は AquaSKK に切り替え
+yabai -m signal --add event=window_focused action="$HOME/.conf/scripts/switch_input_method.sh"
+
 echo "yabai configuration loaded.."

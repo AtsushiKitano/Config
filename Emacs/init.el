@@ -254,6 +254,13 @@
   ;; C-TAB で括弧ブロックの折り畳みトグル
   (evil-define-key '(normal insert motion visual) 'global (kbd "<C-tab>") #'hs-toggle-hiding))
 
+(defun my/isearch-yank-clipboard ()
+  "システムクリップボードまたは kill-ring の内容を isearch に貼り付ける."
+  (interactive)
+  (isearch-yank-string
+   (or (gui-get-selection 'CLIPBOARD 'UTF8_STRING)
+       (current-kill 0 t))))
+
 (leaf isearch
   :doc "isearch 中の次／前候補ナビゲーション"
   :bind
@@ -262,7 +269,9 @@
    ("C-n" . isearch-repeat-forward)
    ("C-b" . isearch-repeat-backward)
    ;; evil の C-y 上書きに対して明示的に kill-ring から貼り付け
-   ("C-y" . isearch-yank-kill)))
+   ("C-y" . isearch-yank-kill)
+   ;; Cmd+V でシステムクリップボードから貼り付け
+   ("s-v" . my/isearch-yank-clipboard)))
 
 (leaf eat
   :ensure t
@@ -734,11 +743,69 @@
          ("\\.hcl\\'" . terraform-mode))
   :hook (terraform-mode-hook . terraform-format-on-save-mode))
 
+(defvar my/markdown-preview-css
+  "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#24292e;background:#fff;padding:32px;max-width:900px;margin:0 auto}h1,h2{border-bottom:1px solid #eaecef;padding-bottom:.3em}h1,h2,h3,h4,h5,h6{margin-top:24px;margin-bottom:16px;font-weight:600;line-height:1.25}code,tt{background-color:rgba(27,31,35,.05);border-radius:3px;font-size:85%;padding:.2em .4em}pre{background-color:#f6f8fa;border-radius:6px;font-size:85%;line-height:1.45;overflow:auto;padding:16px}pre code,pre tt{background:transparent;border:0;font-size:100%;padding:0;word-break:normal}blockquote{border-left:.25em solid #dfe2e5;color:#6a737d;padding:0 1em;margin:0 0 16px}table{border-collapse:collapse;width:100%;margin-bottom:16px}td,th{border:1px solid #dfe2e5;padding:6px 13px}tr:nth-child(2n){background-color:#f6f8fa}img{max-width:100%;box-sizing:content-box}a{color:#0366d6;text-decoration:none}a:hover{text-decoration:underline}hr{border:0;border-top:1px solid #eaecef;margin:24px 0}ul,ol{padding-left:2em;margin-bottom:16px}li+li{margin-top:.25em}"
+  "GitHub 風 CSS for markdown preview.")
+
+(defun my/markdown-preview--render (buf)
+  "BUF のマークダウンを HTML に変換し、ファイルパスを返す."
+  (let* ((md-tmp (unless (buffer-file-name buf)
+                   (let ((f (make-temp-file "md-src-" nil ".md")))
+                     (with-current-buffer buf
+                       (write-region (point-min) (point-max) f))
+                     f)))
+         (md-file (or (buffer-file-name buf) md-tmp))
+         (html-file (make-temp-file "md-preview-" nil ".html"))
+         (css-file (make-temp-file "md-css-" nil ".css")))
+    (write-region my/markdown-preview-css nil css-file)
+    (unless (= 0 (call-process "pandoc" nil nil nil
+                               "-f" "gfm"
+                               "-t" "html5"
+                               "--standalone"
+                               "--embed-resources"
+                               "--syntax-highlighting=tango"
+                               (format "--css=%s" css-file)
+                               "-o" html-file
+                               md-file))
+      (delete-file css-file)
+      (when md-tmp (delete-file md-tmp))
+      (error "pandoc の実行に失敗しました"))
+    (delete-file css-file)
+    (when md-tmp (delete-file md-tmp))
+    html-file))
+
+(defun my/markdown-preview ()
+  "現在のマークダウンバッファを xwidget-webkit でプレビューする."
+  (interactive)
+  (let* ((src-buf (current-buffer))
+         (html-file (my/markdown-preview--render src-buf))
+         (url (concat "file://" html-file))
+         (preview-buf-name (format "*md-preview: %s*"
+                                   (or (buffer-file-name src-buf)
+                                       (buffer-name src-buf)))))
+    (if-let ((existing (get-buffer preview-buf-name)))
+        (with-current-buffer existing
+          (xwidget-webkit-browse-url url))
+      (xwidget-webkit-browse-url url)
+      (when (get-buffer "*xwidget-webkit*")
+        (with-current-buffer "*xwidget-webkit*"
+          (rename-buffer preview-buf-name))))))
+
+(define-minor-mode my/markdown-auto-preview-mode
+  "保存時に自動でマークダウンプレビューを更新するマイナーモード."
+  :lighter " MdPv"
+  (if my/markdown-auto-preview-mode
+      (add-hook 'after-save-hook #'my/markdown-preview nil t)
+    (remove-hook 'after-save-hook #'my/markdown-preview t)))
+
 (leaf markdown-mode
   :ensure t
   :mode
   (("\\.md\\'" . gfm-mode))
-  )
+  :bind
+  (:gfm-mode-map
+   ("C-c C-v" . my/markdown-preview)
+   ("C-c C-x v" . my/markdown-auto-preview-mode)))
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
