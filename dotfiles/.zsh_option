@@ -88,3 +88,6 @@ setopt auto_pushd
 
 # pushd したとき、ディレクトリがすでにスタックに含まれていればスタックに追加されない
 setopt pushd_ignore_dups
+
+bindkey -r '\eh'
+bindkey -r '\el'

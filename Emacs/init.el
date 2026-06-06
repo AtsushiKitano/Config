@@ -297,7 +297,13 @@
   (with-eval-after-load 'eat
     (define-key eat-mode-map (kbd "C-h") (lambda ()
                                            (interactive)
-                                           (eat-self-input 1 ?\177))))
+                                           (eat-self-input 1 ?\177)))
+    (define-key eat-mode-map "\eh" #'previous-multiframe-window)
+    (define-key eat-mode-map "\el" #'next-multiframe-window)
+    (define-key eat-mode-map (kbd "M-z") #'my/toggle-zoom-window)
+    (define-key eat-mode-map (kbd "C-x o") #'ace-window)
+    (define-key eat-semi-char-mode-map "\eh" #'previous-multiframe-window)
+    (define-key eat-semi-char-mode-map "\el" #'next-multiframe-window))
 
   (with-eval-after-load 'evil
     (evil-set-initial-state 'eat-mode 'emacs))
