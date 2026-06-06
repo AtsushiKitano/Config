@@ -39,6 +39,13 @@
     (add-to-list 'exec-path mise-shims)
     (setenv "PATH" (concat mise-shims ":" (getenv "PATH")))))
 
+;; Homebrew (Apple Silicon) のバイナリパスを追加
+;; claude-agent-acp など /opt/homebrew/bin にインストールされるツールのため
+(let ((homebrew-bin "/opt/homebrew/bin"))
+  (when (file-directory-p homebrew-bin)
+    (add-to-list 'exec-path homebrew-bin)
+    (setenv "PATH" (concat homebrew-bin ":" (getenv "PATH")))))
+
 (leaf general-settings
   :config
   (prefer-coding-system 'utf-8-unix)
@@ -776,21 +783,23 @@
     html-file))
 
 (defun my/markdown-preview ()
-  "現在のマークダウンバッファを xwidget-webkit でプレビューする."
+  "現在のマークダウンバッファを shr でプレビューする."
   (interactive)
   (let* ((src-buf (current-buffer))
          (html-file (my/markdown-preview--render src-buf))
-         (url (concat "file://" html-file))
          (preview-buf-name (format "*md-preview: %s*"
                                    (or (buffer-file-name src-buf)
                                        (buffer-name src-buf)))))
-    (if-let ((existing (get-buffer preview-buf-name)))
-        (with-current-buffer existing
-          (xwidget-webkit-browse-url url))
-      (xwidget-webkit-browse-url url)
-      (when (get-buffer "*xwidget-webkit*")
-        (with-current-buffer "*xwidget-webkit*"
-          (rename-buffer preview-buf-name))))))
+    (with-current-buffer (get-buffer-create preview-buf-name)
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert-file-contents html-file)
+        (let ((dom (libxml-parse-html-region (point-min) (point-max))))
+          (erase-buffer)
+          (shr-insert-document dom)))
+      (goto-char (point-min))
+      (special-mode)
+      (pop-to-buffer (current-buffer)))))
 
 (define-minor-mode my/markdown-auto-preview-mode
   "保存時に自動でマークダウンプレビューを更新するマイナーモード."
