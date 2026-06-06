@@ -312,7 +312,8 @@
   :ensure t
   :bind
   (("C-x C-j" . skk-mode)
-   ("C-x j"   . skk-mode))
+   ("C-x j"   . skk-mode)
+   ("M-j"     . skk-mode))
   :init
   (defvar dired-bind-jump nil) ; dired-xに `C-x C-j` が奪われてしまうので対処
   :custom

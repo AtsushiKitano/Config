@@ -66,3 +66,10 @@ defaults write com.apple.dock mru-spaces -bool "false"
 
 # 最近起動したアプリを非表示
 defaults write com.apple.dock show-recents -bool false
+
+# ホットコーナー: 右下 → Quick Note
+defaults write com.apple.dock wvous-br-corner -int 14
+defaults write com.apple.dock wvous-br-modifier -int 0
+
+# Finder: デフォルトビューをカラム表示に設定
+defaults write com.apple.finder FXPreferredViewStyle -string "clmv"

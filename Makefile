@@ -1,18 +1,24 @@
 REPO_DIR := $(shell pwd)
 
-.PHONY: all setup link link-dotfiles link-emacs link-yabai \
+.PHONY: all setup bootstrap sync link link-dotfiles link-emacs link-yabai \
         link-karabiner link-kitty link-wezterm link-mise link-aquaskk \
-        macos-defaults install
+        macos-defaults install homebrew services
 
 # --------------------------------------------------------------------------
 # Top-level targets
 # --------------------------------------------------------------------------
 
-# Full setup for a freshly-cloned machine
-all: link macos-defaults install
+# 新規 Mac: Homebrew インストールからサービス起動まで一括セットアップ
+bootstrap: homebrew link macos-defaults install services
+
+# 既存 Mac: 設定・パッケージ・サービスを最新状態に同期
+sync: link macos-defaults install services
 
 # Symlinks only (safe to re-run any time)
 setup: link
+
+# Full setup for a freshly-cloned machine (legacy)
+all: link macos-defaults install
 
 # --------------------------------------------------------------------------
 # Symlink targets
@@ -37,12 +43,11 @@ link-emacs:
 	@ln -fnsv "$(REPO_DIR)/Emacs/init.el"        "$$HOME/.emacs.d/init.el"
 	@ln -fnsv "$(REPO_DIR)/Emacs/early-init.el"  "$$HOME/.emacs.d/early-init.el"
 
-# yabai / skhd: configs → ~/.config/{yabai,skhd}/
+# yabai / skhd: dotfiles/.yabairc → ~/.yabairc, dotfiles/.skhdrc → ~/.skhdrc
 link-yabai:
-	@echo "[yabai/skhd] Linking to $$HOME/.config/{yabai,skhd}"
-	@mkdir -p "$$HOME/.config/yabai" "$$HOME/.config/skhd"
-	@ln -fnsv "$(REPO_DIR)/macos/TilingWindow-Yabai/yabairc" "$$HOME/.config/yabai/yabairc"
-	@ln -fnsv "$(REPO_DIR)/macos/TilingWindow-Yabai/skhdrc"  "$$HOME/.config/skhd/skhdrc"
+	@echo "[yabai/skhd] Linking dotfiles to $$HOME"
+	@ln -fnsv "$(REPO_DIR)/dotfiles/.yabairc" "$$HOME/.yabairc"
+	@ln -fnsv "$(REPO_DIR)/dotfiles/.skhdrc"  "$$HOME/.skhdrc"
 
 # Karabiner: karabiner.json → ~/.config/karabiner/
 link-karabiner:
@@ -93,3 +98,19 @@ install:
 	@bash "$(REPO_DIR)/scripts/brew.sh"
 	@echo "[install] mise runtimes"
 	@bash "$(REPO_DIR)/scripts/mise.sh"
+
+# --------------------------------------------------------------------------
+# Bootstrap helpers
+# --------------------------------------------------------------------------
+
+# Homebrew 未インストール時のみインストール
+homebrew:
+	@which brew >/dev/null 2>&1 && echo "[homebrew] Already installed" || \
+		(echo "[homebrew] Installing Homebrew..." && \
+		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)")
+
+# yabai / skhd サービスを起動（既に起動中なら再起動）
+services:
+	@echo "[services] Starting yabai and skhd"
+	@brew services restart yabai
+	@brew services restart skhd

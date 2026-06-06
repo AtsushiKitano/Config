@@ -39,3 +39,4 @@ gcloud/credentials
 authinfo
 .authinfo
 .netrc
+/.agent-shell/
