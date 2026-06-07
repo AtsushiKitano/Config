@@ -2,7 +2,7 @@ REPO_DIR := $(shell pwd)
 
 .PHONY: all setup bootstrap sync link link-dotfiles link-emacs link-yabai \
         link-karabiner link-kitty link-wezterm link-mise link-aquaskk \
-        macos-defaults install homebrew services
+        macos-defaults install homebrew services setup-slack
 
 # --------------------------------------------------------------------------
 # Top-level targets
@@ -108,6 +108,10 @@ homebrew:
 	@which brew >/dev/null 2>&1 && echo "[homebrew] Already installed" || \
 		(echo "[homebrew] Installing Homebrew..." && \
 		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)")
+
+# Slack: ~/.authinfo に認証情報を書き込む
+setup-slack:
+	@bash "$(REPO_DIR)/scripts/setup-slack.sh"
 
 # yabai / skhd サービスを起動（既に起動中なら再起動）
 services:

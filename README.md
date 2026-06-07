@@ -72,6 +72,10 @@ make macos-defaults # macOS システム設定を適用
 make install        # Homebrew + mise インストール
 ```
 
+```sh
+make setup-slack    # Slack 認証情報を ~/.authinfo に書き込む
+```
+
 リンクは個別に実行することもできる。
 
 ```sh
@@ -126,6 +130,48 @@ make -C Emacs
 
 yabai は SIP (System Integrity Protection) の部分無効化が必要な場合がある。
 詳細は [yabai wiki](https://github.com/koekeishiya/yabai/wiki) を参照。
+
+### Slack (emacs-slack)
+
+Emacs から Slack を使うための初期設定。
+
+#### 1. トークンの取得
+
+ブラウザで `https://app.slack.com` を開き、開発者ツール（`Cmd+Option+I`）を起動する。
+
+**トークン (`xoxc-`)**: Console タブで以下を実行してコピーする。
+
+```javascript
+JSON.parse(localStorage.localConfig_v2).teams[Object.keys(JSON.parse(localStorage.localConfig_v2).teams)[0]].token
+```
+
+**Cookie (`xoxd-`)**: Application タブ → Cookies → `https://app.slack.com` → 名前が `d` の行の Value をコピーする。
+
+#### 2. 認証情報の設定
+
+スクリプトで対話的に `~/.authinfo` に書き込む。
+
+```sh
+make setup-slack
+```
+
+プロンプトに従い、メールアドレス・トークン・Cookie を入力する。
+
+#### 3. Emacs から接続
+
+Emacs を起動し `C-c s s` で接続する。
+
+#### キーバインド
+
+| キー | 用途 |
+|---|---|
+| `C-c s s` | 接続 |
+| `C-c s c` | チャンネルを開く |
+| `C-c s m` | DM を開く |
+| `C-c C-j` | メッセージ入力欄を開く（バッファ内） |
+| `C-c C-c` | メッセージ送信（入力欄内） |
+
+---
 
 ### mise (ランタイム管理)
 
