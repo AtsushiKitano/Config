@@ -478,7 +478,8 @@
 
 (leaf-keys (("C-h" . backward-delete-char)
             ("M-h" . previous-multiframe-window)
-            ("M-l" . next-multiframe-window)))
+            ("M-l" . next-multiframe-window)
+            ("C-c h" . describe-bindings)))
 
 (leaf which-key
   :global-minor-mode t)
@@ -822,6 +823,32 @@
   (:gfm-mode-map
    ("C-c C-v" . my/markdown-preview)
    ("C-c C-x v" . my/markdown-auto-preview-mode)))
+(leaf slack
+  :ensure t
+  :commands (slack-start)
+  :bind
+  (("C-c s s" . slack-start)
+   ("C-c s c" . slack-channel-select)
+   ("C-c s m" . slack-im-select)
+   (:slack-mode-map
+    ("C-c C-j" . slack-message-write-another-buffer)))
+  :custom
+  (slack-buffer-emojify . t)
+  (slack-prefer-current-team . t)
+  :config
+  (let ((token (auth-source-pick-first-password
+                :host "slack-emacs-token"
+                :user "atsushi@aquamarine-cloud.net"))
+        (cookie (auth-source-pick-first-password
+                 :host "slack-emacs-cookie"
+                 :user "atsushi@aquamarine-cloud.net")))
+    (when (and token cookie)
+      (slack-register-team
+       :name "slack"
+       :default t
+       :token token
+       :cookie cookie))))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
