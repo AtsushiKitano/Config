@@ -422,6 +422,59 @@
    ([remap yank-pop] . consult-yank-pop)
    ("C-;" . consult-buffer)))
 
+(leaf org
+  :ensure t
+  :bind
+  (("C-c a" . org-agenda)
+   ("C-c c" . org-capture)
+   ("C-c l" . org-store-link))
+  :custom
+  (org-directory . "~/org")
+  (org-agenda-files . '("~/org/inbox.org" "~/org/tasks.org"))
+  (org-default-notes-file . "~/org/inbox.org")
+  (org-todo-keywords
+   . '((sequence "TODO(t)" "IN-PROGRESS(i!)" "|" "DONE(d!)" "CANCELLED(c@)")))
+  (org-todo-keyword-faces
+   . '(("TODO"        . (:foreground "#ff6c6b" :weight bold))
+       ("IN-PROGRESS" . (:foreground "#ecbe7b" :weight bold))
+       ("DONE"        . (:foreground "#98be65" :weight bold))
+       ("CANCELLED"   . (:foreground "#5b6268" :weight bold))))
+  (org-log-done . 'time)
+  (org-log-into-drawer . t)
+  (org-agenda-span . 'week)
+  (org-agenda-start-on-weekday . 1)
+  (org-agenda-window-setup . 'current-window)
+  (org-startup-indented . t)
+  (org-hide-leading-stars . t)
+  (org-ellipsis . " ▾")
+  (org-archive-location . "~/org/archive.org::* Archive")
+  (org-modules . '(ol-bbdb ol-bibtex ol-docview ol-eww ol-info ol-irc ol-mhe ol-rmail ol-w3m))
+  :config
+  (setq org-capture-templates
+        '(("t" "Task" entry
+           (file+headline "~/org/inbox.org" "Inbox")
+           "* TODO %?\n  CREATED: %U\n  %i\n  %a"
+           :empty-lines 1)
+          ("n" "Note" entry
+           (file+headline "~/org/inbox.org" "Notes")
+           "* %?\n  CREATED: %U\n  %i\n  %a"
+           :empty-lines 1)))
+  (with-eval-after-load 'evil
+    (evil-define-key 'normal org-mode-map
+      (kbd "TAB") #'org-cycle
+      (kbd "RET") #'org-open-at-point
+      (kbd "t")   #'org-todo
+      (kbd "T")   #'org-set-tags-command
+      (kbd ">")   #'org-deadline
+      (kbd "<")   #'org-schedule
+      (kbd "gh")  #'outline-up-heading
+      (kbd "gj")  #'org-forward-heading-same-level
+      (kbd "gk")  #'org-backward-heading-same-level
+      (kbd "gl")  #'outline-next-heading))
+  (define-key org-mode-map "\eh" #'previous-multiframe-window)
+  (define-key org-mode-map "\el" #'next-multiframe-window)
+  (make-directory "~/org" t))
+
 (leaf avy
   :ensure t
   :bind
