@@ -878,7 +878,18 @@ eglot で LSP を利用する。terraform-ls も設定する。
                                            :includeCompletionsForModuleExports t)))))
     (dolist (hook '(typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook
                     js-mode-hook js-ts-mode-hook))
-      (add-hook hook #'my/eglot-ts-workspace-config))))
+      (add-hook hook #'my/eglot-ts-workspace-config))
+    ;; ddskk との競合修正: SKK の変換操作が after-change-functions をスキップする
+    ;; ケースで before-change が記録した生エントリ (lsp-beg lsp-end (pos . marker) ...)
+    ;; が JSON シリアライズ時に cons cell として渡されエラーになる問題を回避する。
+    ;; 未処理エントリを検出したら eglot の :emacs-messup フルシンクにフォールバック。
+    (advice-add 'eglot--signal-textDocument/didChange :before
+      (lambda ()
+        (when (and (listp eglot--recent-changes)
+                   (cl-some (lambda (change)
+                              (consp (nth 2 change)))
+                            eglot--recent-changes))
+          (setq eglot--recent-changes :emacs-messup))))))
 #+end_src
 
 *** タグジャンプ (xref)
