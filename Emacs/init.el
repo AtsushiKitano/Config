@@ -478,6 +478,47 @@
   (define-key org-mode-map "\el" #'next-multiframe-window)
   (make-directory "~/org" t))
 
+;; GCP Secret Manager からシークレットを取得するヘルパー（セッション中キャッシュ）
+(defvar my/gcloud-secret-cache (make-hash-table :test 'equal))
+
+(defun my/gcloud-secret (secret-name)
+  "GCP Secret Manager から SECRET-NAME の最新バージョンを取得する。
+取得結果はセッション中にキャッシュされる。gcloud CLI の認証が必要。"
+  (or (gethash secret-name my/gcloud-secret-cache)
+      (let ((result (string-trim
+                     (shell-command-to-string
+                      (format "gcloud secrets versions access latest --secret=%s --project=aquamarine-cloud-org-mng 2>/dev/null"
+                              (shell-quote-argument secret-name))))))
+        (if (string-empty-p result)
+            (progn
+              (message "my/gcloud-secret: '%s' の取得に失敗（gcloud の認証状態を確認）"
+                       secret-name)
+              nil)
+          (puthash secret-name result my/gcloud-secret-cache)
+          result))))
+
+(leaf org-gcal
+  :ensure t
+  :custom
+  ;; カレンダー ID → 同期先 org ファイルのマッピング
+  ;; カレンダー ID は Google Calendar の設定→「カレンダーの統合」で確認できる
+  (org-gcal-fetch-file-alist . '(("atsushi@aquamarine-cloud.net" . "~/org/gcal.org")))
+  :config
+  ;; GCP Secret Manager から認証情報を取得してセット
+  (let ((id     (my/gcloud-secret "org-gcal-client-id"))
+        (secret (my/gcloud-secret "org-gcal-client-secret")))
+    (if (and id secret)
+        (setq org-gcal-client-id     id
+              org-gcal-client-secret secret)
+      (display-warning 'org-gcal
+                       "GCP Secret Manager から認証情報を取得できませんでした。\
+gcloud auth login / gcloud auth application-default login を確認してください。"
+                       :warning)))
+  ;; gcal.org を org-agenda の対象に追加
+  (add-to-list 'org-agenda-files "~/org/gcal.org")
+  ;; org-agenda を開いたときに自動フェッチ
+  (add-hook 'org-agenda-mode-hook #'org-gcal-fetch))
+
 (leaf avy
   :ensure t
   :bind
@@ -603,20 +644,17 @@
     (dolist (hook '(typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook
                     js-mode-hook js-ts-mode-hook))
       (add-hook hook #'my/eglot-ts-workspace-config))
-    ;; Python: uv .venv の自動検出と Pyright への通知
-    (defun my/eglot-python-workspace-config ()
-      (when-let* ((project (project-current))
-                  (root (project-root project))
-                  (venv (expand-file-name ".venv" root))
-                  (_ (file-directory-p venv))
-                  (python (expand-file-name "bin/python" venv)))
-        (setq-local eglot-workspace-configuration
-                    `(:python (:defaultInterpreterPath ,python
-                               :pythonPath ,python
-                               :venvPath ,root
-                               :venv ".venv")))))
-    (dolist (hook '(python-mode-hook python-ts-mode-hook))
-      (add-hook hook #'my/eglot-python-workspace-config))))
+    ;; ddskk との競合修正: SKK の変換操作が after-change-functions をスキップする
+    ;; ケースで before-change が記録した生エントリ (lsp-beg lsp-end (pos . marker) ...)
+    ;; が JSON シリアライズ時に cons cell として渡されエラーになる問題を回避する。
+    ;; 未処理エントリを検出したら eglot の :emacs-messup フルシンクにフォールバック。
+    (advice-add 'eglot--signal-textDocument/didChange :before
+      (lambda ()
+        (when (and (listp eglot--recent-changes)
+                   (cl-some (lambda (change)
+                              (consp (nth 2 change)))
+                            eglot--recent-changes))
+          (setq eglot--recent-changes :emacs-messup))))))
 
 (leaf dumb-jump
   :ensure t
