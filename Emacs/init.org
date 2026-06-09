@@ -331,12 +331,14 @@ migemoを使い、ローマ字で漢字など検索できるようにする。
   :custom
   (migemo-command . "cmigemo")
   (migemo-options . '("-q" "--emacs"))
-  (migemo-dictionary . "/usr/share/cmigemo/utf-8/migemo-dict")
+  (migemo-dictionary . "/opt/homebrew/share/migemo/utf-8/migemo-dict")
   (migemo-user-dictionary . nil)
   (migemo-regex-dictionary . nil)
   (migemo-coding-system . 'utf-8-unix)
   :config
-  (migemo-init))
+  (migemo-init)
+  (with-eval-after-load 'skk
+    (setq skk-isearch-start-mode 'utf-8)))
 #+end_src
 
 ** Evil モード
@@ -458,7 +460,8 @@ eat を使う。
     (define-key eat-mode-map (kbd "M-z") #'my/toggle-zoom-window)
     (define-key eat-mode-map (kbd "C-x o") #'ace-window)
     (define-key eat-semi-char-mode-map "\eh" #'previous-multiframe-window)
-    (define-key eat-semi-char-mode-map "\el" #'next-multiframe-window))
+    (define-key eat-semi-char-mode-map "\el" #'next-multiframe-window)
+    (define-key eat-mode-map (kbd "C-c C-j") #'eat-semi-char-mode))
 
   (with-eval-after-load 'evil
     (evil-set-initial-state 'eat-mode 'emacs))
