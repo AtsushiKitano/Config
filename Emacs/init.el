@@ -433,8 +433,12 @@
    ("C-c l" . org-store-link))
   :custom
   (org-directory . "~/org")
-  (org-agenda-files . '("~/org/inbox.org" "~/org/tasks.org"))
-  (org-default-notes-file . "~/org/inbox.org")
+  (org-agenda-files . '("~/org/personal/"
+                        "~/org/work/"
+                        "~/org/research/"
+                        "~/org/shared/"
+                        "~/org/book/"))
+  (org-default-notes-file . "~/org/shared/memo.org")
   (org-todo-keywords
    . '((sequence "TODO(t)" "IN-PROGRESS(i!)" "|" "DONE(d!)" "CANCELLED(c@)")))
   (org-todo-keyword-faces
@@ -451,16 +455,74 @@
   (org-hide-leading-stars . t)
   (org-ellipsis . " ▾")
   (org-archive-location . "~/org/archive.org::* Archive")
-  (org-modules . '(ol-bbdb ol-bibtex ol-docview ol-eww ol-info ol-irc ol-mhe ol-rmail ol-w3m))
+  (org-modules . '(ol-bbdb ol-bibtex ol-docview ol-info ol-irc ol-mhe ol-rmail ol-w3m))
   :config
+  (defun my/org-capture-to-dir (prompt dir sections)
+    "PROMPT でテーマ名を入力し DIR 以下にファイルを作成して Notes 見出しに移動する。
+SECTIONS はファイル初期化時に挿入する見出しのリスト。"
+    (let* ((title (read-string prompt))
+           (slug (replace-regexp-in-string "[^a-z0-9]+" "-" (downcase title)))
+           (file (expand-file-name (concat slug ".org") dir)))
+      (unless (file-exists-p file)
+        (with-temp-file file
+          (insert (format "#+TITLE: %s\n#+DATE: %s\n\n" title (format-time-string "%Y-%m-%d")))
+          (dolist (s sections)
+            (insert (format "* %s\n\n" s)))))
+      (set-buffer (org-capture-target-buffer file))
+      (widen)
+      (goto-char (point-min))
+      (if (re-search-forward "^\\* Notes" nil t)
+          (end-of-line)
+        (goto-char (point-max)))))
+
+  (defun my/org-capture-personal ()
+    (my/org-capture-to-dir "トピック: " "~/org/personal/"
+                            '("Tasks" "Notes")))
+
+  (defun my/org-capture-work ()
+    (my/org-capture-to-dir "トピック: " "~/org/work/"
+                            '("Tasks" "Notes" "References")))
+
+  (defun my/org-capture-shared ()
+    (my/org-capture-to-dir "トピック: " "~/org/shared/"
+                            '("Tasks" "Notes")))
+
+  (defun my/org-capture-research ()
+    (my/org-capture-to-dir "リサーチテーマ: " "~/org/research/"
+                            '("Tasks" "Notes" "References")))
+
+  (defun my/org-capture-book ()
+    (my/org-capture-to-dir "本のタイトル: " "~/org/book/"
+                            '("Tasks" "Notes" "Quotes")))
+
   (setq org-capture-templates
-        '(("t" "Task" entry
-           (file+headline "~/org/inbox.org" "Inbox")
+        '(("m" "Memo" entry
+           (file+headline "~/org/shared/memo.org" "Memo")
+           "* %?\n  CREATED: %U\n  %i\n  %a"
+           :empty-lines 1)
+          ("t" "Task [Memo]" entry
+           (file+headline "~/org/shared/memo.org" "Memo")
            "* TODO %?\n  CREATED: %U\n  %i\n  %a"
            :empty-lines 1)
-          ("n" "Note" entry
-           (file+headline "~/org/inbox.org" "Notes")
-           "* %?\n  CREATED: %U\n  %i\n  %a"
+          ("p" "Personal Note" entry
+           (function my/org-capture-personal)
+           "* %?\n  CREATED: %U\n  %i"
+           :empty-lines 1)
+          ("w" "Work Note" entry
+           (function my/org-capture-work)
+           "* %?\n  CREATED: %U\n  %i"
+           :empty-lines 1)
+          ("s" "Shared Note" entry
+           (function my/org-capture-shared)
+           "* %?\n  CREATED: %U\n  %i"
+           :empty-lines 1)
+          ("r" "Research Note" entry
+           (function my/org-capture-research)
+           "* %?\n  CREATED: %U\n  %i"
+           :empty-lines 1)
+          ("b" "Book Note" entry
+           (function my/org-capture-book)
+           "* %?\n  CREATED: %U\n  %i"
            :empty-lines 1)))
   (with-eval-after-load 'evil
     (evil-define-key 'normal org-mode-map
@@ -476,7 +538,53 @@
       (kbd "gl")  #'outline-next-heading))
   (define-key org-mode-map "\eh" #'previous-multiframe-window)
   (define-key org-mode-map "\el" #'next-multiframe-window)
-  (make-directory "~/org" t))
+  (make-directory "~/org" t)
+
+  (defun my/org-find-file ()
+    "~/org 以下の org ファイルを選択して開く。"
+    (interactive)
+    (let* ((base (expand-file-name "~/org/"))
+           (files (directory-files-recursively base "\\.org$"))
+           (choices (mapcar (lambda (f) (string-remove-prefix base f)) files))
+           (choice (completing-read "Org: " choices nil t)))
+      (find-file (expand-file-name choice base))))
+
+  (defun my/org-git-pull ()
+    "起動時に ~/org を git pull する（失敗は無視）。"
+    (let ((default-directory (expand-file-name "~/org/")))
+      (when (file-directory-p ".git")
+        (start-process "org-git-pull" "*org-git*"
+                       "git" "pull" "--rebase" "--autostash"))))
+
+  (defun my/org-git-commit ()
+    "保存した org ファイルを自動で git add & commit する。"
+    (let ((file (buffer-file-name)))
+      (when (and file
+                 (string-prefix-p (expand-file-name "~/org/") file))
+        (let* ((default-directory (expand-file-name "~/org/"))
+               (rel (file-relative-name file default-directory)))
+          (start-process-shell-command
+           "org-git-commit" "*org-git*"
+           (format "git add %s && git diff --cached --quiet || git commit -m 'update %s'"
+                   (shell-quote-argument rel)
+                   (shell-quote-argument rel)))))))
+
+  (defun my/org-git-push ()
+    "~/org を git push する。"
+    (interactive)
+    (let ((default-directory (expand-file-name "~/org/")))
+      (message "org: pushing...")
+      (set-process-sentinel
+       (start-process "org-git-push" "*org-git*" "git" "push")
+       (lambda (_proc event)
+         (message "org push: %s" (string-trim event))))))
+
+  (add-hook 'emacs-startup-hook #'my/org-git-pull)
+  (add-hook 'after-save-hook    #'my/org-git-commit)
+
+  (define-key global-map (kbd "C-c o f") #'my/org-find-file)
+  (define-key global-map (kbd "C-c o s") #'org-switchb)
+  (define-key global-map (kbd "C-c o p") #'my/org-git-push))
 
 ;; GCP Secret Manager からシークレットを取得するヘルパー（セッション中キャッシュ）
 (defvar my/gcloud-secret-cache (make-hash-table :test 'equal))

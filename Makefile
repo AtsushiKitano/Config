@@ -1,7 +1,7 @@
 REPO_DIR := $(shell pwd)
 
 .PHONY: all setup bootstrap sync link link-dotfiles link-emacs link-yabai \
-        link-karabiner link-kitty link-wezterm link-mise link-aquaskk \
+        link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
         macos-defaults install homebrew services setup-slack
 
 # --------------------------------------------------------------------------
@@ -25,7 +25,7 @@ all: link macos-defaults install
 # --------------------------------------------------------------------------
 
 link: link-dotfiles link-emacs link-yabai \
-      link-karabiner link-kitty link-wezterm link-mise link-aquaskk
+      link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude
 
 # dotfiles/.??* → $HOME  (skip directories, .Brewfile is Mac-only)
 link-dotfiles:
@@ -73,6 +73,12 @@ link-mise:
 	@echo "[mise] Linking to $$HOME/.config/mise"
 	@mkdir -p "$$HOME/.config/mise"
 	@ln -fnsv "$(REPO_DIR)/dotfiles/mise/config.toml"  "$$HOME/.config/mise/config.toml"
+
+# Claude Code: settings.json → ~/.claude/
+link-claude:
+	@echo "[claude] Linking to $$HOME/.claude"
+	@mkdir -p "$$HOME/.claude"
+	@ln -fnsv "$(REPO_DIR)/.claude/settings.json"  "$$HOME/.claude/settings.json"
 
 # AquaSKK: sub-rule.desc / arrow.rule → ~/Library/Application Support/AquaSKK/
 link-aquaskk:
