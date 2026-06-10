@@ -916,7 +916,30 @@ winum でウィンドウ番号による直接移動を行う。
 (leaf-keys (("C-h" . backward-delete-char)
             ("M-h" . previous-multiframe-window)
             ("M-l" . next-multiframe-window)
-            ("C-c h" . describe-bindings)))
+            ("C-c h" . describe-bindings)
+            ("C-c H" . my/show-keybindings)))
+#+end_src
+
+*** キーバインドドキュメントの表示
+
+=C-c H= で =Emacs/docs/operations.md= を表示する。
+
+#+begin_src emacs-lisp :tangle yes
+(defun my/show-keybindings ()
+  "Emacs/docs/operations.md を Markdown プレビューで表示する."
+  (interactive)
+  (let* ((conf-dir (file-name-directory
+                    (directory-file-name
+                     (file-name-directory (or load-file-name buffer-file-name
+                                              (expand-file-name "~/.emacs.d/init.el"))))))
+         (ops-file (expand-file-name "Emacs/docs/operations.md" conf-dir))
+         (fallback (expand-file-name "~/.conf/Emacs/docs/operations.md"))
+         (target (cond ((file-exists-p ops-file) ops-file)
+                       ((file-exists-p fallback) fallback))))
+    (if target
+        (with-current-buffer (find-file-noselect target)
+          (my/markdown-preview))
+      (message "operations.md が見つかりません: %s" ops-file))))
 #+end_src
 
 *** キーバインディングの表示

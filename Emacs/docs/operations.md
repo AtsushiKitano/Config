@@ -1,0 +1,615 @@
+# Emacs キーバインド一覧
+
+> Emacs内から確認: `C-c H`
+
+---
+
+## グローバルキーバインド
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-h` | `backward-delete-char` | カーソル前の文字を削除 |
+| `C-d` | `delete-forward-char` | カーソル後の文字を削除 |
+| `C-f` | `forward-char` | 1文字前進 |
+| `C-k` | `kill-line` | 行末まで削除 |
+| `C-e` | `move-end-of-line` | 行末へ移動 |
+| `C-{` | `hs-hide-block` | コードブロックを折り畳む |
+| `C-}` | `hs-show-block` | コードブロックを展開する |
+| `C-<tab>` | `hs-toggle-hiding` | コードブロックの折り畳みトグル |
+| `M-h` | `previous-multiframe-window` | 前のウィンドウへ移動 |
+| `M-l` | `next-multiframe-window` | 次のウィンドウへ移動 |
+| `M-z` | `my/toggle-zoom-window` | カレントウィンドウをズームトグル (tmux `C-z` 相当) |
+| `M-%` | `anzu-query-replace` | インタラクティブ置換 |
+| `C-c h` | `describe-bindings` | 現在のキーバインド一覧を表示 |
+| `C-c H` | `my/show-keybindings` | このキーバインドドキュメントを表示 |
+| `mouse-2` | `mouse-yank-at-click` | クリック位置にペースト |
+
+---
+
+## Evil モード
+
+### Normal モード — 移動
+
+| キー | 説明 |
+|------|------|
+| `h` / `j` / `k` / `l` | 左 / 下 / 上 / 右 |
+| `w` / `b` | 次の単語先頭 / 前の単語先頭 |
+| `e` | 次の単語末尾 |
+| `W` / `B` / `E` | 空白区切りの単語移動 |
+| `0` / `^` / `$` | 行頭(列0) / 行頭(空白スキップ) / 行末 |
+| `gg` / `G` | バッファ先頭 / バッファ末尾 |
+| `{` / `}` | 前の段落 / 次の段落 |
+| `%` | 対応する括弧へジャンプ |
+| `f<c>` / `F<c>` | 行内の文字 `<c>` へ前進 / 後進ジャンプ |
+| `t<c>` / `T<c>` | `<c>` の直前 / 直後へジャンプ |
+| `;` / `,` | `f/t` ジャンプを繰り返す / 逆方向に繰り返す |
+| `H` / `M` / `L` | 画面上端 / 中央 / 下端へ移動 |
+| `C-u` / `C-d` | 半画面上スクロール / 下スクロール |
+| `C-f` / `C-b` | 1画面前進 / 後退 |
+| `zt` / `zz` / `zb` | カーソル行を画面上端 / 中央 / 下端に |
+| `'<m>` / `` `<m> `` | マーク `<m>` の行頭 / 正確な位置へジャンプ |
+| `''` / ` `` ` | 直前ジャンプ位置に戻る |
+
+### Normal モード — 編集
+
+| キー | 説明 |
+|------|------|
+| `i` / `I` | カーソル位置 / 行頭でインサートモードへ |
+| `a` / `A` | カーソル後 / 行末でインサートモードへ |
+| `o` / `O` | 次行 / 前行に新規行を作りインサートモードへ |
+| `s` / `S` | 1文字削除してインサート / 行全体を置換 |
+| `r<c>` | カーソル文字を `<c>` に置換 |
+| `R` | 上書きモードへ |
+| `x` / `X` | カーソル文字を削除 / カーソル前の文字を削除 |
+| `dd` | 行全体を削除 |
+| `D` | 行末まで削除 |
+| `cc` | 行全体を変更 (削除→インサート) |
+| `C` | 行末まで変更 |
+| `yy` / `Y` | 行全体をヤンク |
+| `p` / `P` | カーソル後 / 前にペースト |
+| `u` | アンドゥ |
+| `C-r` | リドゥ |
+| `~` | カーソル文字の大文字/小文字を切り替え |
+| `gu<motion>` / `gU<motion>` | 小文字化 / 大文字化 |
+| `>>` / `<<` | インデントを増やす / 減らす |
+| `=<motion>` | インデントを自動整形 |
+| `J` | 次行を現在行の末尾に結合 |
+| `.` | 直前の編集操作を繰り返す |
+
+### Normal モード — テキストオブジェクト (d/c/y と組み合わせて使用)
+
+| キー | 対象 |
+|------|------|
+| `iw` / `aw` | 単語 (内側) / 単語 + 前後スペース |
+| `is` / `as` | センテンス (内側 / 外側) |
+| `ip` / `ap` | 段落 (内側 / 外側) |
+| `i"` / `a"` | `"..."` の内側 / 外側 |
+| `i'` / `a'` | `'...'` の内側 / 外側 |
+| `` i` `` / `` a` `` | バッククォート内側 / 外側 |
+| `i(` / `a(` | `(...)` の内側 / 外側 |
+| `i[` / `a[` | `[...]` の内側 / 外側 |
+| `i{` / `a{` | `{...}` の内側 / 外側 |
+| `it` / `at` | HTML タグ内側 / 外側 |
+
+**例:** `di"` → ダブルクォート内を削除、`ya{` → `{...}` 全体をヤンク、`ci(` → 括弧内を変更
+
+### Normal モード — 検索
+
+| キー | 説明 |
+|------|------|
+| `/` + `<pattern>` | 下方向へ検索 |
+| `?` + `<pattern>` | 上方向へ検索 |
+| `n` / `N` | 次のヒット / 前のヒット |
+| `*` / `#` | カーソル下の単語を下 / 上方向へ検索 |
+| `g*` / `g#` | 部分一致で下 / 上方向へ検索 |
+
+### Normal モード — カスタムキーバインド
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `gd` | `xref-find-definitions` | 定義へジャンプ |
+| `gr` | `xref-find-references` | 参照を一覧表示 |
+| `C-t` | `xref-go-back` | ジャンプ前の位置へ戻る |
+| `C-n` | `next-line` | 次の行へ |
+| `C-p` | `previous-line` | 前の行へ |
+| `C-w` | `my/kill-region-or-backward-kill-word` | リージョン切り取り / 単語後退削除 |
+| `M-w` | `my/kill-ring-save-region` | リージョンコピー |
+| `M-z` | `my/toggle-zoom-window` | ウィンドウズームトグル |
+| `C-@` / `C-SPC` | `set-mark-command` | マークをセット |
+| `<C-tab>` | `hs-toggle-hiding` | コードブロックの折り畳みトグル |
+
+### Insert モード (Emacs キーバインド維持)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-p` | `previous-line` | 前の行へ |
+| `C-n` | `next-line` | 次の行へ |
+| `C-b` | `backward-char` | 1文字後退 |
+| `C-f` | `forward-char` | 1文字前進 |
+| `C-a` | `move-beginning-of-line` | 行頭へ |
+| `C-e` | `move-end-of-line` | 行末へ |
+| `M-f` | `forward-word` | 1単語前進 |
+| `M-b` | `backward-word` | 1単語後退 |
+| `C-d` | `delete-forward-char` | カーソル後の文字を削除 |
+| `C-h` | `backward-delete-char` | カーソル前の文字を削除 |
+| `C-k` | `kill-line` | 行末まで削除 |
+| `C-w` | `my/kill-region-or-backward-kill-word` | リージョン切り取り / 単語後退削除 |
+| `M-w` | `my/kill-ring-save-region` | リージョンコピー |
+| `C-y` | `yank` | ペースト |
+| `M-d` | `kill-word` | カーソル後の単語を削除 |
+| `C-g` | `evil-normal-state` | ノーマルモードへ戻る |
+| `C-@` / `C-SPC` | `set-mark-command` | マークをセット |
+| `<C-tab>` | `hs-toggle-hiding` | コードブロックの折り畳みトグル |
+| `RET` | `my/newline-and-indent-pair` | 括弧展開付き改行 (prog-mode) |
+
+### Visual モード
+
+| キー | 説明 |
+|------|------|
+| `v` | キャラクタービジュアルモード |
+| `V` | ラインビジュアルモード |
+| `C-v` | ブロックビジュアルモード |
+| `o` | 選択範囲の反対端へカーソルを移動 |
+| `gv` | 前回の選択範囲を再選択 |
+| `>` / `<` | インデントを増やす / 減らす |
+| `=` | インデントを自動整形 |
+| `u` / `U` | 小文字化 / 大文字化 |
+| `M-w` | `my/kill-ring-save-region` | 選択範囲をコピー |
+| `C-w` | `my/kill-region-or-backward-kill-word` | 選択範囲を切り取り |
+
+### コマンドライン (`:`モード)
+
+| コマンド | 説明 |
+|----------|------|
+| `:w` | 保存 |
+| `:q` / `:q!` | 終了 / 強制終了 |
+| `:wq` / `ZZ` | 保存して終了 |
+| `:e <file>` | ファイルを開く |
+| `:%s/old/new/g` | バッファ全体で置換 |
+| `:'<,'>s/old/new/g` | 選択範囲内で置換 |
+| `:noh` | 検索ハイライトを消す |
+
+### Emacs State (一部モードで強制適用)
+
+以下のモードは Evil を無効化し、Emacs 標準キーバインドで動作する:
+`vterm-mode`, `dired-mode`, `magit-mode`, `imenu-list-major-mode`, `eat-mode`, `agent-shell-mode`
+
+---
+
+## ナビゲーション
+
+### avy (文字ジャンプ)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-:` | `avy-goto-char-timer` | 文字を入力してジャンプ先を選択 |
+| `C-*` | `avy-resume` | 直前の avy 操作を再開 |
+| `M-g M-g` | `avy-goto-line` | 行番号指定でジャンプ |
+| `[remap zap-to-char]` | `avy-zap-to-char` | 指定文字まで削除 |
+
+### ace-window (ウィンドウ移動)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-x o` | `ace-window` | ウィンドウを選んで移動 (ラベル: a s d f g h i j k l) |
+
+### winum (ウィンドウ番号移動)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `M-1` ~ `M-9` | `winum-select-window-N` | 番号でウィンドウを直接選択 |
+
+### xref (定義ジャンプ)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `M-.` | `xref-find-definitions` | 定義へジャンプ |
+| `M-?` | `xref-find-references` | 参照を一覧表示 |
+| `M-,` | `xref-go-back` | ジャンプ前の位置へ戻る |
+
+バックエンド優先順位: eglot (LSP) → dumb-jump (ripgrep)
+
+---
+
+## 補完
+
+### vertico (ミニバッファ補完)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-z` | `vertico-insert` | 候補を補完・挿入 |
+| `C-l` | `grugrut/up-dir` | ひとつ上のディレクトリへ移動 |
+
+### consult (検索・ナビゲーション)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-;` | `consult-buffer` | バッファ・ファイル・履歴を横断検索 |
+| `[remap switch-to-buffer]` | `consult-buffer` | バッファ切り替え |
+| `[remap goto-line]` | `consult-goto-line` | 行番号ジャンプ |
+| `[remap yank-pop]` | `consult-yank-pop` | キルリング選択ペースト |
+
+### corfu (インライン補完)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `TAB` / `RET` | `corfu-insert` | 候補を確定して挿入 |
+
+### isearch
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-n` | `isearch-repeat-forward` | 次のヒットへ |
+| `C-b` | `isearch-repeat-backward` | 前のヒットへ |
+| `C-y` | `isearch-yank-kill` | kill-ring からペースト |
+| `s-v` | `my/isearch-yank-clipboard` | システムクリップボードからペースト |
+
+---
+
+## 編集
+
+### expand-region (選択範囲拡大)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-.` | `er/expand-region` | 選択範囲を意味単位で拡大 |
+
+### yasnippet (スニペット操作)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c y i` | `yas-insert-snippet` | スニペットを挿入 |
+| `C-c y n` | `yas-new-snippet` | 新しいスニペットを作成 |
+| `C-c y v` | `yas-visit-snippet-file` | スニペットファイルを開く |
+| `C-c y l` | `yas-describe-tables` | スニペット一覧を表示 |
+| `C-c y g` | `yas-reload-all` | スニペットをリロード |
+
+スニペットの展開: キーワードを入力して `TAB`
+
+---
+
+## yasnippet スニペット一覧
+
+### Go (`go-mode` / `go-ts-mode`)
+
+| キー | 展開内容 |
+|------|---------|
+| `func` | func 定義 |
+| `mthd` | メソッド定義 |
+| `main` | func main() |
+| `init` | func init() |
+| `if` | if 文 |
+| `iferr` | if err != nil { ... } |
+| `err` | error 型変数 |
+| `el` | else 節 |
+| `for` | for 文 |
+| `range` | for range 文 |
+| `sw` | switch 文 |
+| `sel` | select 文 |
+| `def` | default 節 |
+| `map` | map 型 |
+| `var` | var 宣言 |
+| `const` | const 宣言 |
+| `imp` | import 文 |
+| `type` | type 定義 |
+| `lambda` | 無名関数 |
+| `pr` | fmt.Printf(...) |
+| `dd` | fmt.Printf("%+v\n", ...) (デバッグ用) |
+| `at` | テスト関数 |
+| `bench` | ベンチマーク関数 |
+| `parbench` | 並列ベンチマーク |
+| `example` | Example 関数 |
+| `testmain` | TestMain 関数 |
+
+### JavaScript (`js-mode`) ※ TypeScript も同スニペット利用
+
+| キー | 展開内容 |
+|------|---------|
+| `imp` | import 文 |
+| `imd` | import { ... } from |
+| `ime` | import * as |
+| `imn` | import (モジュール名なし) |
+| `ima` | import ... as |
+| `exp` | export default |
+| `edf` | export default function |
+| `enf` | export named function |
+| `exd` | export { ... } |
+| `exa` | export ... as |
+| `const` | const 宣言 |
+| `let` | let 宣言 |
+| `f` | function 定義 |
+| `nfn` | 名前付きアロー関数 |
+| `anfn` | 無名アロー関数 |
+| `class` | class 定義 |
+| `init` | constructor |
+| `met` | メソッド |
+| `metb` | bound メソッド |
+| `prom` | Promise |
+| `sw` | switch 文 |
+| `for` | for 文 |
+| `fof` | for...of |
+| `fin` | for...in |
+| `fre` | forEach |
+| `try` | try...catch |
+| `clg` | console.log |
+| `clo` | console.log (フォーマット付き) |
+| `cer` | console.error |
+| `cwa` | console.warn |
+| `cin` | console.info |
+| `cdi` | console.dir |
+| `cta` | console.table |
+| `cas` | console.assert |
+| `cgr` / `cge` | console.group / groupEnd |
+| `cte` | console.timeEnd |
+| `sto` | setTimeout |
+| `sti` | setInterval |
+| `dbg` | debugger |
+| `/**` | JSDoc コメント (複数行) |
+
+### Python (`python-mode` / `python-ts-mode`)
+
+| キー | 展開内容 |
+|------|---------|
+| `def` | def メソッド(self, ...) |
+| `f` | 関数定義 |
+| `cls` | class 定義 |
+| `scls` | サブクラス定義 |
+| `dc` | @dataclass クラス |
+| `if` | if 文 |
+| `ife` | if/else 文 |
+| `for` | for ループ |
+| `wh` | while ループ |
+| `with` | with 文 |
+| `wo` | with open(...) |
+| `try` | try/except |
+| `tryelse` | try/except/else |
+| `lam` | lambda 式 |
+| `imp` | import 文 |
+| `from` | from ... import |
+| `main` | if __name__ == '__main__' |
+| `ifm` | ifmain |
+| `p` | print(...) |
+| `r` | return 文 |
+| `ps` | pass |
+| `cm` | @classmethod |
+| `sm` | @staticmethod |
+| `d` | docstring |
+| `fd` | 関数 docstring |
+| `id` | __init__ docstring |
+| `md` | メソッド docstring |
+| `_init` | \_\_init\_\_ |
+| `_repr` | \_\_repr\_\_ |
+| `_str` | \_\_str\_\_ |
+| `_call` | \_\_call\_\_ |
+| `_enter` / `_exit` | \_\_enter\_\_ / \_\_exit\_\_ |
+| `_iter` / `_next` | \_\_iter\_\_ / \_\_next\_\_ |
+| `pdb` | pdb.set_trace() |
+| `ipdb` | ipdb.set_trace() |
+| `ae` / `ane` | assertEqual / assertNotEqual |
+| `at` / `af` | assertTrue / assertFalse |
+| `ai` / `an` | assertIn / assertNotIn |
+| `ar` | assertRaises |
+| `tcs` | テストクラス |
+| `uv` | uv script ヘッダ |
+| `utf8` | # -*- coding: utf-8 -*- |
+| `env` | #!/usr/bin/env python |
+
+### Terraform (`terraform-mode`)
+
+| キー | 展開内容 |
+|------|---------|
+| `res` | resource ブロック |
+| `mod` | module ブロック |
+| `var` | variable ブロック |
+| `output` | output ブロック |
+| `prov` | provider ブロック |
+| `data` | data ブロック |
+| `locals` | locals ブロック |
+| `import` | import ブロック |
+| `tf` | terraform ブロック |
+| `goog_project` | google_project リソース |
+| `goog_project_iam_member` | google_project_iam_member |
+| `goog_service_account` | google_service_account |
+| `goog_storage_bucket` | google_storage_bucket |
+| `goog_container_cluster` | google_container_cluster |
+| `goog_compute_instance` | google_compute_instance |
+| `goog_pubsub_topic` | google_pubsub_topic |
+| `goog_kms_key_ring` | google_kms_key_ring |
+
+※ `goog_` プレフィックスで多数の GCP リソーススニペットあり。`C-c y i` で検索可。
+
+### Org-mode (`org-mode`)
+
+| キー | 展開内容 |
+|------|---------|
+| `<src` | #+begin_src ... #+end_src |
+| `<e` | #+begin_example ... #+end_example |
+| `<q` | #+begin_quote ... #+end_quote |
+| `<c` | #+begin_center ... #+end_center |
+| `<v` | #+begin_verse ... #+end_verse |
+| `<ex` | #+begin_export ... #+end_export |
+| `<ht` | #+begin_html ... #+end_html |
+| `<i` | #+include: |
+| `<ti` | #+title: |
+| `<au` | #+author: |
+| `<da` | #+date: |
+| `<em` | #+email: |
+| `<ke` | #+keywords: |
+| `<op` | #+options: |
+| `<li` | [[link]] |
+| `<im` | [[image]] |
+| `<ta` | テーブル |
+| `py_` | python src ブロック |
+| `emacs-lisp_` | emacs-lisp src ブロック |
+| `elisp_` | elisp src ブロック |
+| `dot_` | dot (Graphviz) src ブロック |
+| `uml` | PlantUML src ブロック |
+| `set` | #+setupfile: |
+| `uuid_` | UUID 生成 |
+| `entry_` | org entry テンプレート |
+| `fig_` | figure リンク |
+
+### Emacs Lisp (`emacs-lisp-mode`)
+
+| キー | 展開内容 |
+|------|---------|
+| `def` | defun 関数定義 |
+| `lam` | lambda |
+| `let` | let 束縛 |
+| `setq` | setq |
+| `defvar` | defvar |
+| `const` | defconst |
+| `defcustom` | defcustom |
+| `add-hook` | add-hook |
+| `define-key` | define-key |
+| `global-set-key` | global-set-key |
+| `cond` | cond 式 |
+| `w` | when |
+| `minor` | マイナーモード定義 |
+| `header` | パッケージヘッダ |
+| `up` | use-package |
+| `upb` | use-package (バインド付き) |
+| `edt` | ert-deftest |
+| `f` | format |
+| `message` | message |
+| `save-excursion` | save-excursion |
+| `with-current-buffer` | with-current-buffer |
+| `interactive` | (interactive) |
+| `grabthing` | カーソル下の単語を取得 |
+
+### Markdown (`markdown-mode` / `gfm-mode`)
+
+| キー | 展開内容 |
+|------|---------|
+| `h1` ~ `h6` | 見出し (# / = / -- 記法) |
+| `` ` `` | インラインコード |
+| `code` | コードブロック |
+| `_` | イタリック |
+| `__` | 太字 |
+| `highlight` | ハイライト |
+| `-` | 箇条書き (-) |
+| `+` | 箇条書き (+) |
+| `ol` | 番号付きリスト |
+| `link` | `[text](url)` リンク |
+| `img` | `![alt](url)` 画像 |
+| `rlink` | 参照リンク |
+| `rimg` | 参照画像 |
+| `rlb` | 参照ラベル定義 |
+| `hr` | 水平線 (- / * 記法) |
+| `utf8` | UTF-8 encoding コメント |
+
+### Shell Script (`sh-mode`)
+
+| キー | 展開内容 |
+|------|---------|
+| `!` | #!/bin/bash |
+| `s!` | より安全な bash 設定 (set -euo pipefail 等) |
+| `f` | function 定義 |
+| `if` | if 文 |
+| `ife` | if/else 文 |
+| `for` | for ループ |
+| `while` | while ループ |
+| `until` | until ループ |
+| `case` | case 文 |
+| `select` | select 文 |
+| `args` | 引数処理 |
+| `script-dir` | スクリプトのディレクトリを取得 |
+
+---
+
+## Org-mode
+
+### グローバル
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c a` | `org-agenda` | アジェンダを開く |
+| `C-c c` | `org-capture` | キャプチャ (タスク・ノート追加) |
+| `C-c l` | `org-store-link` | リンクを保存 |
+
+### org-mode バッファ内 (Evil Normal)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `TAB` | `org-cycle` | 見出しの折り畳みトグル |
+| `RET` | `org-open-at-point` | リンクを開く |
+| `t` | `org-todo` | TODO ステートを変更 |
+| `T` | `org-set-tags-command` | タグを設定 |
+| `>` | `org-deadline` | 締め切り日を設定 |
+| `<` | `org-schedule` | 予定日を設定 |
+| `gh` | `outline-up-heading` | 親見出しへ移動 |
+| `gj` | `org-forward-heading-same-level` | 同レベルの次の見出しへ |
+| `gk` | `org-backward-heading-same-level` | 同レベルの前の見出しへ |
+| `gl` | `outline-next-heading` | 次の見出しへ |
+| `M-h` | `previous-multiframe-window` | 前のウィンドウへ |
+| `M-l` | `next-multiframe-window` | 次のウィンドウへ |
+
+---
+
+## ターミナル (eat)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c t` | `eat` | ターミナルを起動 |
+| `C-h` | backspace 送信 | ターミナルへ `\177` を送信 |
+| `M-h` | `previous-multiframe-window` | 前のウィンドウへ |
+| `M-l` | `next-multiframe-window` | 次のウィンドウへ |
+| `M-z` | `my/toggle-zoom-window` | ウィンドウズームトグル |
+| `C-x o` | `ace-window` | ace-window でウィンドウ移動 |
+| `C-c C-j` | `eat-semi-char-mode` | セミキャラクタモードへ切り替え |
+
+---
+
+## Git (magit)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-x g` | `magit-status` | magit ステータスを開く |
+
+---
+
+## 日本語入力 (ddskk / AZIK)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-x C-j` | `skk-mode` | SKK モードをオン/オフ |
+| `C-x j` | `skk-mode` | SKK モードをオン/オフ |
+| `M-j` | `skk-mode` | SKK モードをオン/オフ |
+
+---
+
+## AI / LLM
+
+### agent-shell (Claude Code)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c A` | `agent-shell` | Claude Code シェルを起動 |
+| `C-c s` | `agent-shell-send-screenshot` | スクリーンショットを送信 (agent-shell-mode 内) |
+| `C-c i` | `agent-shell-send-clipboard-image` | クリップボード画像を送信 (agent-shell-mode 内) |
+
+### ellama (Gemini)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c e` | `ellama-transient-main-menu` | ellama メニューを開く |
+
+---
+
+## コミュニケーション (Slack)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c s s` | `slack-start` | Slack を起動 |
+| `C-c s c` | `slack-channel-select` | チャンネルを選択 |
+| `C-c s m` | `slack-im-select` | ダイレクトメッセージを選択 |
+| `C-c C-j` | `slack-message-write-another-buffer` | 別バッファでメッセージ入力 (slack-mode 内) |
+
+---
+
+## Markdown
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c C-v` | `my/markdown-preview` | pandoc + shr でプレビュー表示 |
+| `C-c C-x v` | `my/markdown-auto-preview-mode` | 保存時自動プレビュー更新のトグル |

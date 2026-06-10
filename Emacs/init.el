@@ -432,13 +432,11 @@
    ("C-c c" . org-capture)
    ("C-c l" . org-store-link))
   :custom
+  ;; ファイル
   (org-directory . "~/org")
-  (org-agenda-files . '("~/org/personal/"
-                        "~/org/work/"
-                        "~/org/research/"
-                        "~/org/shared/"
-                        "~/org/book/"))
-  (org-default-notes-file . "~/org/shared/memo.org")
+  (org-agenda-files . '("~/org/inbox.org" "~/org/tasks.org"))
+  (org-default-notes-file . "~/org/inbox.org")
+  ;; TODO ステート
   (org-todo-keywords
    . '((sequence "TODO(t)" "IN-PROGRESS(i!)" "|" "DONE(d!)" "CANCELLED(c@)")))
   (org-todo-keyword-faces
@@ -446,83 +444,29 @@
        ("IN-PROGRESS" . (:foreground "#ecbe7b" :weight bold))
        ("DONE"        . (:foreground "#98be65" :weight bold))
        ("CANCELLED"   . (:foreground "#5b6268" :weight bold))))
+  ;; ログ
   (org-log-done . 'time)
   (org-log-into-drawer . t)
+  ;; アジェンダ
   (org-agenda-span . 'week)
   (org-agenda-start-on-weekday . 1)
   (org-agenda-window-setup . 'current-window)
+  ;; 外観
   (org-startup-indented . t)
   (org-hide-leading-stars . t)
   (org-ellipsis . " ▾")
+  ;; アーカイブ
   (org-archive-location . "~/org/archive.org::* Archive")
   (org-modules . '(ol-bbdb ol-bibtex ol-docview ol-info ol-irc ol-mhe ol-rmail ol-w3m))
   :config
-  (defun my/org-capture-to-dir (prompt dir sections)
-    "PROMPT でテーマ名を入力し DIR 以下にファイルを作成して Notes 見出しに移動する。
-SECTIONS はファイル初期化時に挿入する見出しのリスト。"
-    (let* ((title (read-string prompt))
-           (slug (replace-regexp-in-string "[^a-z0-9]+" "-" (downcase title)))
-           (file (expand-file-name (concat slug ".org") dir)))
-      (unless (file-exists-p file)
-        (with-temp-file file
-          (insert (format "#+TITLE: %s\n#+DATE: %s\n\n" title (format-time-string "%Y-%m-%d")))
-          (dolist (s sections)
-            (insert (format "* %s\n\n" s)))))
-      (set-buffer (org-capture-target-buffer file))
-      (widen)
-      (goto-char (point-min))
-      (if (re-search-forward "^\\* Notes" nil t)
-          (end-of-line)
-        (goto-char (point-max)))))
-
-  (defun my/org-capture-personal ()
-    (my/org-capture-to-dir "トピック: " "~/org/personal/"
-                            '("Tasks" "Notes")))
-
-  (defun my/org-capture-work ()
-    (my/org-capture-to-dir "トピック: " "~/org/work/"
-                            '("Tasks" "Notes" "References")))
-
-  (defun my/org-capture-shared ()
-    (my/org-capture-to-dir "トピック: " "~/org/shared/"
-                            '("Tasks" "Notes")))
-
-  (defun my/org-capture-research ()
-    (my/org-capture-to-dir "リサーチテーマ: " "~/org/research/"
-                            '("Tasks" "Notes" "References")))
-
-  (defun my/org-capture-book ()
-    (my/org-capture-to-dir "本のタイトル: " "~/org/book/"
-                            '("Tasks" "Notes" "Quotes")))
-
   (setq org-capture-templates
-        '(("m" "Memo" entry
-           (file+headline "~/org/shared/memo.org" "Memo")
-           "* %?\n  CREATED: %U\n  %i\n  %a"
-           :empty-lines 1)
-          ("t" "Task [Memo]" entry
-           (file+headline "~/org/shared/memo.org" "Memo")
+        '(("t" "Task" entry
+           (file+headline "~/org/inbox.org" "Inbox")
            "* TODO %?\n  CREATED: %U\n  %i\n  %a"
            :empty-lines 1)
-          ("p" "Personal Note" entry
-           (function my/org-capture-personal)
-           "* %?\n  CREATED: %U\n  %i"
-           :empty-lines 1)
-          ("w" "Work Note" entry
-           (function my/org-capture-work)
-           "* %?\n  CREATED: %U\n  %i"
-           :empty-lines 1)
-          ("s" "Shared Note" entry
-           (function my/org-capture-shared)
-           "* %?\n  CREATED: %U\n  %i"
-           :empty-lines 1)
-          ("r" "Research Note" entry
-           (function my/org-capture-research)
-           "* %?\n  CREATED: %U\n  %i"
-           :empty-lines 1)
-          ("b" "Book Note" entry
-           (function my/org-capture-book)
-           "* %?\n  CREATED: %U\n  %i"
+          ("n" "Note" entry
+           (file+headline "~/org/inbox.org" "Notes")
+           "* %?\n  CREATED: %U\n  %i\n  %a"
            :empty-lines 1)))
   (with-eval-after-load 'evil
     (evil-define-key 'normal org-mode-map
@@ -538,53 +482,7 @@ SECTIONS はファイル初期化時に挿入する見出しのリスト。"
       (kbd "gl")  #'outline-next-heading))
   (define-key org-mode-map "\eh" #'previous-multiframe-window)
   (define-key org-mode-map "\el" #'next-multiframe-window)
-  (make-directory "~/org" t)
-
-  (defun my/org-find-file ()
-    "~/org 以下の org ファイルを選択して開く。"
-    (interactive)
-    (let* ((base (expand-file-name "~/org/"))
-           (files (directory-files-recursively base "\\.org$"))
-           (choices (mapcar (lambda (f) (string-remove-prefix base f)) files))
-           (choice (completing-read "Org: " choices nil t)))
-      (find-file (expand-file-name choice base))))
-
-  (defun my/org-git-pull ()
-    "起動時に ~/org を git pull する（失敗は無視）。"
-    (let ((default-directory (expand-file-name "~/org/")))
-      (when (file-directory-p ".git")
-        (start-process "org-git-pull" "*org-git*"
-                       "git" "pull" "--rebase" "--autostash"))))
-
-  (defun my/org-git-commit ()
-    "保存した org ファイルを自動で git add & commit する。"
-    (let ((file (buffer-file-name)))
-      (when (and file
-                 (string-prefix-p (expand-file-name "~/org/") file))
-        (let* ((default-directory (expand-file-name "~/org/"))
-               (rel (file-relative-name file default-directory)))
-          (start-process-shell-command
-           "org-git-commit" "*org-git*"
-           (format "git add %s && git diff --cached --quiet || git commit -m 'update %s'"
-                   (shell-quote-argument rel)
-                   (shell-quote-argument rel)))))))
-
-  (defun my/org-git-push ()
-    "~/org を git push する。"
-    (interactive)
-    (let ((default-directory (expand-file-name "~/org/")))
-      (message "org: pushing...")
-      (set-process-sentinel
-       (start-process "org-git-push" "*org-git*" "git" "push")
-       (lambda (_proc event)
-         (message "org push: %s" (string-trim event))))))
-
-  (add-hook 'emacs-startup-hook #'my/org-git-pull)
-  (add-hook 'after-save-hook    #'my/org-git-commit)
-
-  (define-key global-map (kbd "C-c o f") #'my/org-find-file)
-  (define-key global-map (kbd "C-c o s") #'org-switchb)
-  (define-key global-map (kbd "C-c o p") #'my/org-git-push))
+  (make-directory "~/org" t))
 
 ;; GCP Secret Manager からシークレットを取得するヘルパー（セッション中キャッシュ）
 (defvar my/gcloud-secret-cache (make-hash-table :test 'equal))
@@ -684,7 +582,24 @@ gcloud auth login / gcloud auth application-default login を確認してくだ�
 (leaf-keys (("C-h" . backward-delete-char)
             ("M-h" . previous-multiframe-window)
             ("M-l" . next-multiframe-window)
-            ("C-c h" . describe-bindings)))
+            ("C-c h" . describe-bindings)
+            ("C-c H" . my/show-keybindings)))
+
+(defun my/show-keybindings ()
+  "Emacs/docs/operations.md を Markdown プレビューで表示する."
+  (interactive)
+  (let* ((conf-dir (file-name-directory
+                    (directory-file-name
+                     (file-name-directory (or load-file-name buffer-file-name
+                                              (expand-file-name "~/.emacs.d/init.el"))))))
+         (ops-file (expand-file-name "Emacs/docs/operations.md" conf-dir))
+         (fallback (expand-file-name "~/.conf/Emacs/docs/operations.md"))
+         (target (cond ((file-exists-p ops-file) ops-file)
+                       ((file-exists-p fallback) fallback))))
+    (if target
+        (with-current-buffer (find-file-noselect target)
+          (my/markdown-preview))
+      (message "operations.md が見つかりません: %s" ops-file))))
 
 (leaf which-key
   :global-minor-mode t)
@@ -1025,6 +940,7 @@ gcloud auth login / gcloud auth application-default login を確認してくだ�
   (:gfm-mode-map
    ("C-c C-v" . my/markdown-preview)
    ("C-c C-x v" . my/markdown-auto-preview-mode)))
+
 (leaf slack
   :ensure t
   :commands (slack-start)
@@ -1050,28 +966,3 @@ gcloud auth login / gcloud auth application-default login を確認してくだ�
        :default t
        :token token
        :cookie cookie))))
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(display-line-numbers-width-start t)
- '(package-selected-packages
-   '(ace-window agent-shell all-the-icons anzu avy avy-zap beacon
-		blackout cape claude-code claude-code-ide consult
-		ddskk devcontainer doom-modeline doom-themes dumb-jump
-		eat el-get ellama evil evil-collection expand-region
-		gcmh git-gutter hydra indent-bars leaf-convert
-		leaf-keywords magit marginalia markdown-mode memoize
-		migemo nerd-icons orderless prisma-mode puni
-		reformatter shackle terraform-mode typescript-mode
-		vertico volatile-highlights vundo winum yasnippet
-		yasnippet-snippets yatemplate))
- '(warning-suppress-types '((comp) (native-compiler))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(aw-leading-char-face ((t (:height 3.0))) nil "Customized with leaf in `ace-window' block at `/Users/kitanoatsushi/.emacs.d/init.el'"))
