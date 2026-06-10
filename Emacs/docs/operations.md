@@ -681,15 +681,82 @@
 
 ## ターミナル (eat)
 
+### モードの概要
+
+eat には3つのモードがあり、コピー/ペーストはモードに応じて操作が異なる。
+
+| モード | 説明 | 切り替え |
+|--------|------|---------|
+| **Emacs モード** | 起動直後のデフォルト。`buffer-read-only=t` で全 Emacs キーバインドが使える。テキストのコピーはこのモードで行う | `C-c C-e` (semi-char内) |
+| **Semi-char モード** | ほとんどのキーはターミナルへ送信。`C-x` / `C-g` / `M-x` など一部の Emacs キーは Emacs 側で処理。ペーストは `C-y` | `C-c C-j` |
+| **Char モード** | 全キーをターミナルへ送信。vi など full-screen アプリ向け | `C-c M-d` |
+
+### コピー/ペーストのフロー
+
+**テキストをコピーしてターミナルにペーストする手順:**
+
+1. ターミナルに表示されているテキストをコピーする
+   - **方法A (マウス):** マウスドラッグで選択 → 自動的に kill-ring に入る
+   - **方法B (キーボード):** `C-c C-e` で Emacs モードへ切り替え → `C-SPC` でマーク → 移動して `M-w` でコピー → `C-c C-j` で semi-char モードへ戻る
+2. ターミナルにペーストする
+   - semi-char モードで `C-y` → `eat-yank` でターミナルへ送信
+
+**Emacs の別バッファからターミナルへペーストする手順:**
+
+1. 別バッファで `M-w` でコピー (kill-ring に入る)
+2. eat バッファへ切り替え
+3. semi-char モードで `C-y` → ターミナルへ貼り付け
+
+### 起動・モード切り替え
+
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-c t` | `eat` | ターミナルを起動 |
-| `C-h` | backspace 送信 | ターミナルへ `\177` を送信 |
-| `M-h` | `previous-multiframe-window` | 前のウィンドウへ |
-| `M-l` | `next-multiframe-window` | 次のウィンドウへ |
-| `M-z` | `my/toggle-zoom-window` | ウィンドウズームトグル |
-| `C-x o` | `ace-window` | ace-window でウィンドウ移動 |
-| `C-c C-j` | `eat-semi-char-mode` | セミキャラクタモードへ切り替え |
+| `C-c t` | `eat` | ターミナルを起動 (グローバル) |
+| `C-c C-j` | `eat-semi-char-mode` | Semi-char モードへ切り替え (カスタム) |
+| `C-c M-d` | `eat-char-mode` | Char モードへ切り替え |
+| `C-c C-e` | `eat-emacs-mode` | Emacs モードへ切り替え (semi-char 内) |
+| `C-M-m` | `eat-semi-char-mode` | Char モード → Semi-char モードへ |
+| `C-c C-l` | `eat-line-mode` | Line モードへ切り替え |
+
+### コピー操作 (Emacs モード)
+
+Emacs モードは `buffer-read-only=t` なのでキーボードで cut はできないが、コピーは通常通り動く。
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| マウスドラッグ | — | 選択範囲を kill-ring に自動コピー |
+| `C-SPC` | `set-mark-command` | マークをセット (範囲選択の開始) |
+| `M-w` | `kill-ring-save` | 選択範囲をコピー |
+| `C-g` | — | 選択を解除してノーマルに戻る |
+
+### ペースト操作 (Semi-char モード)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-y` | `eat-yank` | kill-ring の先頭をターミナルへ貼り付け |
+| `M-y` | `eat-yank-from-kill-ring` | kill-ring を選んで貼り付け (Emacs 28+) |
+| `S-insert` | `eat-yank` | `C-y` と同じ |
+
+### その他の操作 (Semi-char モード)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-q` | `eat-quoted-input` | 次に押したキーをそのままターミナルへ送信 |
+| `C-c C-c` | `eat-self-input` | `C-c` をターミナルへ送信 (SIGINT 相当) |
+
+### ナビゲーション (全モード共通 / カスタム)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c C-p` | `eat-previous-shell-prompt` | 前のシェルプロンプトへジャンプ |
+| `C-c C-n` | `eat-next-shell-prompt` | 次のシェルプロンプトへジャンプ |
+| `C-x n d` | `eat-narrow-to-shell-prompt` | 現在のプロンプト出力にナロウ |
+| `C-c C-k` | `eat-kill-process` | ターミナルプロセスを終了 |
+| `C-h` | backspace 送信 | `\177` をターミナルへ送信 (カスタム) |
+| `M-h` | `previous-multiframe-window` | 前のウィンドウへ (カスタム) |
+| `M-l` | `next-multiframe-window` | 次のウィンドウへ (カスタム) |
+| `M-z` | `my/toggle-zoom-window` | ウィンドウズームトグル (カスタム) |
+| `C-x o` | `ace-window` | ace-window でウィンドウ移動 (カスタム) |
 
 ---
 
