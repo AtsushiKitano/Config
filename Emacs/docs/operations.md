@@ -4,7 +4,7 @@
 
 ---
 
-## グローバルキーバインド
+## グローバルキーバインド (カスタム)
 
 | キー | コマンド | 説明 |
 |------|---------|------|
@@ -13,8 +13,8 @@
 | `C-f` | `forward-char` | 1文字前進 |
 | `C-k` | `kill-line` | 行末まで削除 |
 | `C-e` | `move-end-of-line` | 行末へ移動 |
-| `C-{` | `hs-hide-block` | コードブロックを折り畳む |
-| `C-}` | `hs-show-block` | コードブロックを展開する |
+| `C-{` | `hs-hide-block` | コードブロックを折り畳む (prog-mode) |
+| `C-}` | `hs-show-block` | コードブロックを展開する (prog-mode) |
 | `C-<tab>` | `hs-toggle-hiding` | コードブロックの折り畳みトグル |
 | `M-h` | `previous-multiframe-window` | 前のウィンドウへ移動 |
 | `M-l` | `next-multiframe-window` | 次のウィンドウへ移動 |
@@ -22,7 +22,26 @@
 | `M-%` | `anzu-query-replace` | インタラクティブ置換 |
 | `C-c h` | `describe-bindings` | 現在のキーバインド一覧を表示 |
 | `C-c H` | `my/show-keybindings` | このキーバインドドキュメントを表示 |
+| `C-;` | `consult-buffer` | バッファ・ファイル・履歴を横断検索 |
+| `C-x o` | `ace-window` | ウィンドウを選んで移動 |
+| `C-x g` | `magit-status` | magit ステータスを開く |
+| `C-c t` | `eat` | ターミナルを起動 |
+| `C-c A` | `agent-shell` | Claude Code シェルを起動 |
+| `C-c e` | `ellama-transient-main-menu` | ellama (LLM) メニューを開く |
+| `C-c a` | `org-agenda` | Org アジェンダを開く |
+| `C-c c` | `org-capture` | Org キャプチャ |
+| `C-c l` | `org-store-link` | Org リンクを保存 |
+| `C-:` | `avy-goto-char-timer` | 文字を入力してジャンプ先を選択 |
+| `C-*` | `avy-resume` | 直前の avy 操作を再開 |
+| `M-g M-g` | `avy-goto-line` | 行番号指定でジャンプ |
+| `C-.` | `er/expand-region` | 選択範囲を意味単位で拡大 |
+| `M-1` ~ `M-9` | `winum-select-window-N` | 番号でウィンドウを直接選択 |
+| `M-.` | `xref-find-definitions` | 定義へジャンプ |
+| `M-?` | `xref-find-references` | 参照を一覧表示 |
+| `M-,` | `xref-go-back` | ジャンプ前の位置へ戻る |
+| `¥` | `\` | ¥ キーをバックスラッシュに置き換え |
 | `mouse-2` | `mouse-yank-at-click` | クリック位置にペースト |
+| `C-z` | (無効) | `suspend-frame` を無効化 |
 
 ---
 
@@ -76,7 +95,7 @@
 | `J` | 次行を現在行の末尾に結合 |
 | `.` | 直前の編集操作を繰り返す |
 
-### Normal モード — テキストオブジェクト (d/c/y と組み合わせて使用)
+### Normal モード — テキストオブジェクト (d/c/y と組み合わせ)
 
 | キー | 対象 |
 |------|------|
@@ -91,7 +110,7 @@
 | `i{` / `a{` | `{...}` の内側 / 外側 |
 | `it` / `at` | HTML タグ内側 / 外側 |
 
-**例:** `di"` → ダブルクォート内を削除、`ya{` → `{...}` 全体をヤンク、`ci(` → 括弧内を変更
+例: `di"` → ダブルクォート内を削除、`ya{` → `{...}` 全体をヤンク、`ci(` → 括弧内を変更
 
 ### Normal モード — 検索
 
@@ -146,9 +165,7 @@
 
 | キー | 説明 |
 |------|------|
-| `v` | キャラクタービジュアルモード |
-| `V` | ラインビジュアルモード |
-| `C-v` | ブロックビジュアルモード |
+| `v` / `V` / `C-v` | キャラクタ / ライン / ブロック ビジュアルモード |
 | `o` | 選択範囲の反対端へカーソルを移動 |
 | `gv` | 前回の選択範囲を再選択 |
 | `>` / `<` | インデントを増やす / 減らす |
@@ -157,7 +174,7 @@
 | `M-w` | `my/kill-ring-save-region` | 選択範囲をコピー |
 | `C-w` | `my/kill-region-or-backward-kill-word` | 選択範囲を切り取り |
 
-### コマンドライン (`:`モード)
+### コマンドライン (`:` モード)
 
 | コマンド | 説明 |
 |----------|------|
@@ -169,10 +186,146 @@
 | `:'<,'>s/old/new/g` | 選択範囲内で置換 |
 | `:noh` | 検索ハイライトを消す |
 
-### Emacs State (一部モードで強制適用)
+### Emacs State (Evil 無効化モード)
 
 以下のモードは Evil を無効化し、Emacs 標準キーバインドで動作する:
 `vterm-mode`, `dired-mode`, `magit-mode`, `imenu-list-major-mode`, `eat-mode`, `agent-shell-mode`
+
+---
+
+## Org-mode
+
+### グローバル起動キー
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c a` | `org-agenda` | アジェンダを開く |
+| `C-c c` | `org-capture` | キャプチャ (タスク・ノート追加) |
+| `C-c l` | `org-store-link` | カーソル位置のリンクを保存 |
+
+### キャプチャテンプレート (`C-c c` 後)
+
+| キー | テンプレート | 保存先 |
+|------|------------|--------|
+| `t` | Task — `* TODO` エントリ | `~/org/inbox.org` の Inbox |
+| `n` | Note — メモエントリ | `~/org/inbox.org` の Notes |
+
+### TODO ステート
+
+| ステート | 説明 |
+|---------|------|
+| `TODO` | 未着手 (ショートカット: `t`) |
+| `IN-PROGRESS` | 作業中 (ショートカット: `i`、状態変更時にタイムスタンプ記録) |
+| `DONE` | 完了 (ショートカット: `d`、タイムスタンプ記録) |
+| `CANCELLED` | キャンセル (ショートカット: `c`、コメント入力) |
+
+### org-mode バッファ内 — 見出し・構造操作
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `TAB` | `org-cycle` | 折り畳みトグル (Evil Normal) |
+| `S-TAB` | `org-shifttab` | 全見出しの折り畳みレベルをトグル |
+| `M-RET` | `org-insert-heading` | 同レベルの見出しを挿入 |
+| `M-S-RET` | `org-insert-todo-heading` | TODO 見出しを挿入 |
+| `M-<left>` / `M-<right>` | `org-promote-heading` / `org-demote-heading` | 見出しを昇格 / 降格 |
+| `M-S-<left>` / `M-S-<right>` | `org-promote-subtree` / `org-demote-subtree` | サブツリーを昇格 / 降格 |
+| `M-<up>` / `M-<down>` | `org-move-subtree-up` / `org-move-subtree-down` | サブツリーを上 / 下へ移動 |
+| `C-c C-^` | `org-sort` | サブツリーを並び替え |
+| `C-c *` | `org-ctrl-c-star` | 見出し/本文をトグル |
+| `C-c C-c` | `org-ctrl-c-ctrl-c` | コンテキスト依存操作 (タグ設定・チェックボックストグル等) |
+
+### org-mode バッファ内 — ナビゲーション
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c C-n` | `org-next-visible-heading` | 次の見出しへ |
+| `C-c C-p` | `org-previous-visible-heading` | 前の見出しへ |
+| `C-c C-f` | `org-forward-heading-same-level` | 同レベルの次の見出しへ |
+| `C-c C-b` | `org-backward-heading-same-level` | 同レベルの前の見出しへ |
+| `C-c C-u` | `outline-up-heading` | 親見出しへ |
+| `gh` | `outline-up-heading` | 親見出しへ (Evil Normal) |
+| `gj` | `org-forward-heading-same-level` | 同レベルの次の見出しへ (Evil Normal) |
+| `gk` | `org-backward-heading-same-level` | 同レベルの前の見出しへ (Evil Normal) |
+| `gl` | `outline-next-heading` | 次の見出しへ (Evil Normal) |
+| `M-h` | `previous-multiframe-window` | 前のウィンドウへ (org-mode-map) |
+| `M-l` | `next-multiframe-window` | 次のウィンドウへ (org-mode-map) |
+| `C-x n s` | `org-narrow-to-subtree` | サブツリーにナロウ |
+| `C-x n w` | `widen` | ナロウを解除 |
+
+### org-mode バッファ内 — TODO / スケジュール (Evil Normal)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `t` | `org-todo` | TODO ステートをトグル |
+| `T` | `org-set-tags-command` | タグを設定 |
+| `>` | `org-deadline` | 締め切り日を設定 |
+| `<` | `org-schedule` | 予定日を設定 |
+| `C-c C-t` | `org-todo` | TODO ステートをトグル (標準) |
+| `C-c C-s` | `org-schedule` | 予定日を設定 (標準) |
+| `C-c C-d` | `org-deadline` | 締め切り日を設定 (標準) |
+| `C-c C-w` | `org-refile` | 別の見出しへリファイル |
+| `S-<right>` / `S-<left>` | — | TODO ステートを次/前へ |
+| `S-<up>` / `S-<down>` | — | 優先度を上げる / 下げる |
+
+### org-mode バッファ内 — クロック (時間計測)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c C-x C-i` | `org-clock-in` | クロックイン (作業開始) |
+| `C-c C-x C-o` | `org-clock-out` | クロックアウト (作業終了) |
+| `C-c C-x C-q` | `org-clock-cancel` | クロックをキャンセル |
+| `C-c C-x C-j` | `org-clock-goto` | 現在クロック中のタスクへジャンプ |
+| `C-c C-x C-d` | `org-clock-display` | バッファ内の合計時間を表示 |
+| `C-c C-x C-r` | `org-clock-report` | クロックレポートを挿入 |
+| `C-c C-x C-e` | `org-clock-modify-effort-estimate` | 見積時間を変更 |
+| `C-c C-x C-x` | `org-clock-in-last` | 直前のタスクを再クロックイン |
+
+### org-mode バッファ内 — リンク・エクスポート
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c C-l` | `org-insert-link` | リンクを挿入 |
+| `C-c C-o` | `org-open-at-point` | リンクを開く |
+| `RET` | `org-open-at-point` | リンクを開く (Evil Normal) |
+| `C-c C-x C-n` | `org-next-link` | 次のリンクへ |
+| `C-c C-x C-p` | `org-previous-link` | 前のリンクへ |
+| `C-c C-e` | `org-export-dispatch` | エクスポートメニューを開く |
+
+### org-mode バッファ内 — アーカイブ・プロパティ
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c C-x C-a` | `org-archive-subtree-default` | アーカイブ (`~/org/archive.org` へ) |
+| `C-c $` | `org-archive-subtree` | アーカイブ先を指定して実行 |
+| `C-c C-x p` | `org-set-property` | プロパティを設定 |
+| `C-c C-x e` | `org-set-effort` | 見積時間を設定 |
+| `C-c C-x C-c` | `org-columns` | カラムビューを表示 |
+| `C-c #` | `org-update-statistics-cookies` | 統計クッキーを更新 (チェックリスト等) |
+
+### アジェンダビュー内のキー (`C-c a` 後)
+
+| キー | 説明 |
+|------|------|
+| `a` | デイビュー |
+| `w` | ウィークビュー |
+| `m` | マンスビュー |
+| `f` / `b` | 次の期間 / 前の期間 |
+| `.` | 今日へ戻る |
+| `j` | 日付を指定してジャンプ |
+| `r` / `g` | アジェンダを更新 |
+| `t` | TODO ステートを変更 |
+| `s` | 全 org バッファを保存 |
+| `l` | ログモードのトグル (完了タスクを表示) |
+| `v` | ビュー切り替えメニュー |
+| `C-c C-s` | 予定日を設定 |
+| `C-c C-d` | 締め切り日を設定 |
+| `C-c C-w` | リファイル |
+| `C-c C-t` | TODO ステートを変更 |
+| `I` | クロックイン |
+| `O` | クロックアウト |
+| `q` | アジェンダを閉じる |
+| `RET` | 対象エントリのバッファへジャンプ |
+| `TAB` | 対象エントリを別ウィンドウで表示 |
 
 ---
 
@@ -206,6 +359,9 @@
 | `M-.` | `xref-find-definitions` | 定義へジャンプ |
 | `M-?` | `xref-find-references` | 参照を一覧表示 |
 | `M-,` | `xref-go-back` | ジャンプ前の位置へ戻る |
+| `gd` | `xref-find-definitions` | 定義へジャンプ (Evil Normal) |
+| `gr` | `xref-find-references` | 参照を一覧表示 (Evil Normal) |
+| `C-t` | `xref-go-back` | 前の位置へ戻る (Evil Normal) |
 
 バックエンド優先順位: eglot (LSP) → dumb-jump (ripgrep)
 
@@ -253,6 +409,12 @@
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-.` | `er/expand-region` | 選択範囲を意味単位で拡大 |
+
+### vundo (Undo ツリー)
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `M-x vundo` | `vundo` | undo 履歴をツリー表示 (vundo バッファ内は `q` で閉じる) |
 
 ### yasnippet (スニペット操作)
 
@@ -514,35 +676,6 @@
 | `select` | select 文 |
 | `args` | 引数処理 |
 | `script-dir` | スクリプトのディレクトリを取得 |
-
----
-
-## Org-mode
-
-### グローバル
-
-| キー | コマンド | 説明 |
-|------|---------|------|
-| `C-c a` | `org-agenda` | アジェンダを開く |
-| `C-c c` | `org-capture` | キャプチャ (タスク・ノート追加) |
-| `C-c l` | `org-store-link` | リンクを保存 |
-
-### org-mode バッファ内 (Evil Normal)
-
-| キー | コマンド | 説明 |
-|------|---------|------|
-| `TAB` | `org-cycle` | 見出しの折り畳みトグル |
-| `RET` | `org-open-at-point` | リンクを開く |
-| `t` | `org-todo` | TODO ステートを変更 |
-| `T` | `org-set-tags-command` | タグを設定 |
-| `>` | `org-deadline` | 締め切り日を設定 |
-| `<` | `org-schedule` | 予定日を設定 |
-| `gh` | `outline-up-heading` | 親見出しへ移動 |
-| `gj` | `org-forward-heading-same-level` | 同レベルの次の見出しへ |
-| `gk` | `org-backward-heading-same-level` | 同レベルの前の見出しへ |
-| `gl` | `outline-next-heading` | 次の見出しへ |
-| `M-h` | `previous-multiframe-window` | 前のウィンドウへ |
-| `M-l` | `next-multiframe-window` | 次のウィンドウへ |
 
 ---
 
