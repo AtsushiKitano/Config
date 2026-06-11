@@ -349,6 +349,41 @@
   (skk-process-okuri-early           . nil)
   (skk-status-indicator              . 'minior-mode))
 
+(defun my/skk-minibuffer-mode-string ()
+  "現在の SKK 入力モードを示す装飾済み文字列を返す。SKK 無効時は nil."
+  (cond
+   ((not (bound-and-true-p skk-mode)) nil)
+   ((bound-and-true-p skk-katakana)
+    (propertize "[カナ]" 'face '(:foreground "#98be65" :weight bold)))
+   ((bound-and-true-p skk-ascii-mode)
+    (propertize "[英数]" 'face '(:foreground "#51afef" :weight bold)))
+   (t
+    (propertize "[かな]" 'face '(:foreground "#c678dd" :weight bold)))))
+
+(defvar my/skk-minibuffer-overlay nil
+  "ミニバッファ SKK 状態表示用オーバーレイ。")
+
+(defun my/skk-minibuffer-update ()
+  "ミニバッファの SKK 状態オーバーレイを更新する。"
+  (when (overlayp my/skk-minibuffer-overlay)
+    (let ((str (my/skk-minibuffer-mode-string)))
+      (overlay-put my/skk-minibuffer-overlay
+                   'before-string
+                   (if str (concat str " ") "")))))
+
+(add-hook 'minibuffer-setup-hook
+          (lambda ()
+            (setq my/skk-minibuffer-overlay
+                  (make-overlay (point-min) (point-min) nil t t))
+            (my/skk-minibuffer-update)
+            (add-hook 'post-command-hook #'my/skk-minibuffer-update nil t)))
+
+(add-hook 'minibuffer-exit-hook
+          (lambda ()
+            (when (overlayp my/skk-minibuffer-overlay)
+              (delete-overlay my/skk-minibuffer-overlay))
+            (setq my/skk-minibuffer-overlay nil)))
+
 (leaf expand-region
   :ensure t
   :bind (("C-." . er/expand-region))
@@ -425,6 +460,101 @@
    ([remap yank-pop] . consult-yank-pop)
    ("C-;" . consult-buffer)))
 
+(defun my/org-slugify (str)
+  "STR をファイル名に使える文字列に変換する."
+  (let* ((s (string-trim str))
+         (s (replace-regexp-in-string "\\s-+" "_" s))
+         (s (replace-regexp-in-string "[/\\\\:*?\"<>|]" "" s)))
+    (if (string-empty-p s) "untitled" s)))
+
+(defun my/org-new-book ()
+  "読書ノートを新規作成して開く。既存ファイルはそのまま開く."
+  (interactive)
+  (let* ((title  (read-string "タイトル: "))
+         (author (read-string "著者: "))
+         (slug   (my/org-slugify title))
+         (file   (expand-file-name (concat slug ".org") "~/org/book/")))
+    (find-file file)
+    (when (= (buffer-size) 0)
+      (insert (format "#+title: %s\n#+author: %s\n#+filetags: :book:\n\n" title author))
+      (insert (format "* TODO Read\n  CREATED: %s\n\n"
+                      (format-time-string "[%Y-%m-%d %a %H:%M]")))
+      (insert "* Notes\n\n")
+      (insert "* Review\n")
+      (save-buffer))))
+
+(defun my/org-new-research ()
+  "リサーチトピックを新規作成して開く。既存ファイルはそのまま開く."
+  (interactive)
+  (let* ((topic (read-string "トピック: "))
+         (slug  (my/org-slugify topic))
+         (file  (expand-file-name (concat slug ".org") "~/org/research/")))
+    (find-file file)
+    (when (= (buffer-size) 0)
+      (insert (format "#+title: %s\n#+filetags: :research:\n\n" topic))
+      (insert "* Overview\n\n")
+      (insert (format "* TODO Tasks\n  CREATED: %s\n\n"
+                      (format-time-string "[%Y-%m-%d %a %H:%M]")))
+      (insert "* Notes\n\n")
+      (insert "* References\n")
+      (save-buffer))))
+
+(defun my/org-select-book-file ()
+  "book/ 内の org ファイルを completing-read で選択して返す."
+  (let* ((dir   (expand-file-name "~/org/book/"))
+         (files (when (file-directory-p dir)
+                  (directory-files dir t "\\.org\\'" t)))
+         (names (mapcar (lambda (f) (cons (file-name-base f) f)) files))
+         (sel   (completing-read "Book: " names nil t)))
+    (cdr (assoc sel names))))
+
+(defun my/org-select-research-file ()
+  "research/ 内の org ファイルを completing-read で選択して返す."
+  (let* ((dir   (expand-file-name "~/org/research/"))
+         (files (when (file-directory-p dir)
+                  (directory-files dir t "\\.org\\'" t)))
+         (names (mapcar (lambda (f) (cons (file-name-base f) f)) files))
+         (sel   (completing-read "Research: " names nil t)))
+    (cdr (assoc sel names))))
+
+(global-set-key (kbd "C-c o b") #'my/org-new-book)
+(global-set-key (kbd "C-c o r") #'my/org-new-research)
+
+(defvar my/org-sync-timer nil
+  "org 自動同期のデバウンスタイマー.")
+
+(defun my/org-sync ()
+  "~/org を GitHub へ非同期で同期する."
+  (interactive)
+  (let ((script (expand-file-name "~/.conf/scripts/org-sync.sh")))
+    (if (not (file-executable-p script))
+        (message "org-sync: script not found: %s" script)
+      (message "org sync: starting...")
+      (set-process-sentinel
+       (start-process "org-sync" "*org-sync*" script)
+       (lambda (_proc event)
+         (cond
+          ((string-match "finished" event) (message "org sync: done"))
+          ((string-match "exited abnormally" event)
+           (message "org sync: failed — see *org-sync* buffer"))))))))
+
+(defun my/org-sync-debounced ()
+  "保存から 5 秒後に org sync を実行する（連続保存をまとめる）."
+  (when my/org-sync-timer
+    (cancel-timer my/org-sync-timer))
+  (setq my/org-sync-timer
+        (run-with-timer 5 nil #'my/org-sync)))
+
+(add-hook 'after-save-hook
+          (lambda ()
+            (when (and (buffer-file-name)
+                       (string-suffix-p ".org" (buffer-file-name))
+                       (string-prefix-p (expand-file-name "~/org/")
+                                        (expand-file-name (buffer-file-name))))
+              (my/org-sync-debounced))))
+
+(global-set-key (kbd "C-c o s") #'my/org-sync)
+
 (leaf org
   :ensure t
   :bind
@@ -434,8 +564,13 @@
   :custom
   ;; ファイル
   (org-directory . "~/org")
-  (org-agenda-files . '("~/org/inbox.org" "~/org/tasks.org"))
-  (org-default-notes-file . "~/org/inbox.org")
+  (org-agenda-files . '("~/org/shared/memo.org"
+                        "~/org/work/tasks.org"
+                        "~/org/work/projects.org"
+                        "~/org/personal/tasks.org"
+                        "~/org/book"
+                        "~/org/research"))
+  (org-default-notes-file . "~/org/shared/memo.org")
   ;; TODO ステート
   (org-todo-keywords
    . '((sequence "TODO(t)" "IN-PROGRESS(i!)" "|" "DONE(d!)" "CANCELLED(c@)")))
@@ -460,13 +595,37 @@
   (org-modules . '(ol-bbdb ol-bibtex ol-docview ol-info ol-irc ol-mhe ol-rmail ol-w3m))
   :config
   (setq org-capture-templates
-        '(("t" "Task" entry
-           (file+headline "~/org/inbox.org" "Inbox")
+        '(("m" "Memo" entry
+           (file+headline "~/org/shared/memo.org" "Memo")
+           "* %?\n  CREATED: %U\n  %i\n  %a"
+           :empty-lines 1)
+          ("w" "Work Task" entry
+           (file+headline "~/org/work/tasks.org" "Tasks")
            "* TODO %?\n  CREATED: %U\n  %i\n  %a"
            :empty-lines 1)
-          ("n" "Note" entry
-           (file+headline "~/org/inbox.org" "Notes")
+          ("W" "Work Note" entry
+           (file+headline "~/org/work/notes.org" "Notes")
            "* %?\n  CREATED: %U\n  %i\n  %a"
+           :empty-lines 1)
+          ("p" "Personal Task" entry
+           (file+headline "~/org/personal/tasks.org" "Tasks")
+           "* TODO %?\n  CREATED: %U\n  %i\n  %a"
+           :empty-lines 1)
+          ("j" "Journal" entry
+           (file+olp+datetree "~/org/personal/journal.org")
+           "* %?\n  CREATED: %U"
+           :empty-lines 1)
+          ("b" "Book Note" entry
+           (file+headline my/org-select-book-file "Notes")
+           "** %T\n   %?"
+           :empty-lines 1)
+          ("r" "Research Note" entry
+           (file+headline my/org-select-research-file "Notes")
+           "** %T\n   %?"
+           :empty-lines 1)
+          ("M" "Meeting" entry
+           (file+headline "~/org/shared/meetings.org" "Meetings")
+           "* %^{タイトル} %^g\n  DATE: %T\n  出席: %^{出席者}\n\n** Agenda\n  %?\n\n** Actions\n"
            :empty-lines 1)))
   (with-eval-after-load 'evil
     (evil-define-key 'normal org-mode-map
@@ -482,7 +641,10 @@
       (kbd "gl")  #'outline-next-heading))
   (define-key org-mode-map "\eh" #'previous-multiframe-window)
   (define-key org-mode-map "\el" #'next-multiframe-window)
-  (make-directory "~/org" t))
+  ;; ディレクトリ作成
+  (dolist (dir '("~/org/book" "~/org/personal"
+                 "~/org/research" "~/org/shared" "~/org/work"))
+    (make-directory (expand-file-name dir) t)))
 
 ;; GCP Secret Manager からシークレットを取得するヘルパー（セッション中キャッシュ）
 (defvar my/gcloud-secret-cache (make-hash-table :test 'equal))

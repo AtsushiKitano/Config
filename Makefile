@@ -2,7 +2,7 @@ REPO_DIR := $(shell pwd)
 
 .PHONY: all setup bootstrap sync link link-dotfiles link-emacs link-yabai \
         link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
-        macos-defaults install homebrew services setup-slack
+        link-launchd macos-defaults install homebrew services setup-slack org-sync-setup
 
 # --------------------------------------------------------------------------
 # Top-level targets
@@ -25,7 +25,8 @@ all: link macos-defaults install
 # --------------------------------------------------------------------------
 
 link: link-dotfiles link-emacs link-yabai \
-      link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude
+      link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
+      link-launchd
 
 # dotfiles/.??* → $HOME  (skip directories, .Brewfile is Mac-only)
 link-dotfiles:
@@ -79,6 +80,25 @@ link-claude:
 	@echo "[claude] Linking to $$HOME/.claude"
 	@mkdir -p "$$HOME/.claude"
 	@ln -fnsv "$(REPO_DIR)/.claude/settings.json"  "$$HOME/.claude/settings.json"
+
+# LaunchAgents: launchd/*.plist → ~/Library/LaunchAgents/
+link-launchd:
+	@echo "[launchd] Linking to $$HOME/Library/LaunchAgents"
+	@mkdir -p "$$HOME/Library/LaunchAgents"
+	@for f in $(REPO_DIR)/launchd/*.plist; do \
+		ln -fnsv "$$f" "$$HOME/Library/LaunchAgents/"; \
+	done
+
+# org-sync: launchd エージェントを登録して即時起動
+org-sync-setup:
+	@chmod +x "$(REPO_DIR)/scripts/org-sync.sh"
+	@mkdir -p "$$HOME/.local/log"
+	@ln -fnsv "$(REPO_DIR)/launchd/com.user.org-sync.plist" \
+		"$$HOME/Library/LaunchAgents/com.user.org-sync.plist"
+	@launchctl bootout "gui/$$(id -u)/com.user.org-sync" 2>/dev/null || true
+	@launchctl bootstrap "gui/$$(id -u)" \
+		"$$HOME/Library/LaunchAgents/com.user.org-sync.plist"
+	@echo "[org-sync] Registered and started"
 
 # AquaSKK: sub-rule.desc / arrow.rule → ~/Library/Application Support/AquaSKK/
 link-aquaskk:
