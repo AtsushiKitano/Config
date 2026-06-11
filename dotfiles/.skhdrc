@@ -1,6 +1,6 @@
 # アプリフォーカス
-cmd - 0x1E : yabai -m window --focus "$(yabai -m query --windows | jq -re 'map(select(.app == "Emacs")) | first | .id')"
-cmd - 0x00 : yabai -m window --focus "$(yabai -m query --windows | jq -re 'map(select(.app == "kitty")) | first | .id')"
+cmd - p : yabai -m window --focus "$(yabai -m query --windows | jq -re 'map(select(.app == "Emacs")) | first | .id')"
+cmd - i : yabai -m window --focus "$(yabai -m query --windows | jq -re 'map(select(.app == "kitty")) | first | .id')"
 
 # 移動フォーカス
 cmd - h: yabai -m window --focus west || yabai -m display --focus west
@@ -11,7 +11,7 @@ cmd - n: yabai -m window --focus next || yabai -m display --focus next
 cmd - p: yabai -m window --focus prev || yabai -m display --focus prev
 
 # focus window
-cmd - p : yabai -m window --focus recent
+# cmd - p : yabai -m window --focus recent
 cmd - h : yabai -m window --focus west
 cmd - j : yabai -m window --focus south
 cmd - k : yabai -m window --focus north
