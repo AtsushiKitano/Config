@@ -265,7 +265,12 @@ claude-agent-acp など =/opt/homebrew/bin= にインストールされるツー
   :global-minor-mode t
   :custom
   (doom-modeline-bar-width . 4)
-  (doom-modeline-hub . t))
+  (doom-modeline-hub . t)
+  ;; evil state などのモーダルアイコンを nerd-icons (v3 PUA-A) ではなく
+  ;; ASCII テキスト (<N>/<E>/<I> 等) で表示する。
+  ;; Monaspace Neon NF / HackGen Console NF は Nerd Fonts v2 のため
+  ;; U+F0xxx 台のグリフが文字化け (0F0/BF8 トーフボックス) になる。
+  (doom-modeline-modal-icon . nil))
 #+end_src
 
 *** ポップアップ
@@ -568,10 +573,14 @@ SKKで入力する。入力方式は、AZIKにする。
   (skk-status-indicator              . 'minior-mode))
 #+end_src
 
-*** SKK ミニバッファインジケータ
+*** SKK 状態インジケータ
 
-ミニバッファのプロンプト先頭に SKK の入力状態をオーバーレイで表示する。
-SKK が無効のときは何も表示しない。
+SKK の入力状態を 2 箇所に表示する。
+
+1. *doom-modeline*: 通常バッファのモードラインに常時表示
+2. *ミニバッファ*: プロンプト末尾にオーバーレイで表示
+   （=skk-status-indicator= が =minior-mode= のままだと
+   =doom-modeline-minor-modes= がデフォルト nil のため表示されないため）
 
 | 表示 | 状態 | 色 |
 |------|------|----|
@@ -580,32 +589,55 @@ SKK が無効のときは何も表示しない。
 | =[英数]= | 英数モード | 青 |
 
 #+begin_src emacs-lisp :tangle yes
-(defun my/skk-minibuffer-mode-string ()
-  "現在の SKK 入力モードを示す装飾済み文字列を返す。SKK 無効時は nil."
-  (cond
-   ((not (bound-and-true-p skk-mode)) nil)
-   ((bound-and-true-p skk-katakana)
-    (propertize "[カナ]" 'face '(:foreground "#98be65" :weight bold)))
-   ((bound-and-true-p skk-ascii-mode)
-    (propertize "[英数]" 'face '(:foreground "#51afef" :weight bold)))
-   (t
-    (propertize "[かな]" 'face '(:foreground "#c678dd" :weight bold)))))
+;; SKK 状態文字列を返すヘルパー (BUF で評価)
+(defun my/skk-mode-string-in (buf)
+  "BUF の SKK 状態文字列。SKK 無効時は nil."
+  (with-current-buffer buf
+    (cond
+     ((not (bound-and-true-p skk-mode)) nil)
+     ((bound-and-true-p skk-katakana)
+      (propertize "[カナ]" 'face '(:foreground "#98be65" :weight bold)))
+     ((bound-and-true-p skk-ascii-mode)
+      (propertize "[英数]" 'face '(:foreground "#51afef" :weight bold)))
+     (t
+      (propertize "[かな]" 'face '(:foreground "#c678dd" :weight bold))))))
 
-(defvar my/skk-minibuffer-overlay nil
-  "ミニバッファ SKK 状態表示用オーバーレイ。")
+;; ① doom-modeline セグメントを定義し main modeline の右端に追加
+(with-eval-after-load 'doom-modeline
+  (doom-modeline-def-segment my/skk-indicator
+    "SKK の入力状態."
+    (my/skk-mode-string-in (current-buffer)))
+
+  (doom-modeline-def-modeline 'main
+    '(eldoc bar workspace-name window-number modals matches follow
+            buffer-info remote-host buffer-position word-count parrot selection-info)
+    '(compilation objed-state my/skk-indicator misc-info persp-name battery grip
+                  irc mu4e gnus github debug repl lsp minor-modes input-method
+                  indent-info buffer-encoding major-mode process vcs check time)))
+
+;; ② ミニバッファ: プロンプト末尾 (minibuffer-prompt-end) にオーバーレイ
+;;    呼び出し元バッファの SKK 状態を minibuffer-selected-window 経由で参照
+(defvar my/skk-minibuffer-overlay nil)
 
 (defun my/skk-minibuffer-update ()
-  "ミニバッファの SKK 状態オーバーレイを更新する。"
   (when (overlayp my/skk-minibuffer-overlay)
-    (let ((str (my/skk-minibuffer-mode-string)))
+    (let* ((win (minibuffer-selected-window))
+           (buf (and win (window-buffer win)))
+           (str (cond
+                 ;; ミニバッファ内で SKK が有効な場合はそちらを優先
+                 ((bound-and-true-p skk-mode)
+                  (my/skk-mode-string-in (current-buffer)))
+                 ;; 呼び出し元バッファの状態を参照
+                 (buf (my/skk-mode-string-in buf)))))
       (overlay-put my/skk-minibuffer-overlay
                    'before-string
-                   (if str (concat str " ") "")))))
+                   (if str (concat " " str) "")))))
 
 (add-hook 'minibuffer-setup-hook
           (lambda ()
-            (setq my/skk-minibuffer-overlay
-                  (make-overlay (point-min) (point-min) nil t t))
+            (let ((pos (minibuffer-prompt-end)))
+              (setq my/skk-minibuffer-overlay
+                    (make-overlay pos pos nil t t)))
             (my/skk-minibuffer-update)
             (add-hook 'post-command-hook #'my/skk-minibuffer-update nil t)))
 
@@ -990,9 +1022,12 @@ launchd による 30 分ごとの定期同期と併用する。
       (kbd "gh")  #'outline-up-heading
       (kbd "gj")  #'org-forward-heading-same-level
       (kbd "gk")  #'org-backward-heading-same-level
-      (kbd "gl")  #'outline-next-heading))
-  (define-key org-mode-map "\eh" #'previous-multiframe-window)
-  (define-key org-mode-map "\el" #'next-multiframe-window)
+      (kbd "gl")  #'outline-next-heading)
+    ;; evil の全ステートで M-h/M-l によるウィンドウ移動を有効にする
+    ;; define-key org-mode-map だけでは evil のキーマップ階層に埋もれるため
+    (evil-define-key '(normal insert visual motion emacs) org-mode-map
+      (kbd "M-h") #'previous-multiframe-window
+      (kbd "M-l") #'next-multiframe-window))
   ;; ディレクトリ作成
   (dolist (dir '("~/org/book" "~/org/personal"
                  "~/org/research" "~/org/shared" "~/org/work"))
