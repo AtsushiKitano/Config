@@ -29,8 +29,12 @@
 | `C-c A` | `agent-shell` | Claude Code シェルを起動 |
 | `C-c e` | `ellama-transient-main-menu` | ellama (LLM) メニューを開く |
 | `C-c a` | `org-agenda` | Org アジェンダを開く |
-| `C-c c` | `org-capture` | Org キャプチャ |
+| `C-c c` | `org-capture` | Org キャプチャ (テンプレート選択) |
 | `C-c l` | `org-store-link` | Org リンクを保存 |
+| `C-c o b` | `my/org-open-book` | book/ のファイルを選択/作成して開く |
+| `C-c o w` | `my/org-open-work` | work/ のファイルを選択/作成して開く |
+| `C-c o r` | `my/org-open-research` | research/ のファイルを選択/作成して開く |
+| `C-c o s` | `my/org-sync` | org ファイルを GitHub へ手動同期 |
 | `C-:` | `avy-goto-char-timer` | 文字を入力してジャンプ先を選択 |
 | `C-*` | `avy-resume` | 直前の avy 操作を再開 |
 | `M-g M-g` | `avy-goto-line` | 行番号指定でジャンプ |

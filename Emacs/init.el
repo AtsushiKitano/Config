@@ -125,6 +125,45 @@
   ;; U+F0xxx 台のグリフが文字化け (0F0/BF8 トーフボックス) になる。
   (doom-modeline-modal-icon . nil))
 
+(defvar my/sysinfo-string "" "モードラインに表示するシステム情報文字列.")
+
+(defun my/sysinfo--shell-command ()
+  "システム情報を収集するシェルコマンドを返す."
+  (concat
+   ;; CPU: top の1サンプルから user+sys を合算 (変数に取り出して % を除去)
+   "cpu=$(top -l 1 -n 0 -s 0 2>/dev/null"
+   " | awk '/CPU usage/{u=$3; s=$5; gsub(/%/,\"\",u); gsub(/%/,\"\",s); printf \"%.0f\", u+s}');"
+   ;; メモリ: vm_stat から (active+wired+compressor)/total を計算
+   "mem=$(vm_stat 2>/dev/null"
+   " | awk '/Pages free:/{f=int($3)} /Pages active:/{a=int($3)}"
+   " /Pages inactive:/{i=int($3)} /Pages wired down:/{w=int($4)}"
+   " /Pages occupied by compressor:/{c=int($5)}"
+   " END{t=f+a+i+w+c; if(t>0) printf \"%.0f\",(a+w+c)*100/t; else print \"?\"}');"
+   ;; ディスク: 使用量/総量(使用率) を df -H (SI単位: G/T) で取得
+   "disk=$(df -H / 2>/dev/null | awk 'NR==2{printf \"%s/%s(%s)\",$3,$2,$5}');"
+   "printf 'CPU:%s%% | MEM:%s%% | DSK:%s' \"${cpu:-?}\" \"${mem:-?}\" \"${disk:-?}\""))
+
+(defun my/sysinfo-update ()
+  "システム情報を非同期で更新する."
+  (let* ((buf (generate-new-buffer " *my-sysinfo*"))
+         (proc (start-process "my-sysinfo" buf
+                              "/bin/bash" "-c"
+                              (my/sysinfo--shell-command))))
+    (set-process-sentinel
+     proc
+     (lambda (p _e)
+       (when (zerop (process-exit-status p))
+         (setq my/sysinfo-string
+               (string-trim
+                (with-current-buffer (process-buffer p)
+                  (buffer-string))))
+         (force-mode-line-update t))
+       (when (buffer-live-p (process-buffer p))
+         (kill-buffer (process-buffer p)))))))
+
+;; 起動 1 秒後に初回実行、以降 10 秒ごとに更新
+(run-with-timer 1 10 #'my/sysinfo-update)
+
 (leaf shackle
   :ensure t
   :global-minor-mode t
@@ -373,12 +412,22 @@
     "SKK の入力状態."
     (my/skk-mode-string-in (current-buffer)))
 
+  (doom-modeline-def-segment my/sysinfo-segment
+    "CPU / メモリ / ディスク使用率."
+    (when (and (doom-modeline--active)
+               (not (string-empty-p my/sysinfo-string)))
+      (concat " "
+              (propertize my/sysinfo-string
+                          'face 'doom-modeline-buffer-minor-mode)
+              " ")))
+
   (doom-modeline-def-modeline 'main
     '(eldoc bar workspace-name window-number modals matches follow
             buffer-info remote-host buffer-position word-count parrot selection-info)
-    '(compilation objed-state my/skk-indicator misc-info persp-name battery grip
-                  irc mu4e gnus github debug repl lsp minor-modes input-method
-                  indent-info buffer-encoding major-mode process vcs check time)))
+    '(compilation objed-state my/skk-indicator my/sysinfo-segment misc-info
+                  persp-name battery grip irc mu4e gnus github debug repl lsp
+                  minor-modes input-method indent-info buffer-encoding
+                  major-mode process vcs check time)))
 
 ;; ② ミニバッファ: プロンプト末尾 (minibuffer-prompt-end) にオーバーレイ
 ;;    呼び出し元バッファの SKK 状態を minibuffer-selected-window 経由で参照
@@ -495,58 +544,62 @@
          (s (replace-regexp-in-string "[/\\\\:*?\"<>|]" "" s)))
     (if (string-empty-p s) "untitled" s)))
 
-(defun my/org-new-book ()
-  "読書ノートを新規作成して開く。既存ファイルはそのまま開く."
+(defun my/org-file-in-dir (dir label filetag headings)
+  "DIR 内の org ファイルを completing-read で選択、または新規作成して返す.
+LABEL はプロンプト文字列、FILETAG は #+filetags の値、
+HEADINGS は新規作成時に挿入するトップレベル見出しのリスト。
+既存ファイルは file-name-base で表示し、選択したパスを返す。
+'[+ 新規作成]' を選ぶと名前を入力してファイルを作成する。"
+  (let* ((dir   (expand-file-name dir))
+         (_     (make-directory dir t))
+         (files (directory-files dir nil "\\.org\\'" t))
+         (new   "[+ 新規作成]")
+         (sel   (completing-read
+                 (format "%s: " label)
+                 (cons new (mapcar #'file-name-base files))
+                 nil nil))
+         (path  (if (string= sel new)
+                    (let* ((name (read-string "名前: "))
+                           (slug (my/org-slugify name))
+                           (p    (expand-file-name (concat slug ".org") dir)))
+                      (unless (file-exists-p p)
+                        (with-temp-file p
+                          (insert (format "#+title: %s\n#+filetags: :%s:\n\n"
+                                          name filetag))
+                          (dolist (h headings)
+                            (insert (format "* %s\n\n" h)))))
+                      p)
+                  (expand-file-name (concat sel ".org") dir))))
+    path))
+
+;; 各領域のキャプチャターゲット関数
+(defun my/org-capture-book ()
+  (my/org-file-in-dir "~/org/book" "Book" "book"
+                      '("TODO Read" "Notes" "Review")))
+(defun my/org-capture-work ()
+  (my/org-file-in-dir "~/org/work" "Work" "work"
+                      '("Tasks" "Notes")))
+(defun my/org-capture-research ()
+  (my/org-file-in-dir "~/org/research" "Research" "research"
+                      '("Overview" "TODO Tasks" "Notes" "References")))
+(defun my/org-capture-personal ()
+  (my/org-file-in-dir "~/org/personal" "Personal" "personal"
+                      '("Tasks" "Notes")))
+
+;; C-c o x でファイルを選択/作成して直接開く
+(defun my/org-open-book ()
   (interactive)
-  (let* ((title  (read-string "タイトル: "))
-         (author (read-string "著者: "))
-         (slug   (my/org-slugify title))
-         (file   (expand-file-name (concat slug ".org") "~/org/book/")))
-    (find-file file)
-    (when (= (buffer-size) 0)
-      (insert (format "#+title: %s\n#+author: %s\n#+filetags: :book:\n\n" title author))
-      (insert (format "* TODO Read\n  CREATED: %s\n\n"
-                      (format-time-string "[%Y-%m-%d %a %H:%M]")))
-      (insert "* Notes\n\n")
-      (insert "* Review\n")
-      (save-buffer))))
-
-(defun my/org-new-research ()
-  "リサーチトピックを新規作成して開く。既存ファイルはそのまま開く."
+  (find-file (my/org-capture-book)))
+(defun my/org-open-work ()
   (interactive)
-  (let* ((topic (read-string "トピック: "))
-         (slug  (my/org-slugify topic))
-         (file  (expand-file-name (concat slug ".org") "~/org/research/")))
-    (find-file file)
-    (when (= (buffer-size) 0)
-      (insert (format "#+title: %s\n#+filetags: :research:\n\n" topic))
-      (insert "* Overview\n\n")
-      (insert (format "* TODO Tasks\n  CREATED: %s\n\n"
-                      (format-time-string "[%Y-%m-%d %a %H:%M]")))
-      (insert "* Notes\n\n")
-      (insert "* References\n")
-      (save-buffer))))
+  (find-file (my/org-capture-work)))
+(defun my/org-open-research ()
+  (interactive)
+  (find-file (my/org-capture-research)))
 
-(defun my/org-select-book-file ()
-  "book/ 内の org ファイルを completing-read で選択して返す."
-  (let* ((dir   (expand-file-name "~/org/book/"))
-         (files (when (file-directory-p dir)
-                  (directory-files dir t "\\.org\\'" t)))
-         (names (mapcar (lambda (f) (cons (file-name-base f) f)) files))
-         (sel   (completing-read "Book: " names nil t)))
-    (cdr (assoc sel names))))
-
-(defun my/org-select-research-file ()
-  "research/ 内の org ファイルを completing-read で選択して返す."
-  (let* ((dir   (expand-file-name "~/org/research/"))
-         (files (when (file-directory-p dir)
-                  (directory-files dir t "\\.org\\'" t)))
-         (names (mapcar (lambda (f) (cons (file-name-base f) f)) files))
-         (sel   (completing-read "Research: " names nil t)))
-    (cdr (assoc sel names))))
-
-(global-set-key (kbd "C-c o b") #'my/org-new-book)
-(global-set-key (kbd "C-c o r") #'my/org-new-research)
+(global-set-key (kbd "C-c o b") #'my/org-open-book)
+(global-set-key (kbd "C-c o w") #'my/org-open-work)
+(global-set-key (kbd "C-c o r") #'my/org-open-research)
 
 (defvar my/org-sync-timer nil
   "org 自動同期のデバウンスタイマー.")
@@ -592,12 +645,12 @@
   :custom
   ;; ファイル
   (org-directory . "~/org")
-  (org-agenda-files . '("~/org/shared/memo.org"
-                        "~/org/work/tasks.org"
-                        "~/org/work/projects.org"
-                        "~/org/personal/tasks.org"
-                        "~/org/book"
-                        "~/org/research"))
+  ;; 各ディレクトリを指定 → 配下の全 .org を自動検出
+  (org-agenda-files . '("~/org/book"
+                        "~/org/work"
+                        "~/org/research"
+                        "~/org/personal"
+                        "~/org/shared"))
   (org-default-notes-file . "~/org/shared/memo.org")
   ;; TODO ステート
   (org-todo-keywords
@@ -623,34 +676,45 @@
   (org-modules . '(ol-bbdb ol-bibtex ol-docview ol-info ol-irc ol-mhe ol-rmail ol-w3m))
   :config
   (setq org-capture-templates
-        '(("m" "Memo" entry
+        '(;; デフォルト: shared/memo.org
+          ("m" "Memo (デフォルト)" entry
            (file+headline "~/org/shared/memo.org" "Memo")
            "* %?\n  CREATED: %U\n  %i\n  %a"
            :empty-lines 1)
+          ;; Book: ファイルを選択/作成 → Notes 見出しへ
+          ("b" "Book Note" entry
+           (file+headline my/org-capture-book "Notes")
+           "** %T\n   %?"
+           :empty-lines 1)
+          ;; Work: ファイルを選択/作成
           ("w" "Work Task" entry
-           (file+headline "~/org/work/tasks.org" "Tasks")
+           (file+headline my/org-capture-work "Tasks")
            "* TODO %?\n  CREATED: %U\n  %i\n  %a"
            :empty-lines 1)
           ("W" "Work Note" entry
-           (file+headline "~/org/work/notes.org" "Notes")
+           (file+headline my/org-capture-work "Notes")
            "* %?\n  CREATED: %U\n  %i\n  %a"
            :empty-lines 1)
-          ("p" "Personal Task" entry
-           (file+headline "~/org/personal/tasks.org" "Tasks")
+          ;; Research: ファイルを選択/作成 → Notes 見出しへ
+          ("r" "Research Note" entry
+           (file+headline my/org-capture-research "Notes")
+           "** %T\n   %?"
+           :empty-lines 1)
+          ("R" "Research Task" entry
+           (file+headline my/org-capture-research "TODO Tasks")
            "* TODO %?\n  CREATED: %U\n  %i\n  %a"
            :empty-lines 1)
+          ;; Personal: ファイルを選択/作成
+          ("p" "Personal Task" entry
+           (file+headline my/org-capture-personal "Tasks")
+           "* TODO %?\n  CREATED: %U\n  %i\n  %a"
+           :empty-lines 1)
+          ;; Journal: personal/journal.org に日付ツリーで追加
           ("j" "Journal" entry
            (file+olp+datetree "~/org/personal/journal.org")
            "* %?\n  CREATED: %U"
            :empty-lines 1)
-          ("b" "Book Note" entry
-           (file+headline my/org-select-book-file "Notes")
-           "** %T\n   %?"
-           :empty-lines 1)
-          ("r" "Research Note" entry
-           (file+headline my/org-select-research-file "Notes")
-           "** %T\n   %?"
-           :empty-lines 1)
+          ;; Meeting: shared/meetings.org に追加
           ("M" "Meeting" entry
            (file+headline "~/org/shared/meetings.org" "Meetings")
            "* %^{タイトル} %^g\n  DATE: %T\n  出席: %^{出席者}\n\n** Agenda\n  %?\n\n** Actions\n"
