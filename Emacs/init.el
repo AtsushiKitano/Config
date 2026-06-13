@@ -247,7 +247,7 @@
   (evil-want-C-u-scroll . t)
   :config
   (evil-mode 1)
-  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode agent-shell-mode))
+  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode agent-shell-mode neotree-mode))
     (evil-set-initial-state mode 'emacs)))
 
 (leaf evil-collection
@@ -334,6 +334,24 @@
     (evil-define-key '(normal emacs) isearch-mode-map
       (kbd "C-y") #'isearch-yank-kill
       (kbd "M-y") #'isearch-yank-pop-only)))
+
+(defun my/neotree-toggle ()
+  "Toggle neotree. VCS root があればそこを、なければ current directory を開く."
+  (interactive)
+  (require 'neotree)
+  (if (neo-global--window-exists-p)
+    (neotree-hide)
+    (neotree-dir (or (vc-root-dir) default-directory))))
+
+(leaf neotree
+  :ensure t
+  :bind
+  (("C-c d" . my/neotree-toggle))
+  :custom
+  (neo-smart-open . t)
+  (neo-window-width . 30)
+  (neo-show-hidden-files . nil)
+  (neo-autorefresh . t))
 
 (leaf eat
   :ensure t
