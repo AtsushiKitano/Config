@@ -100,6 +100,8 @@ cask "claude"
 cask "kindle-previewer"
 cask "orbstack"
 
+cask "basictex"
+
 tap "d12frosted/emacs-plus"
 tap "railwaycat/emacsmacport"
 cask "emacs-plus-app@master"

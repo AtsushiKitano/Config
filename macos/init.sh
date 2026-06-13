@@ -74,6 +74,12 @@ defaults write com.apple.dock wvous-br-modifier -int 0
 # Finder: デフォルトビューをカラム表示に設定
 defaults write com.apple.finder FXPreferredViewStyle -string "clmv"
 
+# org-mode LaTeX プレビュー用パッケージ (basictex インストール後に実行)
+if [ -x /Library/TeX/texbin/tlmgr ]; then
+	sudo /Library/TeX/texbin/tlmgr update --self
+	sudo /Library/TeX/texbin/tlmgr install dvipng dvisvgm collection-fontsrecommended
+fi
+
 # Ctrl-Space の入力ソース切り替えショートカットを無効化 (Emacs の C-SPC Mark set を有効にするため)
 defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 "<dict><key>enabled</key><false/><key>value</key><dict><key>parameters</key><array><integer>32</integer><integer>49</integer><integer>262144</integer></array><key>type</key><string>standard</string></dict></dict>"
 /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u

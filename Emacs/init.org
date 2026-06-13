@@ -1149,7 +1149,39 @@ launchd による 30 分ごとの定期同期と併用する。
   ;; ディレクトリ作成
   (dolist (dir '("~/org/book" "~/org/personal"
                  "~/org/research" "~/org/shared" "~/org/work"))
-    (make-directory (expand-file-name dir) t)))
+    (make-directory (expand-file-name dir) t))
+
+  ;; ─── Org Babel ─────────────────────────────────────────────────────────────
+  ;; 評価対応言語を登録
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (python     . t)
+     (shell      . t)
+     (latex      . t)))
+
+  ;; 評価確認プロンプトを無効（自分で書いたブロックのみ評価する前提）
+  (setq org-confirm-babel-evaluate nil)
+
+  ;; インライン画像を起動時・評価後に自動表示
+  (setq org-startup-with-inline-images t)
+  (add-hook 'org-babel-after-execute-hook #'org-display-inline-images)
+
+  ;; macOS: BasicTeX のバイナリを exec-path に追加 (cask "basictex" 必要)
+  (when (eq system-type 'darwin)
+    (add-to-list 'exec-path "/Library/TeX/texbin"))
+
+  ;; LaTeX 数式プレビュー: dvipng を使用 (basictex + tlmgr install dvipng)
+  (setq org-preview-latex-default-process 'dvipng)
+  (setq org-format-latex-options
+        (plist-put org-format-latex-options :scale 1.8))
+
+  ;; Python: matplotlib グラフ用に Agg バックエンドを prologue で自動設定
+  ;; 各ブロックで plt.savefig('<file>') して `:results file :file <file>` を指定する
+  (with-eval-after-load 'ob-python
+    (unless (assoc :prologue org-babel-default-header-args:python)
+      (push '(:prologue . "import matplotlib as _mpl; _mpl.use('Agg')\n")
+            org-babel-default-header-args:python))))
 #+end_src
 
 ** Google Calendar 連携 (org-gcal)

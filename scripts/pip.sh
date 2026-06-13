@@ -13,7 +13,8 @@ PACKAGES=(
 	powerline-shell \
 	fastapi \
 	uvicorn[standard] \
-	flask
+	flask \
+	matplotlib
 )
 
 if !(type pip > /dev/null 2>&1); then
