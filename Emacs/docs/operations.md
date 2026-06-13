@@ -438,7 +438,7 @@ echo $(date)
 `C-c C-c` で評価すると `#+RESULTS:` にファイルリンクが挿入され、インライン画像として表示される。
 
 ```org
-#+begin_src python :results file :file myplot.png
+#+begin_src python :results file graphics :file myplot.png
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -449,11 +449,13 @@ plt.plot(x, np.cos(x), label="cos(x)")
 plt.legend()
 plt.tight_layout()
 plt.savefig("myplot.png")
-"myplot.png"
+plt.close()
 #+end_src
 ```
 
-> **Note:** `matplotlib.use('Agg')` は init.el の prologue で自動適用済みのため、個別ブロックでの設定は不要。
+> **Note1:** `:results file graphics` が必須。`:results file` だけだと ob-python が `plt.savefig()` の戻り値 `None` を PNG ファイルに上書きしてしまう。`graphics` を付けることで「コードが自分でファイルを書いた、org はリンクを張るだけ」という動作になる。
+
+> **Note2:** `matplotlib.use('Agg')` は init.el の prologue で自動適用済みのため、個別ブロックでの設定は不要。
 
 **ファイル全体でセッションを共有する場合:**
 

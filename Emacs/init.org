@@ -1151,7 +1151,22 @@ launchd による 30 分ごとの定期同期と併用する。
                  "~/org/research" "~/org/shared" "~/org/work"))
     (make-directory (expand-file-name dir) t))
 
+  ;; org-mode では < の自動補完 (electric-pair-mode) を無効化する
+  ;; <s, <q 等の org テンプレート展開と競合するため
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (setq-local electric-pair-inhibit-predicate
+                          (lambda (c)
+                            (if (char-equal c ?<)
+                                t
+                              (electric-pair-default-inhibit c))))))
+
   ;; ─── Org Babel ─────────────────────────────────────────────────────────────
+  ;; Python コマンドを明示的に python3 に固定する
+  ;; org-babel のデフォルトは "python" だが、mise shim 経由の python と
+  ;; pip3 でインストールしたパッケージが入った python3 は別環境のため
+  (setq org-babel-python-command "python3")
+
   ;; 評価対応言語を登録
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -1180,7 +1195,7 @@ launchd による 30 分ごとの定期同期と併用する。
   ;; 各ブロックで plt.savefig('<file>') して `:results file :file <file>` を指定する
   (with-eval-after-load 'ob-python
     (unless (assoc :prologue org-babel-default-header-args:python)
-      (push '(:prologue . "import matplotlib as _mpl; _mpl.use('Agg')\n")
+      (push '(:prologue . "try:\n    import matplotlib as _mpl; _mpl.use('Agg')\nexcept ImportError:\n    pass\n")
             org-babel-default-header-args:python))))
 #+end_src
 

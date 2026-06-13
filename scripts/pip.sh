@@ -24,5 +24,5 @@ if !(type pip > /dev/null 2>&1); then
 fi
 
 for PACKAGE in ${PACKAGES[@]} ; do
-	pip install -U $PACKAGE
+	pip install -U --break-system-packages $PACKAGE
 done
