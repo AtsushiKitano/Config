@@ -536,13 +536,19 @@ isearch 中のナビゲーションとクリップボード貼り付けを設定
   :doc "isearch 中の次／前候補ナビゲーション"
   :bind
   (:isearch-mode-map
-   ;; C-n: 次のヒットへ / C-b: 前のヒットへ
    ("C-n" . isearch-repeat-forward)
    ("C-b" . isearch-repeat-backward)
-   ;; evil の C-y 上書きに対して明示的に kill-ring から貼り付け
    ("C-y" . isearch-yank-kill)
-   ;; Cmd+V でシステムクリップボードから貼り付け
-   ("s-v" . my/isearch-yank-clipboard)))
+   ("M-y" . isearch-yank-pop-only)
+   ("s-v" . my/isearch-yank-clipboard))
+  :config
+  ;; Evil の emulation-mode-map-alists は minor-mode-map-alist より優先度が高いため、
+  ;; :bind だけでは C-y が evil-scroll-line-up に奪われる。
+  ;; evil-define-key で isearch-mode-map に登録することで Evil 経由でも確実に動作させる。
+  (with-eval-after-load 'evil
+    (evil-define-key '(normal emacs) isearch-mode-map
+      (kbd "C-y") #'isearch-yank-kill
+      (kbd "M-y") #'isearch-yank-pop-only)))
 #+end_src
 
 ** ターミナル
