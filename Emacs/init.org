@@ -299,8 +299,8 @@ claude-agent-acp など =/opt/homebrew/bin= にインストールされるツー
    " /Pages inactive:/{i=int($3)} /Pages wired down:/{w=int($4)}"
    " /Pages occupied by compressor:/{c=int($5)}"
    " END{t=f+a+i+w+c; if(t>0) printf \"%.0f\",(a+w+c)*100/t; else print \"?\"}');"
-   ;; ディスク: 使用量/総量(使用率) を df -H (SI単位: G/T) で取得
-   "disk=$(df -H / 2>/dev/null | awk 'NR==2{printf \"%s/%s(%s)\",$3,$2,$5}');"
+   ;; ディスク: 使用量(使用率) のみ — 分母(総量)は表示しない
+   "disk=$(df -H / 2>/dev/null | awk 'NR==2{printf \"%s(%s)\",$3,$5}');"
    "printf 'CPU:%s%% | MEM:%s%% | DSK:%s' \"${cpu:-?}\" \"${mem:-?}\" \"${disk:-?}\""))
 
 (defun my/sysinfo-update ()
@@ -314,9 +314,12 @@ claude-agent-acp など =/opt/homebrew/bin= にインストールされるツー
      (lambda (p _e)
        (when (zerop (process-exit-status p))
          (setq my/sysinfo-string
-               (string-trim
-                (with-current-buffer (process-buffer p)
-                  (buffer-string))))
+               ;; mode-line format では % が制御文字になるため %% にエスケープ
+               (replace-regexp-in-string
+                "%" "%%"
+                (string-trim
+                 (with-current-buffer (process-buffer p)
+                   (buffer-string)))))
          (force-mode-line-update t))
        (when (buffer-live-p (process-buffer p))
          (kill-buffer (process-buffer p)))))))

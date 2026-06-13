@@ -204,15 +204,60 @@
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-c a` | `org-agenda` | アジェンダを開く |
-| `C-c c` | `org-capture` | キャプチャ (タスク・ノート追加) |
+| `C-c c` | `org-capture` | キャプチャ (テンプレート選択) |
 | `C-c l` | `org-store-link` | カーソル位置のリンクを保存 |
+
+### ディレクトリ別ファイル管理
+
+org ファイルは領域ごとのディレクトリで管理する。各ディレクトリ配下の全 `.org` ファイルが自動的にアジェンダに登録される。
+
+```
+~/org/
+├── book/        ← 本ごとに 1 ファイル  (例: book/llm-rag.org)
+├── work/        ← 案件ごとに 1 ファイル (例: work/dmm.org)
+├── research/    ← テーマごとに 1 ファイル (例: research/statistics.org)
+├── personal/    ← 個人タスク・日記
+├── shared/      ← デフォルト (memo.org / meetings.org)
+└── archive.org  ← 完了タスクの自動アーカイブ先
+```
+
+**ファイルの選択/作成フロー (`C-c o` / `C-c c`):**
+
+1. completing-read で既存ファイルを一覧表示
+2. `[+ 新規作成]` を選ぶと名前を入力してファイルを作成
+3. 新規ファイルには `#+title`, `#+filetags`, 初期見出しが自動挿入される
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-c o b` | `my/org-open-book` | `book/` のファイルを選択/作成して開く |
+| `C-c o w` | `my/org-open-work` | `work/` のファイルを選択/作成して開く |
+| `C-c o r` | `my/org-open-research` | `research/` のファイルを選択/作成して開く |
+| `C-c o s` | `my/org-sync` | `~/org` を GitHub へ手動同期 |
 
 ### キャプチャテンプレート (`C-c c` 後)
 
+指定なし時は `shared/memo.org` がデフォルト。`b` / `w` / `r` / `p` はファイル選択ダイアログを経由する。
+
 | キー | テンプレート | 保存先 |
 |------|------------|--------|
-| `t` | Task — `* TODO` エントリ | `~/org/inbox.org` の Inbox |
-| `n` | Note — メモエントリ | `~/org/inbox.org` の Notes |
+| `m` | **Memo** (デフォルト) | `shared/memo.org` の Memo |
+| `b` | **Book Note** | `book/<選択ファイル>` の Notes |
+| `w` | **Work Task** | `work/<選択ファイル>` の Tasks |
+| `W` | **Work Note** | `work/<選択ファイル>` の Notes |
+| `r` | **Research Note** | `research/<選択ファイル>` の Notes |
+| `R` | **Research Task** | `research/<選択ファイル>` の TODO Tasks |
+| `p` | **Personal Task** | `personal/<選択ファイル>` の Tasks |
+| `j` | **Journal** | `personal/journal.org` (日付ツリー) |
+| `M` | **Meeting** | `shared/meetings.org` の Meetings |
+
+**新規ファイル作成時の初期構造:**
+
+| 領域 | 自動挿入される見出し |
+|------|-------------------|
+| book | `TODO Read` / `Notes` / `Review` |
+| work | `Tasks` / `Notes` |
+| research | `Overview` / `TODO Tasks` / `Notes` / `References` |
+| personal | `Tasks` / `Notes` |
 
 ### TODO ステート
 
@@ -305,6 +350,19 @@
 | `C-c C-x e` | `org-set-effort` | 見積時間を設定 |
 | `C-c C-x C-c` | `org-columns` | カラムビューを表示 |
 | `C-c #` | `org-update-statistics-cookies` | 統計クッキーを更新 (チェックリスト等) |
+
+### org GitHub 同期
+
+`~/org` は `https://github.com/AtsushiKitano/Jurnal` で管理されており、自動同期される。
+
+| トリガー | 説明 |
+|---------|------|
+| org ファイル保存の 5 秒後 | Emacs の `after-save-hook` でデバウンス実行 |
+| 30 分ごと | launchd `com.user.org-sync` による定期実行 |
+| `C-c o s` | 手動実行 |
+
+同期スクリプト: `~/.conf/scripts/org-sync.sh` (git add → commit → pull --rebase → push)  
+ログ: `~/.local/log/org-sync.log`
 
 ### アジェンダビュー内のキー (`C-c a` 後)
 
