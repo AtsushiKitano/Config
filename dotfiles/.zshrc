@@ -32,3 +32,10 @@ fi
 
 # Created by `pipx` on 2025-06-15 04:00:03
 export PATH="$PATH:$HOME/.local/bin"
+
+# bun completions
+[ -s "/Users/kitano-atsushi/.bun/_bun" ] && source "/Users/kitano-atsushi/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

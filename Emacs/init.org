@@ -1199,6 +1199,35 @@ launchd による 30 分ごとの定期同期と併用する。
             org-babel-default-header-args:python))))
 #+end_src
 
+** 画像の貼り付け (org-download)
+
+クリップボードやドラッグ&ドロップで画像を org ファイルに貼り付ける。
+macOS では `pngpaste` コマンドを使ってクリップボードから PNG を保存する。
+
+- [org-download](https://github.com/abo-abo/org-download)
+
+#+begin_src emacs-lisp :tangle yes
+(leaf org-download
+  :ensure t
+  :after org
+  :custom
+  ;; 画像の保存先: org ファイルと同じディレクトリの images/ サブディレクトリ
+  (org-download-method . 'directory)
+  (org-download-image-dir . "images")
+  ;; ファイル名に timestamp を使う
+  (org-download-timestamp . "%Y%m%d-%H%M%S_")
+  ;; 貼り付け後にインライン画像を自動表示
+  (org-download-display-inline-images . t)
+  ;; macOS: pngpaste でクリップボードから貼り付け
+  (org-download-screenshot-method . "pngpaste %s")
+  :bind
+  (:org-mode-map
+   ;; C-c i p : クリップボードの画像を貼り付け
+   ("C-c i p" . org-download-clipboard)
+   ;; C-c i s : スクリーンショットを撮って貼り付け
+   ("C-c i s" . org-download-screenshot)))
+#+end_src
+
 ** Google Calendar 連携 (org-gcal)
 
 GCP Secret Manager から OAuth 認証情報を取得し、Google Calendar を org-agenda に同期する。
