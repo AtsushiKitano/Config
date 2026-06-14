@@ -457,7 +457,7 @@ echo $(date)
 `C-c C-c` で評価すると `#+RESULTS:` にファイルリンクが挿入され、インライン画像として表示される。
 
 ```org
-#+begin_src python :results file graphics :file myplot.png
+#+begin_src python :results output file graphics :file myplot.png
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -467,14 +467,19 @@ plt.plot(x, np.sin(x), label="sin(x)")
 plt.plot(x, np.cos(x), label="cos(x)")
 plt.legend()
 plt.tight_layout()
-plt.savefig("myplot.png")
-plt.close()
 #+end_src
 ```
 
-> **Note1:** `:results file graphics` が必須。`:results file` だけだと ob-python が `plt.savefig()` の戻り値 `None` を PNG ファイルに上書きしてしまう。`graphics` を付けることで「コードが自分でファイルを書いた、org はリンクを張るだけ」という動作になる。
+> **Note1:** `:results output file graphics :file <ファイル名>` を使う（`output` `file` `graphics` の 3 つすべて必要）。
+> - `output` — stdout を結果として取得
+> - `file` — ob-core が `:file` パラメータを見てリンク `[[file:...]]` を生成
+> - `graphics` — ファイルを上書きせず、ob-python が `matplotlib.pyplot.savefig(絶対パス)` を自動追記
 
-> **Note2:** `matplotlib.use('Agg')` は init.el の prologue で自動適用済みのため、個別ブロックでの設定は不要。
+> **Note2:** `plt.savefig()` と `plt.close()` は**書かない**。`plt.close()` を書くと図が閉じられた後に ob-python が保存しようとして空ファイルになる。
+
+> **Note3:** `file` を省略して `:results output graphics` にすると ob-core が `:file` パラメータを無視して `[[file:...]]` リンクを生成しないため RESULTS が空になる。
+
+> **Note4:** `matplotlib.use('Agg')` は init.el の prologue で自動適用済みのため、個別ブロックでの設定は不要。
 
 **ファイル全体でセッションを共有する場合:**
 
@@ -488,14 +493,20 @@ plt.close()
 
 #### LaTeX 数式プレビュー
 
-org ファイル内の LaTeX 数式をインライン画像として表示する。`basictex` + `dvipng` が必要。
+org ファイル内の LaTeX 数式をインライン画像として表示する。`basictex` + `imagemagick` + `ghostscript` が必要。
 
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-c C-x C-l` | `org-latex-preview` | カーソル付近の数式をプレビュートグル |
 | `C-c C-x C-v` | `org-toggle-inline-images` | インライン画像の表示/非表示トグル |
 
-**インライン数式:**
+**自動プレビュー（推奨）:** ファイル先頭に以下を追加すると開いたとき自動レンダリングされる。
+
+```org
+#+STARTUP: inlineimages latexpreview
+```
+
+**インライン数式:** コードブロック不要、直接書いて `C-c C-x C-l` でプレビュー。
 
 ```org
 Einstein の式: $E = mc^2$
@@ -511,15 +522,16 @@ Einstein の式: $E = mc^2$
 \end{equation}
 ```
 
-**LaTeX ブロックの評価 (`C-c C-c`):**
+**必要なツール:**
 
-```org
-#+begin_src latex :results raw
-\textbf{太字テキスト}と $\alpha + \beta = \gamma$ の混在
-#+end_src
-```
+| ツール | 役割 | インストール |
+|--------|------|------------|
+| `basictex` | pdflatex を提供 | `brew install --cask basictex` |
+| `imagemagick` | PDF → PNG 変換 | `brew install imagemagick` (Brewfile 済) |
+| `ghostscript` | imagemagick の PDF 処理バックエンド | `brew install ghostscript` (Brewfile 済) |
+| `dvipng` (任意) | 高速プレビュー。あれば自動で優先使用 | `sudo /Library/TeX/texbin/tlmgr install dvipng` |
 
-> **Note:** LaTeX プレビューには `brew install --cask basictex` と `sudo tlmgr install dvipng` が必要。未インストールの場合は `C-c C-x C-l` を実行するとエラーになる。
+> **Note:** `dvipng` が未インストールの場合は自動的に `imagemagick` で代替する。`imagemagick` は `ghostscript` が必要。どちらも Brewfile に追加済みのため新規 Mac では `brew bundle` で自動インストールされる。
 
 ### アジェンダビュー内のキー (`C-c a` 後)
 

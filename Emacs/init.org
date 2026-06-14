@@ -153,6 +153,19 @@ claude-agent-acp など =/opt/homebrew/bin= にインストールされるツー
     (setenv "PATH" (concat homebrew-bin ":" (getenv "PATH")))))
 #+end_src
 
+** BasicTeX パスの設定
+
+BasicTeX のバイナリパスを Emacs の exec-path とサブプロセスの PATH の両方に追加する。
+org-latex-preview (pdflatex) や dvipng が shell-command 経由で呼ばれるため、
+exec-path だけでなく setenv "PATH" も必要。
+
+#+begin_src emacs-lisp :tangle yes
+(let ((tex-bin "/Library/TeX/texbin"))
+  (when (file-directory-p tex-bin)
+    (add-to-list 'exec-path tex-bin)
+    (setenv "PATH" (concat tex-bin ":" (getenv "PATH")))))
+#+end_src
+
 ** 全体設定
 
 一般的な設定をまとめる。auto-save の保存先も設定する。
@@ -1167,6 +1180,19 @@ launchd による 30 分ごとの定期同期と併用する。
   ;; pip3 でインストールしたパッケージが入った python3 は別環境のため
   (setq org-babel-python-command "python3")
 
+  ;; ob-python の CWD を org ファイルのディレクトリに固定する
+  ;; org-babel-eval が with-temp-buffer 内で process-file を呼ぶとき、
+  ;; default-directory が org ファイルのディレクトリを引き継がない場合がある
+  (defun my/org-babel-python-ensure-dir (orig-fun body params)
+    "org-babel python を org ファイルのディレクトリで実行する."
+    (let ((default-directory
+           (or (cdr (assq :dir params))
+               (when (buffer-file-name)
+                 (file-name-directory (expand-file-name (buffer-file-name))))
+               default-directory)))
+      (funcall orig-fun body params)))
+  (advice-add 'org-babel-execute:python :around #'my/org-babel-python-ensure-dir)
+
   ;; 評価対応言語を登録
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -1182,12 +1208,11 @@ launchd による 30 分ごとの定期同期と併用する。
   (setq org-startup-with-inline-images t)
   (add-hook 'org-babel-after-execute-hook #'org-display-inline-images)
 
-  ;; macOS: BasicTeX のバイナリを exec-path に追加 (cask "basictex" 必要)
-  (when (eq system-type 'darwin)
-    (add-to-list 'exec-path "/Library/TeX/texbin"))
-
-  ;; LaTeX 数式プレビュー: dvipng を使用 (basictex + tlmgr install dvipng)
-  (setq org-preview-latex-default-process 'dvipng)
+  ;; LaTeX 数式プレビュー
+  ;; dvipng が未インストールの場合は imagemagick にフォールバック
+  ;; dvipng をインストールするには: sudo tlmgr install dvipng dvisvgm
+  (setq org-preview-latex-default-process
+        (if (executable-find "dvipng") 'dvipng 'imagemagick))
   (setq org-format-latex-options
         (plist-put org-format-latex-options :scale 1.8))
 
