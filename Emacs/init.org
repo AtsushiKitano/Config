@@ -1203,7 +1203,8 @@ launchd による 30 分ごとの定期同期と併用する。
 
 GCP Secret Manager から OAuth 認証情報を取得し、Google Calendar を org-agenda に同期する。
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
+;; org-gcal は現在無効化中
 ;; GCP Secret Manager からシークレットを取得するヘルパー（セッション中キャッシュ）
 (defvar my/gcloud-secret-cache (make-hash-table :test 'equal))
 
