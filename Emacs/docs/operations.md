@@ -514,12 +514,18 @@ Einstein の式: $E = mc^2$
 二項定理: $\binom{n}{k} = \frac{n!}{k!(n-k)!}$
 ```
 
-**ディスプレイ数式:**
+**ディスプレイ数式（Emacs のみ）:**
 
 ```org
 \begin{equation}
 \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
 \end{equation}
+```
+
+**ディスプレイ数式（Emacs + GitHub 両対応）:**
+
+```org
+$$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$
 ```
 
 **必要なツール:**
@@ -532,6 +538,222 @@ Einstein の式: $E = mc^2$
 | `dvipng` (任意) | 高速プレビュー。あれば自動で優先使用 | `sudo /Library/TeX/texbin/tlmgr install dvipng` |
 
 > **Note:** `dvipng` が未インストールの場合は自動的に `imagemagick` で代替する。`imagemagick` は `ghostscript` が必要。どちらも Brewfile に追加済みのため新規 Mac では `brew bundle` で自動インストールされる。
+
+### LaTeX 数式文法
+
+org-mode では LaTeX の数式記法をそのまま使える。`C-c C-x C-l` でプレビュー。
+
+#### 数式の区切り記号
+
+| 記法 | 種類 | 推奨 |
+|------|------|------|
+| `$...$` | インライン（文中） | ✅ Emacs + GitHub |
+| `\(...\)` | インライン（文中） | ✅ Emacs + GitHub |
+| `$$...$$` | ディスプレイ（独立行） | ✅ Emacs + GitHub |
+| `\[...\]` | ディスプレイ（独立行） | ✅ Emacs + GitHub |
+| `\begin{equation}...\end{equation}` | ディスプレイ（番号付き） | Emacs のみ |
+| `\begin{align}...\end{align}` | 複数行揃え | Emacs のみ |
+
+**書き方例:**
+```org
+文中にインライン: $E = mc^2$ と書く。
+
+ディスプレイ（両環境対応）:
+$$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$
+```
+
+#### 上付き・下付き・分数・根号
+
+| 記法 | 意味 | 例 |
+|------|------|----|
+| `^{...}` | 上付き (指数) | `$x^{2}$` → $x^2$ |
+| `_{...}` | 下付き (添字) | `$x_{i}$` → $x_i$ |
+| `\frac{分子}{分母}` | 分数 | `$\frac{a}{b}$` |
+| `\sqrt{...}` | 平方根 | `$\sqrt{x}$` |
+| `\sqrt[n]{...}` | n 乗根 | `$\sqrt[3]{x}$` |
+| `\binom{n}{k}` | 二項係数 | `$\binom{n}{k}$` |
+
+#### ギリシャ文字
+
+| 記法 | 文字 | 記法 | 文字 |
+|------|------|------|------|
+| `\alpha` | α | `\Alpha` | Α |
+| `\beta` | β | `\Beta` | Β |
+| `\gamma` | γ | `\Gamma` | Γ |
+| `\delta` | δ | `\Delta` | Δ |
+| `\epsilon` / `\varepsilon` | ε | `\Epsilon` | Ε |
+| `\theta` / `\vartheta` | θ | `\Theta` | Θ |
+| `\lambda` | λ | `\Lambda` | Λ |
+| `\mu` | μ | `\pi` | π |
+| `\sigma` / `\varsigma` | σ | `\Sigma` | Σ |
+| `\phi` / `\varphi` | φ | `\Phi` | Φ |
+| `\omega` | ω | `\Omega` | Ω |
+| `\rho` | ρ | `\tau` | τ |
+| `\xi` | ξ | `\eta` | η |
+| `\zeta` | ζ | `\chi` | χ |
+
+#### 演算子・関数
+
+| 記法 | 意味 | 記法 | 意味 |
+|------|------|------|------|
+| `\sum_{i=1}^{n}` | Σ (総和) | `\prod_{i=1}^{n}` | Π (総積) |
+| `\int_{a}^{b}` | ∫ (積分) | `\iint` | ∬ (二重積分) |
+| `\oint` | ∮ (周回積分) | `\lim_{x \to \infty}` | 極限 |
+| `\sin`, `\cos`, `\tan` | 三角関数 | `\log`, `\ln`, `\exp` | 対数・指数 |
+| `\max`, `\min` | 最大・最小 | `\sup`, `\inf` | 上限・下限 |
+| `\partial` | ∂ (偏微分) | `\nabla` | ∇ (ナブラ) |
+| `\pm` | ± | `\mp` | ∓ |
+| `\times` | × | `\div` | ÷ |
+| `\cdot` | ⋅ (中点) | `\circ` | ∘ (合成) |
+
+#### 関係記号・矢印
+
+| 記法 | 記号 | 記法 | 記号 |
+|------|------|------|------|
+| `\leq` | ≤ | `\geq` | ≥ |
+| `\neq` | ≠ | `\approx` | ≈ |
+| `\equiv` | ≡ | `\sim` | ∼ |
+| `\in` | ∈ | `\notin` | ∉ |
+| `\subset` | ⊂ | `\subseteq` | ⊆ |
+| `\cup` | ∪ | `\cap` | ∩ |
+| `\to` / `\rightarrow` | → | `\leftarrow` | ← |
+| `\Rightarrow` | ⇒ | `\Leftarrow` | ⇐ |
+| `\Leftrightarrow` | ⟺ | `\iff` | ⟺ |
+| `\forall` | ∀ | `\exists` | ∃ |
+| `\infty` | ∞ | `\emptyset` | ∅ |
+
+#### 括弧・デリミタ
+
+| 記法 | 説明 |
+|------|------|
+| `\left( ... \right)` | 自動サイズの丸括弧 |
+| `\left[ ... \right]` | 自動サイズの角括弧 |
+| `\left\{ ... \right\}` | 自動サイズの波括弧 |
+| `\left\| ... \right\|` | 自動サイズのノルム |
+| `\left\lfloor ... \right\rfloor` | 床関数 |
+| `\left\lceil ... \right\rceil` | 天井関数 |
+
+#### 複数行・行列
+
+**整列式（`\begin{aligned}` は Emacs のみ）:**
+```org
+$$
+\begin{aligned}
+f(x) &= ax^2 + bx + c \\
+     &= a\left(x + \frac{b}{2a}\right)^2 - \frac{b^2 - 4ac}{4a}
+\end{aligned}
+$$
+```
+
+**行列:**
+```org
+$$
+A = \begin{pmatrix}
+a_{11} & a_{12} \\
+a_{21} & a_{22}
+\end{pmatrix}
+$$
+```
+
+行列環境の種類:
+
+| 環境 | 括弧の種類 |
+|------|-----------|
+| `pmatrix` | 丸括弧 `(` `)` |
+| `bmatrix` | 角括弧 `[` `]` |
+| `vmatrix` | 縦棒 `\|` `\|`（行列式） |
+| `Bmatrix` | 波括弧 `{` `}` |
+
+#### よく使う数式例
+
+```org
+二次方程式の解: $x = \dfrac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
+
+Taylor 展開: $e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!}$
+
+正規分布: $f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$
+
+ベクトルの内積: $\mathbf{a} \cdot \mathbf{b} = \sum_{i=1}^{n} a_i b_i$
+
+偏微分方程式: $\frac{\partial u}{\partial t} = \alpha \frac{\partial^2 u}{\partial x^2}$
+```
+
+#### 文字スタイル
+
+| 記法 | スタイル | 用途 |
+|------|---------|------|
+| `\mathbf{A}` | **A**（太字） | ベクトル・行列 |
+| `\mathcal{L}` | 筆記体 | 集合・写像 |
+| `\mathbb{R}` | 黒板太字 | 実数・複素数等の数体 |
+| `\mathrm{d}` | 立体 | 微分記号 |
+| `\text{文字}` | テキスト | 数式中の文字 |
+| `\hat{x}` | x̂（ハット） | 推定量 |
+| `\bar{x}` | x̄（バー） | 平均 |
+| `\vec{v}` | v⃗（矢印） | ベクトル |
+| `\dot{x}` | ẋ（ドット） | 時間微分 |
+| `\tilde{x}` | x̃（チルダ） | 近似値 |
+
+### GitHub との互換表示
+
+org ファイルを GitHub リポジトリで管理する場合、GitHub は `org-ruby` を使って org ファイルを HTML にレンダリングする。Emacs と GitHub の両方で正しく表示するには記法の選択が重要。
+
+#### 数式記法の対応
+
+| 記法 | Emacs | GitHub | 推奨 |
+|------|-------|--------|------|
+| `$...$` | ✅ インライン数式 | ✅ インライン数式 | ✅ 両対応 |
+| `$$...$$` | ✅ ブロック数式 | ✅ ブロック数式 | ✅ 両対応 |
+| `\(...\)` | ✅ | ✅ | ✅ 両対応 |
+| `\[...\]` | ✅ | ✅ | ✅ 両対応 |
+| `\begin{equation}...\end{equation}` | ✅ | ❌ 未対応（生テキスト表示） | ❌ Emacs 専用 |
+
+**数式の書き方（推奨）:**
+
+```org
+インライン: $E = mc^2$
+
+ブロック:
+$$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$
+```
+
+#### 画像の対応
+
+| 記法 | Emacs | GitHub | 推奨 |
+|------|-------|--------|------|
+| `[[file:image.png]]`（standalone） | ✅ インライン画像 | ✅ インライン画像 | ✅ 両対応 |
+| `#+RESULTS:` 内の `[[file:...]]` | ✅ org-babel 結果 | ❌ `#+RESULTS:` ブロックごと非表示 | ❌ Emacs 専用 |
+
+**matplotlib グラフを両方で表示する方法:**
+
+`#+RESULTS:` に加えて、コードブロックの外に standalone リンクを追加する。
+
+```org
+#+begin_src python :results output file graphics :file myplot.png
+import matplotlib.pyplot as plt
+...
+#+end_src
+
+#+RESULTS:
+[[file:myplot.png]]
+
+[[file:myplot.png]]
+```
+
+- Emacs: `#+RESULTS:` の `[[file:...]]` と standalone リンクの両方でインライン表示（画像が2つ表示される）
+- GitHub: `#+RESULTS:` ブロックは非表示。standalone `[[file:myplot.png]]` だけが `<img>` タグとして表示される
+
+> **Note:** GitHub での表示のために画像ファイル（PNG 等）を git commit する必要がある。
+
+#### `#+RESULTS:` ブロックの扱い
+
+org-ruby は `#+RESULTS:` ブロックを HTML にレンダリングしない（非表示）。コードブロックの実行結果（テキスト出力）を GitHub で見せたい場合は `:exports both` を使い org-export で HTML/Markdown に変換するか、結果を直接 org 本文に記述する。
+
+| 要素 | Emacs | GitHub |
+|------|-------|--------|
+| コードブロック (`#+begin_src`) | 構文ハイライト + 実行可能 | 構文ハイライトのみ（実行されない） |
+| `#+RESULTS:` ブロック | 評価結果を表示 | 非表示 |
+| standalone `[[file:...]]` | インライン画像 | インライン画像 |
+| `$...$`, `$$...$$` | org-latex-preview で画像化 | MathJax でレンダリング |
 
 ### アジェンダビュー内のキー (`C-c a` 後)
 
