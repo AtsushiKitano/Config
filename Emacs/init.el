@@ -51,6 +51,24 @@
     (add-to-list 'exec-path tex-bin)
     (setenv "PATH" (concat tex-bin ":" (getenv "PATH")))))
 
+;; Workaround: Emacs 32 development build fails with (setting-constant nil) in
+;; connection-local-set-profile-variables when vc-git loads interactively via
+;; project-try-vc. The bug occurs in the gv/setf expansion for alist-get when
+;; adding a new key. This advice catches the error and falls back to direct
+;; alist manipulation.
+(defvar vc-git--program-version nil)
+(with-eval-after-load 'files-x
+  (advice-add 'connection-local-set-profile-variables :around
+    (lambda (orig-fn profile variables)
+      (condition-case nil
+          (funcall orig-fn profile variables)
+        (setting-constant
+         (let ((existing (assq profile connection-local-profile-alist)))
+           (if existing
+               (setcdr existing variables)
+             (push (cons profile variables) connection-local-profile-alist))))))
+    '((name . "emacs32-dev-fix"))))
+
 (leaf general-settings
   :config
   (prefer-coding-system 'utf-8-unix)
@@ -432,11 +450,11 @@
     (cond
      ((not (bound-and-true-p skk-mode)) nil)
      ((bound-and-true-p skk-katakana)
-      (propertize "[カナ]" 'face '(:foreground "#98be65" :weight bold)))
+      (propertize "[カナ]" 'face '(:family "HackGen Console NF" :foreground "#98be65" :weight bold)))
      ((bound-and-true-p skk-ascii-mode)
-      (propertize "[英数]" 'face '(:foreground "#51afef" :weight bold)))
+      (propertize "[英数]" 'face '(:family "HackGen Console NF" :foreground "#51afef" :weight bold)))
      (t
-      (propertize "[かな]" 'face '(:foreground "#c678dd" :weight bold))))))
+      (propertize "[かな]" 'face '(:family "HackGen Console NF" :foreground "#c678dd" :weight bold))))))
 
 ;; ① doom-modeline セグメントを定義し main modeline の右端に追加
 (with-eval-after-load 'doom-modeline
@@ -1266,7 +1284,8 @@ HEADINGS は新規作成時に挿入するトップレベル見出しのリス�
   :bind
   (:gfm-mode-map
    ("C-c C-v" . my/markdown-preview)
-   ("C-c C-x v" . my/markdown-auto-preview-mode)))
+   ("C-c C-x v" . my/markdown-auto-preview-mode)
+   ("C-c C-g" . browse-url-of-file)))
 
 (leaf slack
   :ensure t
