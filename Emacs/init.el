@@ -112,11 +112,18 @@
 		(when (display-graphic-p)
 		  (let* ((ascii-family "Monaspace Neon NF")
 				 (jp-family "HackGen Console NF")
+				 (nerd-family "Symbols Nerd Font Mono")
 				 (ascii-spec (font-spec :family ascii-family :weight 'normal))
-				 (jp-spec    (font-spec :family jp-family    :weight 'normal)))
+				 (jp-spec    (font-spec :family jp-family    :weight 'normal))
+				 (nerd-spec  (font-spec :family nerd-family)))
 			(set-face-attribute 'default target-frame :family ascii-family :height 180)
 			(set-fontset-font nil 'ascii            ascii-spec target-frame 'append)
-			(set-fontset-font nil 'japanese-jisx0208 jp-spec   target-frame 'append))))))
+			(set-fontset-font nil 'japanese-jisx0208 jp-spec   target-frame 'append)
+			;; nerd-icons v3 は BMP PUA (U+E000-F8FF) と PUA-A (U+F0000-FFFFF) を使用する。
+			;; Monaspace/HackGen NF は v2 のため PUA-A グリフがない。
+			;; Symbols Nerd Font Mono (v3) をこれらの範囲に割り当てる。
+			(set-fontset-font nil '(#xE000 . #xF8FF)   nerd-spec target-frame 'prepend)
+			(set-fontset-font nil '(#xF0000 . #xFFFFF) nerd-spec target-frame 'prepend))))))
   (add-hook 'after-make-frame-functions #'my/setup-fonts)
   (when (display-graphic-p)
 	(my/setup-fonts)))
