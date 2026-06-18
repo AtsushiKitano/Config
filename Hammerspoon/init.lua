@@ -70,6 +70,6 @@ local function searchChromeBookmarks()
 end
 
 -- Ctrl+Shift+B でブックマーク検索を起動
-hs.hotkey.bind({"ctrl"}, "@", searchChromeBookmarks)
+hs.hotkey.bind({"ctrl", "shift"}, "b", searchChromeBookmarks)
 
 hs.alert.show("Hammerspoon loaded")
