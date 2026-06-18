@@ -69,7 +69,34 @@ local function searchChromeBookmarks()
   chooser:show()
 end
 
--- Ctrl+Shift+B でブックマーク検索を起動
-hs.hotkey.bind({"ctrl", "shift"}, "b", searchChromeBookmarks)
+-- 物理 Ctrl+Shift+B → Karabiner が left_shift を option に変換するため ctrl+alt+b で受け取る
+hs.hotkey.bind({"ctrl", "alt"}, "b", searchChromeBookmarks)
+
+-- Web 検索
+local function webSearch()
+  local chooser = hs.chooser.new(function(choice)
+    if choice and choice.url then
+      hs.urlevent.openURL(choice.url)
+    end
+  end)
+  chooser:placeholderText("Web 検索...")
+  chooser:choices({})
+  chooser:queryChangedCallback(function(query)
+    if query and #query > 0 then
+      local encoded = hs.http.encodeForQuery(query)
+      chooser:choices({{
+        text    = query,
+        subText = "Google で検索",
+        url     = "https://www.google.com/search?q=" .. encoded,
+      }})
+    else
+      chooser:choices({})
+    end
+  end)
+  chooser:show()
+end
+
+-- 物理 Ctrl+Shift+S → Karabiner が left_shift を option に変換するため ctrl+alt+s で受け取る
+hs.hotkey.bind({"ctrl", "alt"}, "s", webSearch)
 
 hs.alert.show("Hammerspoon loaded")
