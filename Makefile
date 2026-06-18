@@ -2,7 +2,7 @@ REPO_DIR := $(shell pwd)
 
 .PHONY: all setup bootstrap sync link link-dotfiles link-emacs link-yabai \
         link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
-        link-launchd macos-defaults install homebrew services setup-slack org-sync-setup
+        link-launchd link-hammerspoon macos-defaults install homebrew services setup-slack org-sync-setup
 
 # --------------------------------------------------------------------------
 # Top-level targets
@@ -26,7 +26,7 @@ all: link macos-defaults install
 
 link: link-dotfiles link-emacs link-yabai \
       link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
-      link-launchd
+      link-launchd link-hammerspoon
 
 # dotfiles/.??* → $HOME  (skip directories, .Brewfile is Mac-only)
 link-dotfiles:
@@ -106,6 +106,11 @@ link-aquaskk:
 	@mkdir -p "$$HOME/Library/Application Support/AquaSKK"
 	@ln -fnsv "$(REPO_DIR)/macos/AquaSKK/sub-rule.desc"  "$$HOME/Library/Application Support/AquaSKK/sub-rule.desc"
 	@ln -fnsv "$(REPO_DIR)/macos/AquaSKK/arrow.rule"     "$$HOME/Library/Application Support/AquaSKK/arrow.rule"
+
+# Hammerspoon: Hammerspoon/ → ~/.hammerspoon
+link-hammerspoon:
+	@echo "[hammerspoon] Linking to $$HOME/.hammerspoon"
+	@ln -fnsv "$(REPO_DIR)/Hammerspoon" "$$HOME/.hammerspoon"
 
 # --------------------------------------------------------------------------
 # macOS system defaults
