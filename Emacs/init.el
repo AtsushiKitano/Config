@@ -414,7 +414,16 @@
 
   (defun ins-eat-skk-settings ()
     (when (fboundp 'evil-emacs-state)
-      (evil-emacs-state)))
+      (evil-emacs-state))
+    ;; SKK を有効化
+    (when (fboundp 'skk-mode)
+      (skk-mode 1))
+    ;; eat char-mode は SKK の preedit と非互換なので line-mode を使用
+    (add-hook 'eat-exec-hook
+              (lambda (_proc)
+                (when (fboundp 'eat-line-mode)
+                  (eat-line-mode)))
+              nil t))
 
   :hook (eat-mode-hook . (lambda ()
                            (setq-local inhibit-read-only t)
@@ -434,6 +443,7 @@
   :init
   (defvar dired-bind-jump nil) ; dired-xに `C-x C-j` が奪われてしまうので対処
   :custom
+  (skk-preload                        . t) ; 起動時にSKK辞書をプリロード
   (skk-use-azik                      . t) ; AZIKを使用
   (skk-azik-keyboard-type            . 'jp106)
   (skk-server-host                   . "localhost")
