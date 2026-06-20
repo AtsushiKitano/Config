@@ -252,12 +252,4 @@ init.el をゼロから書き直す。`leaf` でパッケージ管理する。
 - スクロール: 保持, conservatively 100
 - リージョン選択時に挿入で削除: `delete-selection-mode`
 - ベルを無効化: `ring-bell-function` → ignore
-- ユーザ情報: Atsushi Kitano / atsushi@aquamarine-cloud.net
-
----
-
-## Claude Code IDE
-
-- `claude-code-ide.el` を VC 経由でインストール
-- `C-c C-' ` で IDE メニュー表示
-- `claude-code-ide-emacs-tools-setup` を実行
+- ユーザ情報: Atsushi Kitano / atsushi@aquamarine-cloud.netherstone

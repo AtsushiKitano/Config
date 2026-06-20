@@ -37,12 +37,19 @@ link-dotfiles:
 		ln -fnsv "$$f" "$$HOME/"; \
 	done
 
-# Emacs: init.el + early-init.el → ~/.emacs.d/
+# Emacs: init.org をタングルして ~/.emacs.d/ に配置（テンポラリディレクトリ経由）
 link-emacs:
-	@echo "[emacs] Linking to $$HOME/.emacs.d"
+	@echo "[emacs] Tangling init.org → $$HOME/.emacs.d"
 	@mkdir -p "$$HOME/.emacs.d"
-	@ln -fnsv "$(REPO_DIR)/Emacs/init.el"        "$$HOME/.emacs.d/init.el"
-	@ln -fnsv "$(REPO_DIR)/Emacs/early-init.el"  "$$HOME/.emacs.d/early-init.el"
+	@tmpdir=$$(mktemp -d) && \
+		cp "$(REPO_DIR)/Emacs/init.org" "$$tmpdir/" && \
+		emacs --batch -l org \
+			--eval "(org-babel-tangle-file \"$$tmpdir/init.org\")" 2>&1 | grep -v "^$$" && \
+		rm -f "$$HOME/.emacs.d/init.el" "$$HOME/.emacs.d/early-init.el" && \
+		cp "$$tmpdir/init.el"       "$$HOME/.emacs.d/init.el" && \
+		cp "$$tmpdir/early-init.el" "$$HOME/.emacs.d/early-init.el" && \
+		rm -rf "$$tmpdir"
+	@echo "[emacs] Done"
 
 # yabai / skhd: dotfiles/.yabairc → ~/.yabairc, dotfiles/.skhdrc → ~/.skhdrc
 link-yabai:
