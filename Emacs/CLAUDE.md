@@ -4,6 +4,24 @@
 
 init.el をゼロから書き直す。`leaf` でパッケージ管理する。
 
+---
+
+## 設定の適用方法
+
+**編集するファイル**: `Emacs/init.org` のみ。`~/.emacs.d/init.el` / `~/.emacs.d/early-init.el` は自動生成のため直接編集しない。
+
+**init.org を編集したあとは必ず以下を実行する（リポジトリルートから）:**
+
+```sh
+make link-emacs
+```
+
+- tangle した `init.el` / `early-init.el` を `~/.emacs.d/` に配置する
+- `cd Emacs && make init.el` は **使わない**（ローカルの `Emacs/init.el` に出力されるだけで Emacs には反映されない）
+- 実行後、Emacs を再起動または `M-x load-file ~/.emacs.d/init.el` で反映する
+
+---
+
 ## パッケージ管理
 
 - パッケージマネージャ: `leaf` + `leaf-keywords`

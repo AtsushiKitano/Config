@@ -1261,6 +1261,15 @@ launchd による 30 分ごとの定期同期と併用する。
 #+begin_src emacs-lisp :tangle yes
 (leaf org
   :ensure t
+  :init
+  ;; org ロード前に設定することで org.el 内の初期化コードに確実に反映される。
+  ;; :config (with-eval-after-load) では org-emph-re 再構築タイミングが遅れる場合がある。
+  (setq org-emphasis-regexp-components
+        '("-[:space:]('\"{[:nonascii:]"
+          "-[:space:].,:!?;'\")}\\[[:nonascii:]"
+          "[:space:]"
+          "."
+          1))
   :bind
   (("C-c a" . org-agenda)
    ("C-c c" . org-capture)
@@ -1373,6 +1382,10 @@ launchd による 30 分ごとの定期同期と併用する。
                  "~/org/research" "~/org/shared" "~/org/work"))
     (make-directory (expand-file-name dir) t))
 
+  ;; :init で設定した org-emphasis-regexp-components を org ロード後に確実に反映する
+  (when (fboundp 'org-set-emph-re)
+    (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components))
+
   ;; org-mode では < の自動補完 (electric-pair-mode) を無効化する
   ;; <s, <q 等の org テンプレート展開と競合するため
   (add-hook 'org-mode-hook
@@ -1431,6 +1444,71 @@ launchd による 30 分ごとの定期同期と併用する。
     (unless (assoc :prologue org-babel-default-header-args:python)
       (push '(:prologue . "try:\n    import matplotlib as _mpl; _mpl.use('Agg')\nexcept ImportError:\n    pass\n")
             org-babel-default-header-args:python))))
+#+end_src
+
+** アジェンダ日付から Daily へジャンプ
+
+Week-agenda の日付行（例: =Sunday     21 June 2026=）で =RET= を押すと、
+=daily_YYYY.org= の当該日付見出しへ移動する。
+エントリ行（タスク・スケジュール）では通常の =org-agenda-goto= として動作する。
+
+日付エントリが存在しない場合は =C-c c d= で作成できる旨を表示する。
+
+| キー | 動作 |
+|------|------|
+| =RET=（日付行） | =daily_YYYY.org= の当該日へジャンプ |
+| =RET=（エントリ行） | 通常の =org-agenda-goto= |
+
+#+begin_src emacs-lisp :tangle yes
+(defun my/org-agenda-open-daily-at-point ()
+  "アジェンダの日付行から daily_YYYY.org の当該日見出しへ移動する."
+  (interactive)
+  (let* ((line (buffer-substring-no-properties
+                (line-beginning-position) (line-end-position)))
+         (month-alist '(("January" . 1) ("February" . 2) ("March" . 3)
+                        ("April" . 4) ("May" . 5) ("June" . 6)
+                        ("July" . 7) ("August" . 8) ("September" . 9)
+                        ("October" . 10) ("November" . 11) ("December" . 12))))
+    (if (string-match
+         (concat "[A-Za-z]+\\s-+\\([0-9]+\\)\\s-+"
+                 "\\(January\\|February\\|March\\|April\\|May\\|June\\|"
+                 "July\\|August\\|September\\|October\\|November\\|December\\)"
+                 "\\s-+\\([0-9]\\{4\\}\\)")
+         line)
+        (let* ((day   (string-to-number (match-string 1 line)))
+               (month (cdr (assoc (match-string 2 line) month-alist)))
+               (year  (string-to-number (match-string 3 line)))
+               (daily-file (expand-file-name
+                            (format "personal/daily_%04d.org" year)
+                            "~/org")))
+          (unless (file-exists-p daily-file)
+            (with-temp-file daily-file
+              (insert (format "#+title: Daily %d\n#+filetags: :personal:daily:\n\n" year))))
+          (find-file daily-file)
+          (goto-char (point-min))
+          (if (re-search-forward
+               (format "^\\*\\{3\\}\\s-+%04d-%02d-%02d" year month day)
+               nil t)
+              (progn
+                (org-reveal)
+                (recenter)
+                (message "%04d-%02d-%02d の日記を開きました" year month day))
+            (message "%04d-%02d-%02d の日記がありません。C-c c d で作成してください。"
+                     year month day)))
+      (message "この行に日付が見つかりません。"))))
+
+(defun my/org-agenda-goto-or-daily ()
+  "日付行では daily ファイルへ、エントリ行では通常の org-agenda-goto を実行する."
+  (interactive)
+  (if (org-get-at-bol 'org-marker)
+      (org-agenda-goto)
+    (my/org-agenda-open-daily-at-point)))
+
+(with-eval-after-load 'org-agenda
+  (define-key org-agenda-mode-map (kbd "RET") #'my/org-agenda-goto-or-daily)
+  (with-eval-after-load 'evil
+    (evil-define-key 'motion org-agenda-mode-map
+      (kbd "RET") #'my/org-agenda-goto-or-daily)))
 #+end_src
 
 ** 画像の貼り付け (org-download)
