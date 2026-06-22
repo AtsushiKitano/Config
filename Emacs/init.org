@@ -432,7 +432,25 @@ Emacs 32.0.50 開発版で ~connection-local-set-profile-variables~ が ~(settin
 #+begin_src emacs-lisp :tangle yes
 (leaf beacon
   :ensure t
+  :custom
+  ;; agent-shell-mode / viewport は mode 名でブロック。
+  ;; diff バッファは agent-shell-diff-mode を一度設定しても
+  ;; diff-no-select (diff.el) が (diff-mode) を呼び直して
+  ;; major-mode を上書きするため mode 名では catch できない。
+  ;; 下の predicate でバッファ名ベースでブロックする。
+  ((beacon-dont-blink-major-modes . '(agent-shell-mode
+                                      agent-shell-viewport-view-mode
+                                      agent-shell-viewport-edit-mode)))
   :config
+  (defun my/beacon-skip-agent-shell-diff ()
+    "agent-shell 由来の diff バッファで beacon を抑止する。
+agent-shell-diff の diff バッファは ---/+++/@@ を隠す overlay が大量にあり、
+beacon--visual-current-column → vertical-motion が事実上停止する。"
+    (let ((name (buffer-name)))
+      (and name (string-prefix-p "*agent-shell-diff" name))))
+  (with-eval-after-load 'beacon
+    (add-hook 'beacon-dont-blink-predicates
+              #'my/beacon-skip-agent-shell-diff))
   (when (display-graphic-p)
     (beacon-mode 1))
   (add-hook 'after-make-frame-functions
