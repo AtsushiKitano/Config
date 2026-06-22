@@ -519,12 +519,21 @@ agent-shell-mode では Evil の insert モードを使わず emacs-state で動
   (agent-shell-mode-hook . (lambda ()
                              (when (fboundp 'evil-emacs-state)
                                (evil-emacs-state))
-			     (display-line-numbers-mode -1)))
+			     (display-line-numbers-mode -1)
+                             (when (and (boundp 'skk-mode) skk-mode)
+                               (skk-mode -1))))
   :config
   (setq agent-shell-anthropic-authentication
         (agent-shell-anthropic-make-authentication :login t))
   (setq agent-shell-preferred-agent-config
-        (agent-shell-anthropic-make-claude-code-config)))
+        (agent-shell-anthropic-make-claude-code-config))
+  (with-eval-after-load 'evil-collection-agent-shell
+    (define-key agent-shell-mode-map "v"
+                evil-collection-agent-shell-permission-view-diff)
+    (define-key agent-shell-mode-map "y"
+                evil-collection-agent-shell-permission-allow-once)
+    (define-key agent-shell-mode-map "!"
+                evil-collection-agent-shell-permission-allow-always)))
 #+end_src
 
 ** Evil モード
@@ -537,7 +546,7 @@ Vim キーバインドを evil で使う。挿入モードでも Emacs の基本
 - 挿入モードでは =C-p/n/b/f/a/e/d/h/k= など Emacs の移動・編集キーを優先する
 
 *Emacs state で起動するモード*（Evil キーバインドを持ち込まない）:
-=vterm-mode=, =dired-mode=, =magit-mode=, =eat-mode=, =agent-shell-mode=, =neotree-mode=
+=vterm-mode=, =dired-mode=, =magit-mode=, =eat-mode=, =agent-shell-mode=, =agent-shell-diff-mode=, =neotree-mode=
 
 *カスタムコマンド*:
 | コマンド | 説明 |
@@ -560,7 +569,7 @@ Vim キーバインドを evil で使う。挿入モードでも Emacs の基本
   (evil-want-C-u-scroll . t)
   :config
   (evil-mode 1)
-  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode agent-shell-mode neotree-mode))
+  (dolist (mode '(vterm-mode dired-mode magit-mode imenu-list-major-mode eat-mode agent-shell-mode agent-shell-diff-mode neotree-mode))
     (evil-set-initial-state mode 'emacs)))
 
 (leaf evil-collection
@@ -1399,7 +1408,7 @@ launchd による 30 分ごとの定期同期と併用する。
           ;; Book: ファイルを選択/作成 → Notes 見出しへ
           ("b" "Book Note" entry
            (file+headline my/org-capture-book "Notes")
-           "* %^{本のタイトル}                                        :読書:\n:PROPERTIES:\n:CREATED:     %U\n:AUTHOR:      %^{著者名}\n:PUBLISHER:   %^{出版社名}\n:STATUS:      READING\n:END:\n%?"
+           "* %^{本のタイトル}                                        :読書:\n:PROPERTIES:\n:CREATED:     %U\n:AUTHOR:      %^{著者名}\n:PUBLISHER:   %^{出版社名}\n:SOURCE:      %^{参考URL・入手元}\n:STATUS:      READING\n:END:\n%?"
            :empty-lines 1)
           ;; Work: 会社名を選択/入力 → 会社ファイルの Tasks 見出しへ
           ("w" "Work Task" entry
@@ -1426,7 +1435,7 @@ launchd による 30 分ごとの定期同期と併用する。
           ;; Research: ファイルを選択/作成 → Notes 見出しへ
           ("r" "Research Note" entry
            (file+headline my/org-capture-research "Notes")
-           "* %^{検証内容タイトル}                                    :IT:検証:\n:PROPERTIES:\n:CREATED:     %U\n:TECH_STACK:  %^{技術スタック (カンマ区切り)}\n:STATUS:      %^{STATUS|IN_PROGRESS|SUCCESS|FAILED|ABANDONED}\n:END:\n\n** 検証目的\n\n%?\n\n** 検証環境\n"
+           "* %^{検証内容タイトル}                                    :IT:検証:\n:PROPERTIES:\n:CREATED:     %U\n:TYPE:        %^{種別|調査|検証|決定|手順|参考}\n:TECH_STACK:  %^{技術スタック (カンマ区切り)}\n:SOURCE:      %^{出典・参考URL}\n:STATUS:      %^{STATUS|IN_PROGRESS|SUCCESS|FAILED|ABANDONED}\n:END:\n\n** 検証目的\n\n%?\n\n** 検証環境\n"
            :empty-lines 1)
           ("R" "Research Task" entry
            (file my/org-capture-research)
@@ -1453,7 +1462,7 @@ launchd による 30 分ごとの定期同期と併用する。
           ("D" "Daily サブ (トレ・勉強・アイディア・趣味・食事)")
           ("DT" "Training" entry
            (file+olp+datetree my/org-capture-daily)
-           "* トレーニング                                           :ジム:\n:PROPERTIES:\n:PART:     %^{部位|胸|背中|肩|腕|脚}\n:Effort:   %^{予定時間|1:30|2:00|2:30}\n:END:\n%?"
+           "* トレーニング                                           :ジム:\n:PROPERTIES:\n:PART:        %^{部位|胸|背中|肩|腕|脚}\n:BODYWEIGHT:  %^{体重(kg)}\n:CONDITION:   %^{体調|好|普|不調}\n:DURATION:    %^{所要時間|1:30|2:00|2:30}\n:END:\n- %?"
            :empty-lines 1)
           ("DS" "Study" entry
            (file+olp+datetree my/org-capture-daily)
