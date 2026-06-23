@@ -87,13 +87,12 @@ make link-emacs
 | `M-p`       | `flycheck-previous-error`      |
 | `C-c C-'`   | `claude-code-ide-menu`         |
 
-### 括弧・ペア管理 (smartparens)
+### 括弧・ペア管理 (puni)
 
-- 括弧・クォートを入力すると自動で閉じる（`electric-pair-mode` は無効）
-- 移動コマンド: `C-M-a/e/d/u/w/q/f/b/n/p`, `C-s-f/b`
-- wrap: `C-c (/{/[/'/"`, unwrap: `M-]`, kill: `M-k`
-- Go: `{` 後改行でインデント
-- TSX/JSX: `{` 後スペース挿入、`< >` ペア有効
+- `electric-pair-mode` は **無効**（global で OFF）
+- `puni-global-mode` による Structured Editing で対応括弧を壊さない編集を行う
+- prog-mode では `RET` で括弧内展開 (`my/newline-and-indent-pair`)
+- SKK のペア補完は `skk-auto-insert-paren: t` が担う
 
 ### 日本語入力 (ddskk)
 
@@ -101,6 +100,15 @@ make link-emacs
 - `C-x C-j` / `M-j` で SKK モード起動
 - `skk-egg-like-newline`, `skk-show-inline` 等の設定を維持
 - `skk-preload`: t
+- `skk-status-indicator`: `'minor-mode`
+- evil の insert state から抜ける際 (`evil-insert-state-exit-hook`) に
+  `skk-kakutei` を呼び、▽ モードのまま normal state に入ることで
+  内部状態とバッファ表示がずれる不具合を予防する
+- 脱出弁として `skk-start-henkan` / `skk-abbrev-mode` / `skk-insert` に
+  around advice を付与し、`既に▽モードに入っています` / `▽がありません`
+  系のエラーを検知した時点で SKK の internal state を強制リセットして
+  入力を継続できるようにする（`C-h` / `C-w` / undo 等で ▽/▼ がバッファ
+  から消えても insert state を抜けないケースをカバー）
 
 ---
 
