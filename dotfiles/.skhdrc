@@ -1,6 +1,7 @@
 # アプリフォーカス
 cmd - p : yabai -m window --focus "$(yabai -m query --windows | jq -re 'map(select(.app == "Emacs")) | first | .id')"
 cmd - i : yabai -m window --focus "$(yabai -m query --windows | jq -re 'map(select(.app == "kitty")) | first | .id')"
+cmd - 0x2F : yabai -m window --focus "$(yabai -m query --windows | jq -re 'map(select(.app == "Slack")) | first | .id')" || open -a Slack
 
 # 移動フォーカス
 cmd - h: yabai -m window --focus west || yabai -m display --focus west
