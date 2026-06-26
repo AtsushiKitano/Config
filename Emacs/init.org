@@ -46,6 +46,30 @@ make link-emacs   # init.org → ~/.emacs.d/init.el と early-init.el を生成
   (setq debug-on-error t)
 #+end_src
 
+** native-comp のリンカパス (macOS)
+
+Homebrew の =gcc= が新しくなると libgccjit のリンカが =libemutls_w.a=
+（=gcc/<arch>/<ver>/= 配下にある）を見つけられず =ld: library 'emutls_w' not found=
+で native compilation が失敗する。Homebrew の gcc が提供するライブラリ
+ディレクトリを =LIBRARY_PATH= に追加して回避する。
+
+#+begin_src emacs-lisp :tangle early-init.el
+  (when (eq system-type 'darwin)
+    (let* ((brew-prefix (or (getenv "HOMEBREW_PREFIX") "/opt/homebrew"))
+           (gcc-current (expand-file-name "lib/gcc/current" brew-prefix))
+           (extra-dirs (when (file-directory-p gcc-current)
+                         (cons gcc-current
+                               (file-expand-wildcards
+                                (expand-file-name "gcc/*/*" gcc-current))))))
+      (when extra-dirs
+        (setenv "LIBRARY_PATH"
+                (mapconcat #'identity
+                           (append extra-dirs
+                                   (when (getenv "LIBRARY_PATH")
+                                     (list (getenv "LIBRARY_PATH"))))
+                           ":")))))
+#+end_src
+
 ** 見た目の設定
 
 起動直後から UI を整える。パッケージ読み込み前に実行することで、
@@ -99,6 +123,10 @@ make link-emacs   # init.org → ~/.emacs.d/init.el と early-init.el を生成
 =C-c -= で薄く (透明)、=C-c 0= で既定値 (90) に戻す。=set-frame-parameter nil=
 で選択フレームのみに作用するため、emacsclient で複数フレームを開いていても
 フレーム単位で調整できる。
+
+#+begin_src emacs-lisp :tangle yes
+;;; init.el --- User init file -*- lexical-binding: t -*-
+#+end_src
 
 #+begin_src emacs-lisp :tangle yes
 (defun my/frame-alpha--current ()

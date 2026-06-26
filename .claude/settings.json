@@ -139,5 +139,6 @@
     "pyright-lsp@claude-plugins-official": true
   },
   "skipDangerousModePermissionPrompt": true,
-  "theme": "dark-daltonized"
+  "theme": "dark-daltonized",
+  "tui": "fullscreen"
 }

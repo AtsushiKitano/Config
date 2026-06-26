@@ -1,10 +1,21 @@
-tap "homebrew/bundle"
-tap "homebrew/cask-fonts"
+# 外部 tap は Homebrew 4.5 以降 `brew trust` による明示的な信頼が必要。
+# `brew bundle --global` を直接叩いてもエラーにならないよう、ここで自動 trust する。
+# `brew bundle` 実行中の subshell には PATH が通っていないため、HOMEBREW_BREW_FILE を使う。
+_brew = ENV["HOMEBREW_BREW_FILE"] || "brew"
+%w[
+  koekeishiya/formulae
+  laishulu/homebrew
+  spring-io/tap
+  hashicorp/tap
+  d12frosted/emacs-plus
+  railwaycat/emacsmacport
+].each { |t| system(_brew, "trust", "--tap", t, out: File::NULL, err: File::NULL) }
+
 tap "koekeishiya/formulae"
 tap "laishulu/homebrew"
-tap "sanemat/font"
-tap "homebrew/cask-fonts"
 tap "spring-io/tap"
+tap "d12frosted/emacs-plus"
+tap "railwaycat/emacsmacport"
 
 brew "argocd"
 brew "autoconf"
@@ -59,7 +70,6 @@ brew "zsh-syntax-highlighting"
 brew "koekeishiya/formulae/skhd"
 brew "koekeishiya/formulae/yabai"
 brew "laishulu/homebrew/macism"
-brew "ricty"
 brew "minikube"
 brew "kubernetes-cli"
 brew "maven"
@@ -68,7 +78,6 @@ brew "neovim"
 brew "lazygit"
 brew "nodebrew"
 brew "pwgen"
-brew "lua"
 brew "pnpm"
 brew "hashicorp/tap/terraform-ls"
 brew "uv"
@@ -83,7 +92,7 @@ brew "gnupg"
 brew "pinentry-mac"
 
 cask "chromium"
-cask "google-cloud-sdk"
+cask "gcloud-cli"
 cask "google-chrome"
 cask "kitty"
 cask "raycast"
@@ -100,15 +109,11 @@ cask "discord"
 cask "cursor"
 cask "wezterm@nightly"
 cask "obsidian"
-cask "dbeaver-community"
 cask "hammerspoon"
 cask "claude-code"
 cask "claude"
 cask "kindle-previewer"
 cask "basictex"
 cask "font-symbols-only-nerd-font"
-cask "orbstack"
-
-tap "d12frosted/emacs-plus"
-tap "railwaycat/emacsmacport"
 cask "emacs-plus-app@master"
+cask "orbstack"

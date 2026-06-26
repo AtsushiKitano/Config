@@ -5,8 +5,6 @@ if [ $(uname) != "Darwin" ]; then
 	exit 1
 fi
 
-brew trust koekeishiya/formulae
-brew trust railwaycat/emacsmacport
-brew trust d12frosted/emacs-plus
-
-brew bundle --global
+# 外部 tap の `brew trust` は Brewfile 冒頭の Ruby ブロックで自動実行される。
+# 手動で /Applications に置かれた既存アプリと衝突しても上書きできるよう --force を渡す。
+HOMEBREW_CASK_OPTS="--force" brew bundle --global
