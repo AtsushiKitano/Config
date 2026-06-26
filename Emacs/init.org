@@ -93,6 +93,70 @@ make link-emacs   # init.org → ~/.emacs.d/init.el と early-init.el を生成
   (setq initial-frame-alist default-frame-alist)
 #+end_src
 
+*** フレーム透明度の調整キーバインド
+
+選択中フレームの不透明度 (=alpha=) を増減する。=C-c == で濃く (不透明)、
+=C-c -= で薄く (透明)、=C-c 0= で既定値 (90) に戻す。=set-frame-parameter nil=
+で選択フレームのみに作用するため、emacsclient で複数フレームを開いていても
+フレーム単位で調整できる。
+
+#+begin_src emacs-lisp :tangle yes
+(defun my/frame-alpha--current ()
+  "選択中フレームの不透明度 (0-100) を返す。未設定なら 100。"
+  (let ((a (frame-parameter nil 'alpha)))
+    (cond ((numberp a) a)
+          ((consp a) (car a))            ; (active . inactive)
+          (t 100))))
+
+(defun my/frame-alpha-adjust (delta)
+  "選択中フレームの不透明度を DELTA だけ変える (10-100 にクランプ)。"
+  (let ((new (max 10 (min 100 (+ (my/frame-alpha--current) delta)))))
+    (set-frame-parameter nil 'alpha new)
+    (message "Frame opacity: %d%%" new)))
+
+(defun my/frame-alpha-increase ()
+  "背景を濃く (不透明に) する。"
+  (interactive)
+  (my/frame-alpha-adjust 5))
+
+(defun my/frame-alpha-decrease ()
+  "背景を薄く (透明に) する。"
+  (interactive)
+  (my/frame-alpha-adjust -5))
+
+(defun my/frame-alpha-reset ()
+  "不透明度を既定値 (90) に戻す。"
+  (interactive)
+  (set-frame-parameter nil 'alpha 90)
+  (message "Frame opacity: 90%% (reset)"))
+
+(global-set-key (kbd "C-c =") #'my/frame-alpha-increase)
+(global-set-key (kbd "C-c -") #'my/frame-alpha-decrease)
+(global-set-key (kbd "C-c 0") #'my/frame-alpha-reset)
+#+end_src
+
+*** 文字サイズの拡大・縮小キーバインド
+
+=text-scale= による文字 (フォント) サイズの拡大・縮小を単打で行う。バッファ単位。
+=C-= / C-+= で拡大、=C--= で縮小、=C-0= で既定サイズに戻す。
+標準の =C-x C-+= / =C-x C--= / =C-x C-0= も引き続き使える。
+
+衝突確認: =C-= / C-+= は未割当で安全。=C--= は標準の =negative-argument=、
+=C-0= は =digit-argument= を上書きする (Evil 各ステートとの衝突はなし)。
+数引数は =M--= / =M-0=〜=M-9= または =C-u= で代替できる。
+
+#+begin_src emacs-lisp :tangle yes
+(defun my/text-scale-reset ()
+  "文字サイズを既定に戻す。"
+  (interactive)
+  (text-scale-set 0))
+
+(global-set-key (kbd "C-=") #'text-scale-increase)
+(global-set-key (kbd "C-+") #'text-scale-increase)
+(global-set-key (kbd "C--") #'text-scale-decrease)
+(global-set-key (kbd "C-0") #'my/text-scale-reset)
+#+end_src
+
 
 ** footer
 
@@ -347,6 +411,62 @@ Emacs 32.0.50 開発版で ~connection-local-set-profile-variables~ が ~(settin
   ;; Monaspace Neon NF / HackGen Console NF は Nerd Fonts v2 のため
   ;; U+F0xxx 台のグリフが文字化け (0F0/BF8 トーフボックス) になる。
   (doom-modeline-modal-icon . nil))
+#+end_src
+
+*** 見た目の強化 (org-modern / spacious-padding / ligature / dashboard)
+
+UI をモダンに整える「おしゃれ」系パッケージ群。
+
+- =org-modern=: org の見出し・箇条書き・タグ・テーブル・ブロックを装飾
+- =spacious-padding=: フレーム内側に余白とクリーンなフリンジを与える
+- =ligature=: =->= =>= =!== などのプログラミングリガチャを表示 (Monaspace/FiraCode 対応)
+- =dashboard=: 起動画面に最近のファイル・プロジェクト・アジェンダを表示
+- =consult-theme= (=C-c T=): テーマをライブプレビューで切り替え
+
+#+begin_src emacs-lisp :tangle yes
+;; org をモダンに装飾
+(leaf org-modern
+  :ensure t
+  :hook ((org-mode-hook . org-modern-mode)
+         (org-agenda-finalize-hook . org-modern-agenda))
+  :custom
+  (org-modern-table . t)
+  (org-modern-star . 'replace))
+
+;; フレーム内側の余白・クリーンなフリンジ (rougier 風のミニマルな佇まい)
+(leaf spacious-padding
+  :ensure t
+  :global-minor-mode spacious-padding-mode)
+
+;; プログラミングリガチャ (Monaspace / FiraCode が対応)
+(leaf ligature
+  :ensure t
+  :config
+  (ligature-set-ligatures 't '("www"))
+  (ligature-set-ligatures
+   'prog-mode
+   '("->" "=>" "<-" "<=" ">=" "!=" "==" "===" "!==" ":=" "::" "..."
+     ".." "&&" "||" "|>" "<|" "++" "--" "**" "//" "/*" "*/" "</" "/>"
+     "</>" "<>" "?." "?:" "##" "###" "<->" "<--" "-->"))
+  (global-ligature-mode t))
+
+;; 起動画面 (ダッシュボード)
+(leaf dashboard
+  :ensure t
+  :custom
+  (dashboard-items . '((recents . 5) (projects . 5) (agenda . 5)))
+  (dashboard-center-content . t)
+  (dashboard-icon-type . 'nerd-icons)
+  (dashboard-set-heading-icons . t)
+  (dashboard-set-file-icons . t)
+  (dashboard-startup-banner . 'logo)
+  :config
+  (dashboard-setup-startup-hook)
+  ;; emacsclient / daemon の新規フレームでもダッシュボードを表示する
+  (setq initial-buffer-choice (lambda () (get-buffer-create dashboard-buffer-name))))
+
+;; テーマをライブプレビューで切り替え (consult 導入済み)
+(global-set-key (kbd "C-c T") #'consult-theme)
 #+end_src
 
 *** システム情報表示 (CPU / メモリ / ディスク)

@@ -20,6 +20,13 @@
 | `M-l` | `next-multiframe-window` | 次のウィンドウへ移動 |
 | `M-z` | `my/toggle-zoom-window` | カレントウィンドウをズームトグル (tmux `C-z` 相当) |
 | `M-%` | `anzu-query-replace` | インタラクティブ置換 |
+| `C-c =` | `my/frame-alpha-increase` | フレーム背景を濃く (不透明に) する |
+| `C-c -` | `my/frame-alpha-decrease` | フレーム背景を薄く (透明に) する |
+| `C-c 0` | `my/frame-alpha-reset` | フレーム透明度を既定 (90) に戻す |
+| `C-=` / `C-+` | `text-scale-increase` | 文字サイズを拡大 (バッファ単位) |
+| `C--` | `text-scale-decrease` | 文字サイズを縮小 (バッファ単位、`negative-argument` を上書き) |
+| `C-0` | `my/text-scale-reset` | 文字サイズを既定に戻す (`digit-argument` を上書き) |
+| `C-c T` | `consult-theme` | テーマをライブプレビューで切り替え |
 | `C-c h` | `describe-bindings` | 現在のキーバインド一覧を表示 |
 | `C-c H` | `my/show-keybindings` | このキーバインドドキュメントを表示 |
 | `C-;` | `consult-buffer` | バッファ・ファイル・履歴を横断検索 |
