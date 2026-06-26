@@ -738,6 +738,11 @@ Vim キーバインドを evil で使う。挿入モードでも Emacs の基本
 =evil-collection-unimpaired-mode--set-explicitly= が存在せずエラーになる。
 そのため =(evil-collection-unimpaired-mode -1)= の直接呼び出しで無効化している。
 
+=dashboard= 20260402 以降、=dashboard-mode-map= のキーに named symbol ではなく anonymous lambda
+が直接バインドされるようになった。=evil-collection-dashboard-setup-jump-commands= が内部で
+=(symbol-function (lookup-key ...))= を呼ぶため =wrong-type-argument: symbolp= が発生し
+daemon 起動が失敗する。=:override= advice で =lookup-key= の結果をそのまま渡す版に差し替えることで回避する。
+
 #+begin_src emacs-lisp :tangle yes
 (leaf evil
   :ensure t
@@ -754,6 +759,16 @@ Vim キーバインドを evil で使う。挿入モードでも Emacs の基本
   :ensure t
   :after evil
   :config
+  ;; dashboard のキーバインドが anonymous lambda のため symbol-function が失敗する問題を回避
+  ;; evil-collection-dashboard-setup-jump-commands を安全な版に差し替える
+  (advice-add 'evil-collection-dashboard-setup-jump-commands :override
+              (lambda (&rest _)
+                (evil-collection-define-key 'normal 'dashboard-mode-map
+                  "r" (lookup-key dashboard-mode-map "r")
+                  "m" (lookup-key dashboard-mode-map "m")
+                  "p" (lookup-key dashboard-mode-map "p")
+                  "a" (lookup-key dashboard-mode-map "a")
+                  "e" (lookup-key dashboard-mode-map "e"))))
   (evil-collection-init)
   (evil-collection-unimpaired-mode -1)
   (defun my/kill-region-or-backward-kill-word ()
