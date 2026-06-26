@@ -1,24 +1,32 @@
 REPO_DIR := $(shell pwd)
 
-.PHONY: all setup bootstrap sync link link-dotfiles link-emacs link-yabai \
+# Make は /bin/sh で各レシピを実行するため、.zshenv 等を読まない。
+# Homebrew (emacs / mise / brew 等) のパスを通しておく。
+export PATH := /opt/homebrew/bin:/usr/local/bin:$(PATH)
+
+.PHONY: all setup bootstrap sync link link-pre link-dotfiles link-emacs link-yabai \
         link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
-        link-launchd link-hammerspoon macos-defaults install homebrew services setup-slack org-sync-setup
+        link-launchd link-hammerspoon macos-defaults install homebrew services setup-slack org-sync-setup \
+        emacs-install
 
 # --------------------------------------------------------------------------
 # Top-level targets
 # --------------------------------------------------------------------------
 
-# 新規 Mac: Homebrew インストールからサービス起動まで一括セットアップ
-bootstrap: homebrew link macos-defaults install services
+# 新規 Mac: Homebrew インストールからサービス起動まで一括セットアップ。
+# `install` で emacs / mise を入れる前に link-pre で .Brewfile と mise 設定を
+# symlink しておく必要がある。emacs インストール後に link で残りを張り、
+# emacs-install で leaf 管理パッケージを batch で事前ダウンロードする。
+bootstrap: homebrew link-pre install link emacs-install macos-defaults services
 
 # 既存 Mac: 設定・パッケージ・サービスを最新状態に同期
-sync: link macos-defaults install services
+sync: link install emacs-install macos-defaults services
 
 # Symlinks only (safe to re-run any time)
 setup: link
 
 # Full setup for a freshly-cloned machine (legacy)
-all: link macos-defaults install
+all: bootstrap
 
 # --------------------------------------------------------------------------
 # Symlink targets
@@ -27,6 +35,9 @@ all: link macos-defaults install
 link: link-dotfiles link-emacs link-yabai \
       link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
       link-launchd link-hammerspoon
+
+# install 前に必要な最小限のリンク (Brewfile と mise 設定)
+link-pre: link-dotfiles link-mise
 
 # dotfiles/.??* → $HOME  (skip directories, .Brewfile is Mac-only)
 link-dotfiles:
@@ -50,6 +61,20 @@ link-emacs:
 		cp "$$tmpdir/early-init.el" "$$HOME/.emacs.d/early-init.el" && \
 		rm -rf "$$tmpdir"
 	@echo "[emacs] Done"
+
+# Emacs: leaf 管理パッケージを batch で事前インストールする。
+# `link-emacs` で init.el を配置済みである必要がある。
+# init.org の早期 (early-init.el) で `debug-on-error t` が立っているため、
+# -Q で起動し early-init を手動 load → debug を切ってから init.el を load する。
+# 初回は MELPA から数十 MB をダウンロードするため数分かかる。
+emacs-install: link-emacs
+	@echo "[emacs] Pre-installing leaf-managed packages (this can take several minutes)..."
+	@emacs --batch -Q \
+		--eval "(load \"$$HOME/.emacs.d/early-init.el\" nil t)" \
+		--eval '(setq debug-on-error nil)' \
+		--eval "(load \"$$HOME/.emacs.d/init.el\" nil t)" \
+		--eval '(message "[emacs] Package install complete")' 2>&1 | tail -5
+	@echo "[emacs] Pre-install done"
 
 # yabai / skhd: dotfiles/.yabairc → ~/.yabairc, dotfiles/.skhdrc → ~/.skhdrc
 link-yabai:
