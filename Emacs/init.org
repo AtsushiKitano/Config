@@ -641,17 +641,30 @@ Anthropic API の認証は =:login t= によりシステムのキーチェーン
 | =C-c A= | agent-shell バッファを開く |
 | =C-c s= | スクリーンショットを送信 |
 | =C-c i= | クリップボードの画像を送信 |
+| =C-c TAB= | 補完を手動起動 (=completion-at-point=) |
+| =TAB= / =S-TAB= | 次/前の項目へ移動 (=agent-shell-next/previous-item=) |
+
+*補完について*: =agent-shell-file-completion-enabled= が =t= のとき
+=agent-shell-completion-mode= が自動で有効になり、=@= でプロジェクトファイル、
+=/= でエージェントのスラッシュコマンド (ACP から取得できた場合) を補完する。
+=@= / =/= を行頭か空白の直後に打つと自動でポップアップ (corfu) が出る。
+途中から呼びたいときや出ないときは =C-c TAB= で手動起動する。
 
 agent-shell-mode では Evil の insert モードを使わず emacs-state で動作させる。
 
 #+begin_src emacs-lisp :tangle yes
 (leaf agent-shell
   :ensure t
+  :custom
+  ;; @ (ファイル) / / (スラッシュコマンド) の補完を自動で有効化
+  (agent-shell-file-completion-enabled . t)
   :bind
   (("C-c A" . agent-shell)
    (:agent-shell-mode-map
     ("C-c s" . agent-shell-send-screenshot)
-    ("C-c i" . agent-shell-send-clipboard-image)))
+    ("C-c i" . agent-shell-send-clipboard-image)
+    ;; TAB は項目移動に割当済みのため、補完の手動起動は C-c TAB に割り当てる
+    ("C-c TAB" . completion-at-point)))
   :hook
   (agent-shell-mode-hook . (lambda ()
                              (when (fboundp 'evil-emacs-state)
