@@ -99,3 +99,11 @@ alias dcd='docker-compose down'
 alias dcb='docker-compose build'
 alias dcc='docker-compose create'
 alias di='docker images'
+
+# === eza (ls 代替) ===
+if command -v eza >/dev/null; then
+	alias ls='eza --group-directories-first'
+	alias ll='eza -l --git --group-directories-first'
+	alias la='eza -la --git --group-directories-first'
+	alias lt='eza --tree --level=2 --group-directories-first'
+fi

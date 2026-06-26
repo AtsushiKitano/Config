@@ -8,3 +8,27 @@ function peco-history-selection(){
 function cdls (){
     \cd "$@" && ls
 }
+
+# === gcloud: 環境(構成)・プロジェクト切替 (fzf) ===
+# 構成(configuration)を fzf で選んで切り替える
+function gcswitch() {
+    local cfg
+    cfg=$(gcloud config configurations list --format="value(name)" | fzf --height 40% --reverse --prompt="gcloud config> ") || return
+    [ -n "$cfg" ] && gcloud config configurations activate "$cfg"
+}
+
+# 現在の構成のプロジェクトを fzf で選んで切り替える
+function gcproj() {
+    local proj
+    proj=$(gcloud projects list --format="value(projectId)" | fzf --height 40% --reverse --prompt="gcloud project> ") || return
+    [ -n "$proj" ] && gcloud config set project "$proj"
+}
+
+# サービスアカウントの impersonation を設定 (引数なしで解除)
+function gcimp() {
+    if [ -z "$1" ]; then
+        gcloud config unset auth/impersonate_service_account && echo "impersonation: cleared"
+    else
+        gcloud config set auth/impersonate_service_account "$1"
+    fi
+}

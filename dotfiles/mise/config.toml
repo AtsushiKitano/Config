@@ -2,6 +2,7 @@
 node = "25.2.1"
 python = "3.12.4"
 terraform = "1.15.0"
+terragrunt = "1.0.1"
 ruff = "latest"
 "npm:typescript" = "latest"
 "npm:@devcontainers/cli" = "latest"
