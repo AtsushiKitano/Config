@@ -107,6 +107,7 @@ cask "claude"
 cask "kindle-previewer"
 cask "basictex"
 cask "font-symbols-only-nerd-font"
+cask "orbstack"
 
 tap "d12frosted/emacs-plus"
 tap "railwaycat/emacsmacport"
