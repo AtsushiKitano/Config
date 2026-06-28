@@ -127,13 +127,20 @@ link-launchd:
 	done
 
 # Emacs daemon: launchd エージェントを登録して即時起動。
-# 既に daemon が動いていれば bootout 後に再起動する (新しい init.el を反映するため)。
+# 既に loaded なら kickstart -k で kill→reload、未 load なら bootstrap で初回登録。
+# KeepAlive: true のため `bootout` 直後に再起動が走ってしまい、次の `bootstrap` が
+# `Input/output error` で失敗する race を避けるための条件分岐。
 emacs-daemon-setup: link-launchd
 	@mkdir -p "$$HOME/.local/log"
-	@launchctl bootout "gui/$$(id -u)/com.user.emacs-daemon" 2>/dev/null || true
-	@launchctl bootstrap "gui/$$(id -u)" \
-		"$$HOME/Library/LaunchAgents/com.user.emacs-daemon.plist"
-	@echo "[emacs-daemon] Registered and started. Use 'emacsclient -nc' to open a frame."
+	@if launchctl print "gui/$$(id -u)/com.user.emacs-daemon" >/dev/null 2>&1; then \
+		echo "[emacs-daemon] already loaded → kickstart -k"; \
+		launchctl kickstart -k "gui/$$(id -u)/com.user.emacs-daemon"; \
+	else \
+		echo "[emacs-daemon] bootstrapping"; \
+		launchctl bootstrap "gui/$$(id -u)" \
+			"$$HOME/Library/LaunchAgents/com.user.emacs-daemon.plist"; \
+	fi
+	@echo "[emacs-daemon] Use 'emacsclient -nc' to open a frame."
 
 # org-sync: launchd エージェントを登録して即時起動
 org-sync-setup:
