@@ -853,13 +853,15 @@ GUI フレームでは Emacs が標準でクリップボードを扱うため設
            (executable-find "pbcopy"))
   (defun my/pbcopy (text &optional _push)
     "TEXT を macOS のシステムクリップボードへ送る."
-    (let ((process-connection-type nil))
+    (let ((process-connection-type nil)
+          (default-directory "~"))
       (let ((proc (start-process "pbcopy" nil "pbcopy")))
         (process-send-string proc text)
         (process-send-eof proc))))
   (defun my/pbpaste ()
     "macOS のシステムクリップボードの内容を返す."
-    (shell-command-to-string "pbpaste"))
+    (let ((default-directory "~"))
+      (shell-command-to-string "pbpaste")))
   (setq interprogram-cut-function #'my/pbcopy)
   (setq interprogram-paste-function #'my/pbpaste))
 #+end_src
@@ -1260,6 +1262,26 @@ smartparens の代替として軽量に動作する。
   :global-minor-mode puni-global-mode)
 #+end_src
 
+*** 括弧の自動補完 (smartparens)
+
+[[https://github.com/Fuco1/smartparens][smartparens]] で括弧・クォートを入力したとき自動で閉じる。
+=smartparens-config= により各言語向けのデフォルト設定が有効になる。
+
+org-mode では ='= と =`= の自動補完を無効化する（org 記法と衝突するため）。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf smartparens
+  :ensure t
+  :hook
+  ((prog-mode-hook . smartparens-mode)
+   (org-mode-hook  . smartparens-mode))
+  :config
+  (require 'smartparens-config)
+  (sp-with-modes 'org-mode
+    (sp-local-pair "'" nil :actions nil)
+    (sp-local-pair "`" nil :actions nil)))
+#+end_src
+
 *** スマート改行（括弧展開）
 
 括弧の内側で Enter を押したとき、VSCode や JetBrains と同様に括弧を展開してインデントする。
@@ -1597,7 +1619,7 @@ CUSTOM_ID は repo の / を - に置換した <owner>-<repo>-<番号> 形式（
         (insert (format "#+title: Daily %s\n#+filetags: :personal:daily:\n\n" year))))
     path))
 
-;; 日付見出し (datetree の日付ノード) に付与する日メタデータのプロパティ。
+;; 日付見出し (datetree の日付ノード) に付与する日メタデータのプロパティと初期値。
 ;; 天気系は後から API/手入力で、主観値 (MOOD/CONDITION/SLEEP/HIGHLIGHT) は手入力で埋める運用。
 (defvar my/org-daily-metadata-properties
   '("WEATHER" "TEMPERATURE" "HUMIDITY" "PRESSURE"
@@ -1614,12 +1636,15 @@ CUSTOM_ID は repo の / を - に置換した <owner>-<repo>-<番号> 形式（
          (date (list (nth 4 time) (nth 3 time) (nth 5 time))))
     (org-datetree-find-date-create date))
   (org-back-to-heading t)
-  (unless (org-entry-get (point) "CREATED")
-    (org-entry-put (point) "CREATED"
-                   (format-time-string (org-time-stamp-format t t))))
-  (dolist (prop my/org-daily-metadata-properties)
-    (unless (org-entry-get (point) prop)
-      (org-entry-put (point) prop "")))
+  ;; WEATHER を proxy にしてプロパティブロック未追加なら見出し直後に挿入する。
+  ;; org-entry-put に空文字列を渡すとプロパティが削除されるため、テキスト挿入で回避。
+  (unless (org-entry-get (point) "WEATHER")
+    (save-excursion
+      (end-of-line)
+      (insert "\n:PROPERTIES:\n")
+      (dolist (prop my/org-daily-metadata-properties)
+        (insert (format ":%s:\n" prop)))
+      (insert ":END:")))
   (if (fboundp 'org-fold-show-entry) (org-fold-show-entry) (org-show-entry)))
 
 ;; C-c o x でファイルを選択/作成して直接開く
@@ -2327,6 +2352,9 @@ eglot で LSP を利用する。terraform-ls も設定する。
   (with-eval-after-load 'eglot
     (add-to-list 'eglot-server-programs
                  '(terraform-mode . ("terraform-ls" "serve")))
+    ;; Python: basedpyright を優先 LSP サーバとして登録
+    (add-to-list 'eglot-server-programs
+                 '((python-mode python-ts-mode) . ("basedpyright-langserver" "--stdio")))
     ;; TypeScript: プロジェクト内エクスポートの補完とauto-importを有効化
     (defun my/eglot-ts-workspace-config ()
       (setq-local eglot-workspace-configuration
@@ -2349,6 +2377,35 @@ eglot で LSP を利用する。terraform-ls も設定する。
                               (consp (nth 2 change)))
                             eglot--recent-changes))
           (setq eglot--recent-changes :emacs-messup))))))
+#+end_src
+
+*** Python 仮想環境 (pet)
+
+[[https://github.com/wyuenho/emacs-pet][pet]] (Python Environment Tool) により、uv / poetry / pipenv / pyenv 等で管理された
+仮想環境を自動検出し、eglot と =python-shell= に正しいインタープリタパスを設定する。
+
+uv プロジェクトでは =.venv/bin/python= が自動的に選ばれ、
+そのインタープリタを使う LSP サーバ（basedpyright / pylsp）がプロジェクトの
+インストール済みライブラリを補完候補として提供する。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf pet
+  :ensure t
+  :config
+  (defun my/pet-eglot-setup ()
+    "pet で検出した仮想環境を eglot と python-shell に設定する."
+    (when-let ((python (pet-executable-find "python")))
+      (setq-local python-shell-interpreter python)
+      (let ((venv (pet-virtualenv-root)))
+        (setq-local eglot-workspace-configuration
+                    `(:python (:pythonPath ,python)
+                      :basedpyright (:pythonPath ,python)
+                      :pylsp (:plugins (:jedi (:environment ,venv))))))))
+  ;; pet-mode を -10 で先行起動し、-5 で eglot 設定を注入、0 で eglot-ensure が接続する
+  (add-hook 'python-mode-hook    #'pet-mode           -10)
+  (add-hook 'python-ts-mode-hook #'pet-mode           -10)
+  (add-hook 'python-mode-hook    #'my/pet-eglot-setup  -5)
+  (add-hook 'python-ts-mode-hook #'my/pet-eglot-setup  -5))
 #+end_src
 
 *** タグジャンプ (xref)
