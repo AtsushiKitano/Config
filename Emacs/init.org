@@ -1252,6 +1252,26 @@ smartparens の代替として軽量に動作する。
   :global-minor-mode puni-global-mode)
 #+end_src
 
+*** 括弧の自動補完 (smartparens)
+
+[[https://github.com/Fuco1/smartparens][smartparens]] で括弧・クォートを入力したとき自動で閉じる。
+=smartparens-config= により各言語向けのデフォルト設定が有効になる。
+
+org-mode では ='= と =`= の自動補完を無効化する（org 記法と衝突するため）。
+
+#+begin_src emacs-lisp :tangle yes
+(leaf smartparens
+  :ensure t
+  :hook
+  ((prog-mode-hook . smartparens-mode)
+   (org-mode-hook  . smartparens-mode))
+  :config
+  (require 'smartparens-config)
+  (sp-with-modes 'org-mode
+    (sp-local-pair "'" nil :actions nil)
+    (sp-local-pair "`" nil :actions nil)))
+#+end_src
+
 *** スマート改行（括弧展開）
 
 括弧の内側で Enter を押したとき、VSCode や JetBrains と同様に括弧を展開してインデントする。
