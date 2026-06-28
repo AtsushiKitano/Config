@@ -179,5 +179,5 @@ setup-slack:
 # yabai / skhd サービスを起動（既に起動中なら再起動）
 services:
 	@echo "[services] Starting yabai and skhd"
-	@brew services restart yabai
-	@brew services restart skhd
+	@yabai --restart-service
+	@skhd --restart-service
