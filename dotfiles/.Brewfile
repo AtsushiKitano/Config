@@ -113,4 +113,7 @@ cask "kindle-previewer"
 cask "basictex"
 cask "font-symbols-only-nerd-font"
 cask "emacs-plus-app@master"
-cask "orbstack"
+
+# Container runtime: Docker.app が既に入っていれば何もせず、なければ OrbStack を入れる。
+# Docker Desktop と OrbStack はどちらも Docker socket を提供するため共存させない。
+cask "orbstack" unless File.exist?("/Applications/Docker.app")
