@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.emacs-daemon</string>
+
+    <!-- ラッパー (scripts/emacs-daemon.sh) 経由で起動する。
+         前回 daemon の dangling server socket を除去してから `emacs --fg-daemon`
+         を exec するので、launchd の KeepAlive と組み合わせても起動ループしない。 -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>@HOME@/.conf/scripts/emacs-daemon.sh</string>
+    </array>
+
+    <!-- ログイン時に起動し、落ちたら自動で再起動 -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- GUI セッション (Aqua) でのみ起動する。SSH などで login しても
+         Emacs daemon は立たないようにする。 -->
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>@HOME@</string>
+        <key>PATH</key>
+        <string>@HOMEBREW_PREFIX@/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>@HOME@/.local/log/emacs-daemon.log</string>
+    <key>StandardErrorPath</key>
+    <string>@HOME@/.local/log/emacs-daemon.log</string>
+</dict>
+</plist>

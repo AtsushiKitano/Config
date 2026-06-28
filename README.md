@@ -12,8 +12,7 @@ macOS の環境設定を管理する dotfiles リポジトリ。
 │   ├── .tmux.conf
 │   ├── .yabairc / .skhdrc
 │   ├── .Brewfile
-│   ├── mise/          # mise (ランタイム管理)
-│   └── wezterm*.lua
+│   └── mise/          # mise (ランタイム管理)
 ├── Emacs/             # Emacs 設定 (init.org が正)
 ├── macos/
 │   ├── TilingWindow-Yabai/   # yabai / skhd
@@ -87,7 +86,6 @@ make link-emacs       # Emacs/init.el, early-init.el → ~/.emacs.d/
 make link-yabai       # yabairc → ~/.config/yabai/, skhdrc → ~/.config/skhd/
 make link-karabiner   # karabiner.json → ~/.config/karabiner/
 make link-kitty       # kitty.conf → ~/.config/kitty/
-make link-wezterm     # wezterm*.lua → ~/.config/wezterm/
 make link-mise        # mise/config.toml → ~/.config/mise/
 make link-aquaskk     # AquaSKK ルール → ~/Library/Application Support/AquaSKK/
 ```

@@ -26,7 +26,8 @@ alias gtree='git log --graph --branches --pretty="format:%C(yellow)%h%Creset %s 
 
 alias e='emacsclient -nw'
 alias ec='emacsclient -nw --create-frame'
-alias er='emacsclient -e "(kill-emacs)" ; emacs --bg-daemon'
+# daemon は launchd (com.user.emacs-daemon) 管理。kickstart -k で kill→restart。
+alias er='launchctl kickstart -k "gui/$(id -u)/com.user.emacs-daemon"'
 alias et='emacs --batch --eval "(require (quote ob-tangle))" --eval "(org-babel-tangle-file \"$HOME/.conf/Emacs/init.org\")"'
 
 alias virginia='export AWS_DEFAULT_REGION=us-east-1'

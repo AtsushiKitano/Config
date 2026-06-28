@@ -83,3 +83,14 @@ fi
 # Ctrl-Space の入力ソース切り替えショートカットを無効化 (Emacs の C-SPC Mark set を有効にするため)
 defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 "<dict><key>enabled</key><false/><key>value</key><dict><key>parameters</key><array><integer>32</integer><integer>49</integer><integer>262144</integer></array><key>type</key><string>standard</string></dict></dict>"
 /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+
+# TouchID for sudo (Apple 推奨の sudo_local を使うと macOS update で消えない)
+SUDO_LOCAL=/etc/pam.d/sudo_local
+if [ ! -f "$SUDO_LOCAL" ] || ! grep -q "pam_tid.so" "$SUDO_LOCAL"; then
+	echo "[macos] Enabling TouchID for sudo via $SUDO_LOCAL"
+	sudo tee "$SUDO_LOCAL" >/dev/null <<'EOF'
+# Managed by ~/.conf/macos/init.sh - TouchID for sudo
+auth       sufficient     pam_tid.so
+EOF
+	sudo chmod 444 "$SUDO_LOCAL"
+fi

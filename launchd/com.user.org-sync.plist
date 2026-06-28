@@ -8,7 +8,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/kitanoatsushi/.conf/scripts/org-sync.sh</string>
+        <string>@HOME@/.conf/scripts/org-sync.sh</string>
     </array>
 
     <!-- 30分ごとに実行 -->
@@ -22,14 +22,14 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>HOME</key>
-        <string>/Users/kitanoatsushi</string>
+        <string>@HOME@</string>
         <key>PATH</key>
-        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <string>@HOMEBREW_PREFIX@/bin:/usr/local/bin:/usr/bin:/bin</string>
     </dict>
 
     <key>StandardOutPath</key>
-    <string>/Users/kitanoatsushi/.local/log/org-sync.log</string>
+    <string>@HOME@/.local/log/org-sync.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/kitanoatsushi/.local/log/org-sync.log</string>
+    <string>@HOME@/.local/log/org-sync.log</string>
 </dict>
 </plist>

@@ -1,13 +1,17 @@
 REPO_DIR := $(shell pwd)
 
+# Homebrew prefix を Apple Silicon / Intel 両対応にする。
+# `brew --prefix` が動く場合はそれを採用、なければ AS 既定の /opt/homebrew にフォールバック。
+HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo /opt/homebrew)
+
 # Make は /bin/sh で各レシピを実行するため、.zshenv 等を読まない。
 # Homebrew (emacs / mise / brew 等) のパスを通しておく。
-export PATH := /opt/homebrew/bin:/usr/local/bin:$(PATH)
+export PATH := $(HOMEBREW_PREFIX)/bin:/usr/local/bin:$(PATH)
 
 .PHONY: all setup bootstrap sync link link-pre link-dotfiles link-emacs link-yabai \
-        link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
+        link-karabiner link-kitty link-mise link-aquaskk link-claude \
         link-launchd link-hammerspoon macos-defaults install homebrew services setup-slack org-sync-setup \
-        emacs-install
+        emacs-install emacs-daemon-setup doctor
 
 # --------------------------------------------------------------------------
 # Top-level targets
@@ -17,10 +21,10 @@ export PATH := /opt/homebrew/bin:/usr/local/bin:$(PATH)
 # `install` で emacs / mise を入れる前に link-pre で .Brewfile と mise 設定を
 # symlink しておく必要がある。emacs インストール後に link で残りを張り、
 # emacs-install で leaf 管理パッケージを batch で事前ダウンロードする。
-bootstrap: homebrew link-pre install link emacs-install macos-defaults services
+bootstrap: homebrew link-pre install link emacs-install emacs-daemon-setup macos-defaults services
 
 # 既存 Mac: 設定・パッケージ・サービスを最新状態に同期
-sync: link install emacs-install macos-defaults services
+sync: link install emacs-install emacs-daemon-setup macos-defaults services
 
 # Symlinks only (safe to re-run any time)
 setup: link
@@ -33,7 +37,7 @@ all: bootstrap
 # --------------------------------------------------------------------------
 
 link: link-dotfiles link-emacs link-yabai \
-      link-karabiner link-kitty link-wezterm link-mise link-aquaskk link-claude \
+      link-karabiner link-kitty link-mise link-aquaskk link-claude \
       link-launchd link-hammerspoon
 
 # install 前に必要な最小限のリンク (Brewfile と mise 設定)
@@ -62,18 +66,20 @@ link-emacs:
 		rm -rf "$$tmpdir"
 	@echo "[emacs] Done"
 
-# Emacs: leaf 管理パッケージを batch で事前インストールする。
+# Emacs: leaf 管理パッケージを batch で事前インストール + init.el を native-compile。
 # `link-emacs` で init.el を配置済みである必要がある。
 # init.org の早期 (early-init.el) で `debug-on-error t` が立っているため、
 # -Q で起動し early-init を手動 load → debug を切ってから init.el を load する。
 # 初回は MELPA から数十 MB をダウンロードするため数分かかる。
+# 最後に init.el / early-init.el を native-compile して GUI 起動の初回ラグを抑える。
 emacs-install: link-emacs
-	@echo "[emacs] Pre-installing leaf-managed packages (this can take several minutes)..."
+	@echo "[emacs] Pre-installing leaf-managed packages + native-compiling init (this can take several minutes)..."
 	@emacs --batch -Q \
 		--eval "(load \"$$HOME/.emacs.d/early-init.el\" nil t)" \
 		--eval '(setq debug-on-error nil)' \
 		--eval "(load \"$$HOME/.emacs.d/init.el\" nil t)" \
-		--eval '(message "[emacs] Package install complete")' 2>&1 | tail -5
+		--eval "(progn (require 'comp) (native-compile \"$$HOME/.emacs.d/init.el\") (native-compile \"$$HOME/.emacs.d/early-init.el\"))" \
+		--eval '(message "[emacs] Package install + native-compile complete")' 2>&1 | tail -5
 	@echo "[emacs] Pre-install done"
 
 # yabai / skhd: dotfiles/.yabairc → ~/.yabairc, dotfiles/.skhdrc → ~/.skhdrc
@@ -94,13 +100,6 @@ link-kitty:
 	@mkdir -p "$$HOME/.config/kitty"
 	@ln -fnsv "$(REPO_DIR)/macos/kitty.conf"  "$$HOME/.config/kitty/kitty.conf"
 
-# WezTerm: wezterm.lua + keybinds → ~/.config/wezterm/
-link-wezterm:
-	@echo "[wezterm] Linking to $$HOME/.config/wezterm"
-	@mkdir -p "$$HOME/.config/wezterm"
-	@ln -fnsv "$(REPO_DIR)/dotfiles/wezterm.lua"           "$$HOME/.config/wezterm/wezterm.lua"
-	@ln -fnsv "$(REPO_DIR)/dotfiles/wezterm_keybinds.lua"  "$$HOME/.config/wezterm/wezterm_keybinds.lua"
-
 # mise: config.toml → ~/.config/mise/
 link-mise:
 	@echo "[mise] Linking to $$HOME/.config/mise"
@@ -113,13 +112,28 @@ link-claude:
 	@mkdir -p "$$HOME/.claude"
 	@ln -fnsv "$(REPO_DIR)/.claude/settings.json"  "$$HOME/.claude/settings.json"
 
-# LaunchAgents: launchd/*.plist → ~/Library/LaunchAgents/
+# LaunchAgents: launchd/*.plist のテンプレートを @HOME@ / @HOMEBREW_PREFIX@ で
+# 置換して ~/Library/LaunchAgents/ に書き出す (端末ごとの絶対パス差異を吸収)。
 link-launchd:
-	@echo "[launchd] Linking to $$HOME/Library/LaunchAgents"
+	@echo "[launchd] Installing plists to $$HOME/Library/LaunchAgents"
 	@mkdir -p "$$HOME/Library/LaunchAgents"
 	@for f in $(REPO_DIR)/launchd/*.plist; do \
-		ln -fnsv "$$f" "$$HOME/Library/LaunchAgents/"; \
+		name="$$(basename $$f)"; \
+		out="$$HOME/Library/LaunchAgents/$$name"; \
+		[ -L "$$out" ] && rm -f "$$out"; \
+		sed -e "s|@HOME@|$$HOME|g" \
+		    -e "s|@HOMEBREW_PREFIX@|$(HOMEBREW_PREFIX)|g" "$$f" > "$$out"; \
+		echo "  installed $$out"; \
 	done
+
+# Emacs daemon: launchd エージェントを登録して即時起動。
+# 既に daemon が動いていれば bootout 後に再起動する (新しい init.el を反映するため)。
+emacs-daemon-setup: link-launchd
+	@mkdir -p "$$HOME/.local/log"
+	@launchctl bootout "gui/$$(id -u)/com.user.emacs-daemon" 2>/dev/null || true
+	@launchctl bootstrap "gui/$$(id -u)" \
+		"$$HOME/Library/LaunchAgents/com.user.emacs-daemon.plist"
+	@echo "[emacs-daemon] Registered and started. Use 'emacsclient -nc' to open a frame."
 
 # org-sync: launchd エージェントを登録して即時起動
 org-sync-setup:
@@ -175,6 +189,30 @@ homebrew:
 # Slack: ~/.authinfo に認証情報を書き込む
 setup-slack:
 	@bash "$(REPO_DIR)/scripts/setup-slack.sh"
+
+# 環境ヘルスチェック: dotfiles ドリフト、Brewfile 同期状態、launchd 状態、
+# init.org / init.el の鮮度を一覧表示する。終了コードは常に 0 (情報出力)。
+doctor:
+	@echo "==> Broken symlinks under \$$HOME"
+	@find "$$HOME" -maxdepth 3 -type l 2>/dev/null | \
+		while read -r l; do [ ! -e "$$l" ] && echo "  BROKEN: $$l"; done; \
+		echo "  (none if no output above)"
+	@echo
+	@echo "==> Brewfile drift (vs $(REPO_DIR)/dotfiles/.Brewfile)"
+	@brew bundle check --file="$(REPO_DIR)/dotfiles/.Brewfile" --verbose 2>&1 | \
+		grep -E "(needs to|Warning|complete)" || echo "  in sync"
+	@echo
+	@echo "==> launchd agents (com.user.*)"
+	@launchctl list 2>/dev/null | awk 'NR==1 || /com\.user\./'
+	@echo
+	@echo "==> Emacs init freshness"
+	@if [ -f "$$HOME/.emacs.d/init.el" ] && [ "$(REPO_DIR)/Emacs/init.org" -nt "$$HOME/.emacs.d/init.el" ]; then \
+		echo "  STALE: init.org is newer than ~/.emacs.d/init.el → run 'make link-emacs'"; \
+	else \
+		echo "  init.el is up-to-date with init.org"; \
+	fi
+	@echo
+	@echo "==> Homebrew prefix detected: $(HOMEBREW_PREFIX)"
 
 # yabai / skhd サービスを起動（既に起動中なら再起動）
 services:
