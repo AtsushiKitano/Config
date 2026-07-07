@@ -65,7 +65,7 @@ make link-emacs
   - `M-d`: `kill-word`
   - `C-g`: ノーマルモードに戻る
 - 以下のモードでは emacs state で起動
-  - `vterm-mode`, `dired-mode`, `magit-mode`, `imenu-list-major-mode`, `eat-mode`
+  - `vterm-mode`, `dired-mode`, `magit-mode`, `imenu-list-major-mode`, `ghostel-mode`
 
 ### グローバルキーバインド
 
@@ -82,7 +82,7 @@ make link-emacs
 | `¥`         | `\` に置き換え                  |
 | `C-x g`     | `magit-status`                 |
 | `M-t`       | `vterm`                        |
-| `C-c t`     | `eat`                          |
+| `C-c t`     | `ghostel`                      |
 | `M-n`       | `flycheck-next-error`          |
 | `M-p`       | `flycheck-previous-error`      |
 | `C-c C-'`   | `claude-code-ide-menu`         |
@@ -171,13 +171,17 @@ make link-emacs
 
 ## ターミナル
 
-### eat（メイン）
+### ghostel（メイン）
 
+- libghostty-vt ベースのネイティブモジュール式ターミナル（初回起動時に自動ダウンロード）
 - `C-c t` で起動、バッファに展開
-- `C-h` で backspace 送信
+- 既定で `ghostel-semi-char-mode` で起動（eat の起動フックは不要）
+- `C-h` で backspace 送信（`ghostel-send-string "\177"`）
+- `M-h`/`M-l` でウィンドウ移動、`M-z` でズームトグル、`C-x o` で ace-window
 - evil emacs state で起動
-- `eat-kill-buffer-on-exit`: t
-- マウス有効
+- `ghostel-kill-buffer-on-exit`: t
+- マウス有効（既定）
+- SKK: `ghostel-ime-mode` で入力メソッドのコミットを PTY へ転送（eat には無い機能）
 
 ### vterm（補助）
 
