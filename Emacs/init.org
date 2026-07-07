@@ -245,7 +245,7 @@ Homebrew の =gcc= が新しくなると libgccjit のリンカが =libemutls_w.
   :ensure t
   :global-minor-mode t
   :custom
-  (gcmh-verbose . t))
+  (gcmh-verbose . nil))
 #+end_src
 
 ** mise パスの設定
@@ -2377,7 +2377,13 @@ eglot で LSP を利用する。terraform-ls も設定する。
 
 #+begin_src emacs-lisp :tangle yes
 (leaf eglot
+  :custom
+  ;; LSP サーバへの接続を非同期にする（Emacs を止めない）
+  (eglot-sync-connect . nil)
   :config
+  ;; イベントログをメモリに溜めない（LSP通信が多いと数MB規模になる）
+  ;; Emacs 30.1 以降は eglot-events-buffer-config（プリスト値のため :custom では設定不可）
+  (setopt eglot-events-buffer-config '(:size 0 :format full))
   (dolist (hook '(typescript-mode-hook
                   tsx-ts-mode-hook
                   go-mode-hook
@@ -2432,7 +2438,7 @@ uv プロジェクトでは =.venv/bin/python= が自動的に選ばれ、
   :config
   (defun my/pet-eglot-setup ()
     "pet で検出した仮想環境を eglot と python-shell に設定する."
-    (when-let ((python (pet-executable-find "python")))
+    (when-let* ((python (pet-executable-find "python")))
       (setq-local python-shell-interpreter python)
       (let ((venv (pet-virtualenv-root)))
         (setq-local eglot-workspace-configuration
@@ -2542,8 +2548,8 @@ GUI フレームと TUI フレームが混在する場合は =after-make-frame-f
 #+begin_src emacs-lisp :tangle yes
 (leaf corfu
   :custom ((corfu-auto . t)
-           (corfu-auto-delay . 0)
-           (corfu-auto-prefix . 1)
+           (corfu-auto-delay . 0.3)
+           (corfu-auto-prefix . 2)
            (corfu-cycle . t)
            (corfu-on-exact-match . nil)
            (tab-always-indent . 'complete))
@@ -2604,15 +2610,14 @@ GUI フレームと TUI フレームが混在する場合は =after-make-frame-f
 
   (defun my/set-super-capf (&optional arg)
     (setq-local completion-at-point-functions
-                (list (cape-capf-noninterruptible
-                       (cape-capf-buster
-                        (cape-capf-properties
-                         (cape-capf-super
-                          (if arg arg (car completion-at-point-functions))
-                          #'cape-dabbrev
-                          #'cape-file)
-                         :sort t
-                         :exclusive 'no))))))
+                (list (cape-capf-buster
+                       (cape-capf-properties
+                        (cape-capf-super
+                         (if arg arg (car completion-at-point-functions))
+                         #'cape-dabbrev
+                         #'cape-file)
+                        :sort t
+                        :exclusive 'no)))))
 
   (add-to-list 'completion-at-point-functions #'cape-file t)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
