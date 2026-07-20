@@ -359,6 +359,34 @@ Emacs 32.0.50 開発版で ~connection-local-set-profile-variables~ が ~(settin
   (make-directory (expand-file-name "auto-save/" user-emacs-directory) t)
 #+end_src
 
+** バッファの自動クリーンアップ (midnight)
+
+長時間 daemon を起動しっぱなしにすると、定義ジャンプ (xref) やファイル参照で
+外部ファイル（site-packages 等）を大量に開いてバッファが溜まり、ファイル
+ハンドルや file-notify 監視・メモリを圧迫する。組み込みの =midnight= を使って
+一定時間表示されていないバッファを自動 kill する。
+
+- =clean-buffer-list= は「変更あり／表示中／プロセス付き」のバッファは kill しないため安全
+- 既定では毎日 0:00 に実行される。daemon で連続起動していても溜めないよう、
+  2 時間ごとにも実行する
+- =clean-buffer-list-delay-general= は日単位。1 日以上表示されていない一般
+  バッファを対象にする（作業中のバッファを誤って消さない粒度）
+
+#+begin_src emacs-lisp :tangle yes
+(leaf midnight
+  :require t
+  :custom
+  ;; 1 日以上表示されていない一般バッファを kill 対象にする
+  (clean-buffer-list-delay-general . 1)
+  ;; help/compilation 等の特別バッファは 2 時間 (7200 秒) で kill
+  (clean-buffer-list-delay-special . 7200)
+  :config
+  ;; 毎日 0:00 に clean-buffer-list を実行
+  (midnight-mode 1)
+  ;; 連続起動でも溜めないよう 2 時間ごとにも掃除する
+  (run-with-timer 7200 7200 #'clean-buffer-list))
+#+end_src
+
 ** 外観
 
 *** フォント
@@ -2384,6 +2412,18 @@ eglot で LSP を利用する。terraform-ls も設定する。
   ;; イベントログをメモリに溜めない（LSP通信が多いと数MB規模になる）
   ;; Emacs 30.1 以降は eglot-events-buffer-config（プリスト値のため :custom では設定不可）
   (setopt eglot-events-buffer-config '(:size 0 :format full))
+  ;; ---- ファイル監視 (didChangeWatchedFiles) の抑制 ----
+  ;; basedpyright は Python インストール全体
+  ;;   (~/.local/share/mise/installs/python/*/lib/python*) を "**" で再帰監視
+  ;; するよう登録してくる。eglot は macOS の kqueue でサブディレクトリごとに
+  ;; fd を 1 つ消費するため、site-packages 配下の数千ディレクトリで
+  ;; 1 プロセスの fd 上限 (launchd 既定 256) を使い切り
+  ;;   (file-error "Opening directory" "Too many open files" ...)
+  ;; になる。プロジェクトルート外は監視しないことで根本的に防ぐ。
+  ;; どちらも defvar のため :custom ではなく setq で設定する。
+  (setq eglot-watch-files-outside-project-root nil)
+  ;; 保険: 全 eglot サーバ合計の監視数を fd 上限より十分低く抑える。
+  (setq eglot-max-file-watches 2000)
   (dolist (hook '(typescript-mode-hook
                   tsx-ts-mode-hook
                   go-mode-hook

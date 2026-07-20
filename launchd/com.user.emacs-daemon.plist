@@ -20,6 +20,22 @@
     <key>KeepAlive</key>
     <true/>
 
+    <!-- launchd 経由で起動されるプロセスは 1 プロセスあたりの fd 上限が
+         既定 256 (launchctl limit maxfiles) と低い。eglot/LSP のファイル監視
+         (file-notify) や大量バッファで簡単に枯渇し
+           (file-error "Opening directory" "Too many open files" ...)
+         になるため、fd 上限を引き上げる。 -->
+    <key>SoftResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>65536</integer>
+    </dict>
+    <key>HardResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>65536</integer>
+    </dict>
+
     <!-- GUI セッション (Aqua) でのみ起動する。SSH などで login しても
          Emacs daemon は立たないようにする。 -->
     <key>LimitLoadToSessionType</key>
