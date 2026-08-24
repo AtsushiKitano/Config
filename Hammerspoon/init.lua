@@ -1,3 +1,16 @@
+-- 入力ソース自動切り替え
+-- Emacs フォーカス時は ABC (英字)、それ以外は AquaSKK に切り替える。
+-- yabai の window_focused シグナル + switch_input_method.sh の代替。
+local macism = "/opt/homebrew/bin/macism"
+local inputMethodWatcher = hs.window.filter.new()
+inputMethodWatcher:subscribe(hs.window.filter.windowFocused, function(_, appName)
+  if appName == "Emacs" then
+    hs.execute(macism .. " com.apple.keylayout.ABC 2>/dev/null")
+  else
+    hs.execute(macism .. " jp.sourceforge.inputmethod.aquaskk 2>/dev/null")
+  end
+end)
+
 -- Chrome ブックマーク検索
 -- Ctrl+Shift+B で hs.chooser を開き、全プロファイルのブックマークを fuzzy 検索する
 

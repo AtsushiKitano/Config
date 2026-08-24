@@ -1,0 +1,115 @@
+# ~/.config/rift/config.toml
+
+[settings]
+animate = true
+animation_duration = 0.2
+animation_fps = 120.0
+
+default_disable = false
+
+focus_follows_mouse = true
+mouse_follows_focus  = true
+mouse_hides_on_focus = false
+
+hot_reload = true
+
+run_on_start = []
+
+[settings.layout]
+mode = "bsp"
+window_insertion_point = "next_to_selection"
+
+[settings.layout.gaps.outer]
+top    = 12
+left   = 12
+bottom = 12
+right  = 12
+
+[settings.layout.gaps.inner]
+horizontal = 6
+vertical   = 6
+
+[settings.ui.menu_bar]
+enabled       = true
+mode          = "all"
+display_style = "layout"
+
+[virtual_workspaces]
+enabled                       = true
+default_workspace_count       = 4
+auto_assign_windows           = true
+preserve_focus_per_workspace  = true
+workspace_auto_back_and_forth = false
+prevent_wrapping              = false
+
+workspace_names = ["main", "code", "browser", "misc"]
+
+# App rules
+# Rift はデフォルトで全ウィンドウを管理する。
+# 浮動扱いになりやすいアプリを明示的に manage=true で固定する。
+app_rules = [
+  { app_name = "Emacs",                  manage = true },
+  { app_name = "LINE",                   manage = true },
+  { app_name = "App for Google Calendar", manage = true },
+]
+
+# Modifier combinations
+[modifier_combinations]
+wm_shift = "Meta + Shift"
+wm_ctrl  = "Meta + Ctrl"
+
+[keys]
+# ── スペース管理 ─────────────────────────────────────
+# Rift によるウィンドウ管理を有効 / 無効にするトグル
+"Alt + Z" = "toggle_space_activated"
+
+# ── アプリフォーカス ──────────────────────────────────
+"Meta + P" = { exec = ["/bin/bash", "-c", "osascript -e 'tell application \"Emacs\" to activate'"] }
+"Meta + I" = { exec = ["/bin/bash", "-c", "osascript -e 'tell application \"kitty\" to activate'"] }
+"Meta + Period" = { exec = ["/bin/bash", "-c", "osascript -e 'tell application \"Slack\" to activate' || open -a Slack"] }
+
+# ── 方向フォーカス ────────────────────────────────────
+"Meta + H" = { move_focus = "left" }
+"Meta + J" = { move_focus = "down" }
+"Meta + K" = { move_focus = "up" }
+"Meta + L" = { move_focus = "right" }
+
+# ── ウィンドウ移動 ────────────────────────────────────
+"wm_shift + H" = { move_node = "left" }
+"wm_shift + J" = { move_node = "down" }
+"wm_shift + K" = { move_node = "up" }
+"wm_shift + L" = { move_node = "right" }
+
+# ── リサイズ ─────────────────────────────────────────
+"wm_shift + Equal" = "resize_window_grow"
+"wm_shift + Minus" = "resize_window_shrink"
+
+# ── レイアウト操作 ────────────────────────────────────
+"Meta + E" = "toggle_orientation"
+
+# ── フルスクリーン ────────────────────────────────────
+"Meta + S" = "toggle_fullscreen"
+# ネイティブフルスクリーン: Ctrl+Cmd+F を送出
+"wm_shift + F" = { exec = ["/bin/bash", "-c", "osascript -e 'tell application \"System Events\" to keystroke \"f\" using {command down, control down}'"] }
+
+# ── フロート / タイル切り替え ──────────────────────────
+"Meta + T" = "toggle_window_floating"
+
+# ── ワークスペース切り替え ─────────────────────────────
+"Meta + 1" = { switch_to_workspace = 0 }
+"Meta + 2" = { switch_to_workspace = 1 }
+"Meta + 3" = { switch_to_workspace = 2 }
+"Meta + 4" = { switch_to_workspace = 3 }
+
+"wm_shift + 1" = { move_window_to_workspace = 0 }
+"wm_shift + 2" = { move_window_to_workspace = 1 }
+"wm_shift + 3" = { move_window_to_workspace = 2 }
+"wm_shift + 4" = { move_window_to_workspace = 3 }
+
+"Meta + Tab" = "switch_to_last_workspace"
+"Meta + N"   = "next_workspace"
+"Meta + B"   = "prev_workspace"
+
+# ── その他 ───────────────────────────────────────────
+"wm_ctrl + R" = "reload_config"
+"wm_shift + D" = "debug"

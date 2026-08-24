@@ -7,15 +7,15 @@ macOS の環境設定を管理する dotfiles リポジトリ。
 ```
 .conf/
 ├── dotfiles/          # $HOME に直接リンクする dotfiles
-│   ├── .zshrc / .zshenv / .zsh_* 
+│   ├── .zshrc / .zshenv / .zsh_*
 │   ├── .gitconfig / .gitignore_global
 │   ├── .tmux.conf
-│   ├── .yabairc / .skhdrc
 │   ├── .Brewfile
 │   └── mise/          # mise (ランタイム管理)
 ├── Emacs/             # Emacs 設定 (init.org が正)
+├── Hammerspoon/       # Hammerspoon (入力ソース自動切り替え等)
 ├── macos/
-│   ├── TilingWindow-Yabai/   # yabai / skhd
+│   ├── rift/                 # rift (タイリングウィンドウマネージャ)
 │   ├── Karabiner/            # Karabiner-Elements
 │   ├── AquaSKK/              # AquaSKK
 │   └── init.sh               # macOS システム設定
@@ -55,9 +55,9 @@ make bootstrap
 | `link` | Emacs (init.org → init.el を tangle) ほか全設定の symlink を張る |
 | `emacs-install` | `emacs --batch` で `init.el` を読み込み、leaf 管理パッケージ (約 150 個) を MELPA から事前ダウンロード |
 | `macos-defaults` | キーリピート速度・Dock・スクリーンショット保存先など macOS システム設定を適用 |
-| `services` | yabai / skhd を `brew services` で起動 |
+| `services` | rift を launchd サービスとして起動 |
 
-`scripts/brew.sh` の冒頭で外部 tap (`koekeishiya/formulae`, `d12frosted/emacs-plus` 等) は自動で `brew trust` され、`HOMEBREW_CASK_OPTS="--force"` により手動インストール済みアプリと衝突しても上書きされる。
+`scripts/brew.sh` の冒頭で外部 tap (`acsandmann/tap`, `d12frosted/emacs-plus` 等) は自動で `brew trust` され、`HOMEBREW_CASK_OPTS="--force"` により手動インストール済みアプリと衝突しても上書きされる。
 
 ---
 
@@ -71,7 +71,7 @@ make link           # 全シンボリックリンクを作成
 make emacs-install  # init.el を batch で読み込み leaf パッケージを事前ダウンロード
 make macos-defaults # macOS システム設定を適用
 make install        # Homebrew + mise インストール
-make services       # yabai / skhd を起動
+make services       # rift を起動
 ```
 
 ```sh
@@ -83,11 +83,12 @@ make setup-slack    # Slack 認証情報を ~/.authinfo に書き込む
 ```sh
 make link-dotfiles    # dotfiles/.??* → $HOME
 make link-emacs       # Emacs/init.el, early-init.el → ~/.emacs.d/
-make link-yabai       # yabairc → ~/.config/yabai/, skhdrc → ~/.config/skhd/
+make link-rift        # macos/rift/config.toml → ~/.config/rift/
 make link-karabiner   # karabiner.json → ~/.config/karabiner/
 make link-kitty       # kitty.conf → ~/.config/kitty/
 make link-mise        # mise/config.toml → ~/.config/mise/
 make link-aquaskk     # AquaSKK ルール → ~/Library/Application Support/AquaSKK/
+make link-hammerspoon # Hammerspoon/ → ~/.hammerspoon
 ```
 
 ---
@@ -139,15 +140,38 @@ make emacs-install   # ~/.emacs.d/elpa/ に leaf 宣言済みパッケージを�
 依存のため repo には含めない。`make emacs-install` で都度ダウンロード・
 ネイティブコンパイルを再現する。
 
-### yabai / skhd
+### rift (タイリングウィンドウマネージャ)
 
-`make link-yabai` で以下にリンクされる。
+`make link-rift` で `macos/rift/config.toml` が `~/.config/rift/config.toml` にリンクされる。
 
-- `~/.config/yabai/yabairc`
-- `~/.config/skhd/skhdrc`
+`make services` で launchd サービスとして起動する。
 
-yabai は SIP (System Integrity Protection) の部分無効化が必要な場合がある。
-詳細は [yabai wiki](https://github.com/koekeishiya/yabai/wiki) を参照。
+```sh
+make link-rift   # 設定ファイルをリンク
+make services    # rift service install && start
+```
+
+設定ファイルは `hot_reload = true` のため、`macos/rift/config.toml` を編集すると
+自動で反映される。手動でリロードする場合は `Meta + Ctrl + R`。
+
+#### キーバインド (主要)
+
+| キー | 動作 |
+|---|---|
+| `cmd + h/j/k/l` | フォーカス移動 |
+| `cmd + shift + h/j/k/l` | ウィンドウ移動 |
+| `cmd + s` | フルスクリーン |
+| `cmd + shift + f` | ネイティブフルスクリーン |
+| `cmd + t` | フロート切り替え |
+| `cmd + e` | 分割方向切り替え |
+| `cmd + 1〜4` | ワークスペース切り替え |
+| `cmd + shift + 1〜4` | ウィンドウをワークスペースへ移動 |
+
+#### 入力ソース自動切り替え
+
+Hammerspoon (`Hammerspoon/init.lua`) が `hs.window.filter` でウィンドウフォーカスを監視し、
+Emacs フォーカス時は ABC (英字)、それ以外は AquaSKK に自動切り替えする。
+`make link-hammerspoon` + Hammerspoon の Reload Config で有効になる。
 
 ### Slack (emacs-slack)
 

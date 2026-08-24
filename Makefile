@@ -8,7 +8,7 @@ HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo /opt/homebrew)
 # Homebrew (emacs / mise / brew 等) のパスを通しておく。
 export PATH := $(HOMEBREW_PREFIX)/bin:/usr/local/bin:$(PATH)
 
-.PHONY: all setup bootstrap sync link link-pre link-dotfiles link-emacs link-yabai \
+.PHONY: all setup bootstrap sync link link-pre link-dotfiles link-emacs link-rift link-yabai \
         link-karabiner link-kitty link-mise link-aquaskk link-claude \
         link-launchd link-hammerspoon macos-defaults install homebrew services setup-slack org-sync-setup \
         emacs-install emacs-daemon-setup doctor
@@ -36,7 +36,7 @@ all: bootstrap
 # Symlink targets
 # --------------------------------------------------------------------------
 
-link: link-dotfiles link-emacs link-yabai \
+link: link-dotfiles link-emacs link-rift \
       link-karabiner link-kitty link-mise link-aquaskk link-claude \
       link-launchd link-hammerspoon
 
@@ -82,7 +82,14 @@ emacs-install: link-emacs
 		--eval '(message "[emacs] Package install + native-compile complete")' 2>&1 | tail -5
 	@echo "[emacs] Pre-install done"
 
-# yabai / skhd: dotfiles/.yabairc → ~/.yabairc, dotfiles/.skhdrc → ~/.skhdrc
+# rift: config.toml → ~/.config/rift/
+link-rift:
+	@echo "[rift] Linking to $$HOME/.config/rift"
+	@mkdir -p "$$HOME/.config/rift"
+	@ln -fnsv "$(REPO_DIR)/macos/rift/config.toml"  "$$HOME/.config/rift/config.toml"
+
+# yabai / skhd (legacy): dotfiles/.yabairc → ~/.yabairc, dotfiles/.skhdrc → ~/.skhdrc
+# Rift に移行済みのため link ターゲットからは除外。参照用に残す。
 link-yabai:
 	@echo "[yabai/skhd] Linking dotfiles to $$HOME"
 	@ln -fnsv "$(REPO_DIR)/dotfiles/.yabairc" "$$HOME/.yabairc"
@@ -221,8 +228,8 @@ doctor:
 	@echo
 	@echo "==> Homebrew prefix detected: $(HOMEBREW_PREFIX)"
 
-# yabai / skhd サービスを起動（既に起動中なら再起動）
+# rift サービスを起動（初回は install → start、以降は restart）
 services:
-	@echo "[services] Starting yabai and skhd"
-	@yabai --restart-service
-	@skhd --restart-service
+	@echo "[services] Starting rift"
+	@rift service install 2>/dev/null || true
+	@rift service start 2>/dev/null || rift service restart
