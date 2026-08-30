@@ -9,7 +9,7 @@ HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo /opt/homebrew)
 export PATH := $(HOMEBREW_PREFIX)/bin:/usr/local/bin:$(PATH)
 
 .PHONY: all setup bootstrap sync link link-pre link-dotfiles link-emacs link-rift link-yabai \
-        link-karabiner link-kitty link-mise link-aquaskk link-claude \
+        link-karabiner link-ghostty link-kitty link-mise link-aquaskk link-claude \
         link-launchd link-hammerspoon macos-defaults install homebrew services setup-slack org-sync-setup \
         emacs-install emacs-daemon-setup doctor
 
@@ -37,7 +37,7 @@ all: bootstrap
 # --------------------------------------------------------------------------
 
 link: link-dotfiles link-emacs link-rift \
-      link-karabiner link-kitty link-mise link-aquaskk link-claude \
+      link-karabiner link-ghostty link-mise link-aquaskk link-claude \
       link-launchd link-hammerspoon
 
 # install 前に必要な最小限のリンク (Brewfile と mise 設定)
@@ -101,7 +101,14 @@ link-karabiner:
 	@mkdir -p "$$HOME/.config/karabiner"
 	@ln -fnsv "$(REPO_DIR)/macos/Karabiner/karabiner.json"  "$$HOME/.config/karabiner/karabiner.json"
 
-# kitty: kitty.conf → ~/.config/kitty/
+# ghostty: config → ~/.config/ghostty/
+link-ghostty:
+	@echo "[ghostty] Linking to $$HOME/.config/ghostty"
+	@mkdir -p "$$HOME/.config/ghostty"
+	@ln -fnsv "$(REPO_DIR)/macos/ghostty/config"  "$$HOME/.config/ghostty/config"
+
+# kitty (legacy): kitty.conf → ~/.config/kitty/
+# Ghostty に移行済みのため link ターゲットからは除外。参照用に残す。
 link-kitty:
 	@echo "[kitty] Linking to $$HOME/.config/kitty"
 	@mkdir -p "$$HOME/.config/kitty"

@@ -65,7 +65,7 @@ wm_ctrl  = "Meta + Ctrl"
 
 # ── アプリフォーカス ──────────────────────────────────
 "Meta + P" = { exec = ["/bin/bash", "-c", "osascript -e 'tell application \"Emacs\" to activate'"] }
-"Meta + I" = { exec = ["/bin/bash", "-c", "osascript -e 'tell application \"kitty\" to activate'"] }
+"Meta + I" = { exec = ["/bin/bash", "-c", "osascript -e 'tell application \"Ghostty\" to activate'"] }
 "Meta + Period" = { exec = ["/bin/bash", "-c", "osascript -e 'tell application \"Slack\" to activate' || open -a Slack"] }
 
 # ── 方向フォーカス ────────────────────────────────────

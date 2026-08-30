@@ -1,0 +1,75 @@
+# ~/.config/ghostty/config
+
+# ── フォント ──────────────────────────────────────────
+font-family = Ubuntu Mono
+font-size = 17
+
+# ── カーソル ──────────────────────────────────────────
+cursor-color = c7c7c7
+cursor-text = FEFFFF
+
+# ── 色 ───────────────────────────────────────────────
+foreground = D1D2D3
+background = 16171E
+
+# black
+palette = 0=#000000
+palette = 8=#676767
+
+# red
+palette = 1=#E68E8E
+palette = 9=#FF6D67
+
+# green
+palette = 2=#83AC8E
+palette = 10=#5FF967
+
+# yellow
+palette = 3=#F5B78A
+palette = 11=#FEFB67
+
+# blue
+palette = 4=#9BB8DC
+palette = 12=#6871FF
+
+# magenta
+palette = 5=#BAACE2
+palette = 13=#FF76FF
+
+# cyan
+palette = 6=#00C5C7
+palette = 14=#5FFDFF
+
+# white
+palette = 7=#C7C7C7
+palette = 15=#FEFFFF
+
+# ── 透明度 ───────────────────────────────────────────
+background-opacity = 0.8
+background-blur = true
+
+# ── スクロールバック ──────────────────────────────────
+# 10MB (kitty の scrollback_lines 10000 相当)
+scrollback-limit = 10000000
+
+# ── macOS ─────────────────────────────────────────────
+macos-option-as-alt = true
+quit-after-last-window-closed = true
+
+# 終了確認なし (kitty の confirm_os_window_close 0 相当)
+confirm-close-surface = false
+
+# ── tmux 互換 ────────────────────────────────────────
+# Ctrl+@ / Ctrl+Space (NUL 0x00) を tmux の begin-selection に届ける
+keybind = ctrl+@=text:\x00
+keybind = ctrl+space=text:\x00
+
+# ── キーバインド ──────────────────────────────────────
+# cmd+d : 右に新規スプリット (kitty の cmd+d new_window_with_cwd 相当)
+keybind = super+d=new_split:right
+
+# cmd+t : 新規タブ (作業ディレクトリを継承)
+keybind = super+t=new_tab
+
+# cmd+w : 現在のサーフェスを閉じる
+keybind = super+w=close_surface
