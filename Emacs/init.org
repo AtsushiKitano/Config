@@ -725,6 +725,36 @@ agent-shell-mode では Evil の insert モードを使わず emacs-state で動
   :type 'string
   :group 'agent-shell)
 
+(defun my/agent-shell-project-name ()
+  "現在の `default-directory' から git リポジトリ名(トップ階層の basename)を返す。
+git 管理外なら default-directory の basename にフォールバックする。"
+  (let ((root (or (locate-dominating-file default-directory ".git")
+                  default-directory)))
+    (file-name-nondirectory (directory-file-name (expand-file-name root)))))
+
+(defun my/agent-shell-make-environment ()
+  "agent-shell(claude-agent-acp) に渡す環境変数を生成する。
+OTEL_RESOURCE_ATTRIBUTES に service.namespace と、セッションのディレクトリから
+導出した project.name を動的に付与する。これにより Grafana の Project フィルタで
+リポジトリ単位に分解できる。"
+  (agent-shell-make-environment-variables
+   "CLAUDE_CODE_ENABLE_TELEMETRY" "1"
+   "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA" "1"
+   "OTEL_METRICS_EXPORTER" "otlp"
+   "OTEL_LOGS_EXPORTER" "otlp"
+   "OTEL_TRACES_EXPORTER" "otlp"
+   "OTEL_EXPORTER_OTLP_PROTOCOL" "http/protobuf"
+   "OTEL_EXPORTER_OTLP_ENDPOINT" my/agent-shell-otel-endpoint
+   "OTEL_METRIC_EXPORT_INTERVAL" "10000"
+   "OTEL_LOGS_EXPORT_INTERVAL" "5000"
+   "OTEL_RESOURCE_ATTRIBUTES"
+   (format "service.namespace=emacs-agent-shell,project.name=%s"
+           (my/agent-shell-project-name))))
+
+(defun my/agent-shell-refresh-environment (&rest _)
+  "agent-shell 起動直前に、現在のバッファのリポジトリ名で環境を組み直す。"
+  (setq agent-shell-anthropic-claude-environment (my/agent-shell-make-environment)))
+
 (leaf agent-shell
   :ensure t
   :custom
@@ -755,18 +785,10 @@ agent-shell-mode では Evil の insert モードを使わず emacs-state で動
   ;; .claude/settings.json の env と揃える。ここで渡した環境変数は acp 側で
   ;; process-environment に prepend されるため、GUI 起動の Emacs でも確実に効く。
   ;; OTEL_RESOURCE_ATTRIBUTES で CLI 由来のスパンと区別できるようタグ付けする。
-  (setq agent-shell-anthropic-claude-environment
-        (agent-shell-make-environment-variables
-         "CLAUDE_CODE_ENABLE_TELEMETRY" "1"
-         "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA" "1"
-         "OTEL_METRICS_EXPORTER" "otlp"
-         "OTEL_LOGS_EXPORTER" "otlp"
-         "OTEL_TRACES_EXPORTER" "otlp"
-         "OTEL_EXPORTER_OTLP_PROTOCOL" "http/protobuf"
-         "OTEL_EXPORTER_OTLP_ENDPOINT" my/agent-shell-otel-endpoint
-         "OTEL_METRIC_EXPORT_INTERVAL" "10000"
-         "OTEL_LOGS_EXPORT_INTERVAL" "5000"
-         "OTEL_RESOURCE_ATTRIBUTES" "service.namespace=emacs-agent-shell"))
+  (setq agent-shell-anthropic-claude-environment (my/agent-shell-make-environment))
+  ;; agent-shell 起動直前に、そのバッファのリポジトリ名で project.name を付け直す。
+  ;; （C-c A で起動したバッファの default-directory を基準にする）
+  (advice-add 'agent-shell :before #'my/agent-shell-refresh-environment)
   (with-eval-after-load 'evil-collection-agent-shell
     (define-key agent-shell-mode-map "v"
                 evil-collection-agent-shell-permission-view-diff)
