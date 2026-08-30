@@ -2982,6 +2982,93 @@ pandoc で GitHub 風 HTML に変換し、xwidget-webkit で描画する。
    ("C-c C-g" . browse-url-of-file)))
 #+end_src
 
+*** Org プレビュー
+
+pandoc で GitHub 風 HTML に変換し、xwidget-webkit (WebKit) で
+実際の Web ブラウザのようにリッチ表示する。=C-c C-v= でプレビュー、
+=C-c C-x v= で保存時自動更新モードをトグルする。
+(xwidget 対応の GUI Emacs が必要。非対応環境では =C-c C-g= で外部ブラウザに開く)
+
+CSS・Mermaid ヘッダは =my/markdown-preview-css= / =my/markdown-preview-mermaid-header=
+を共用する（markdown セクションで定義済み）。
+
+#+begin_src emacs-lisp :tangle yes
+(defvar-local my/org-preview--last-html nil
+  "直近に生成したプレビュー HTML。再生成時に削除して /tmp の増殖を防ぐ。")
+
+(defun my/org-preview--render (buf)
+  "BUF の org ファイルを GitHub 風 HTML に変換し、ファイルパスを返す."
+  (let* ((org-tmp (unless (buffer-file-name buf)
+                    (let ((f (make-temp-file "org-src-" nil ".org")))
+                      (with-current-buffer buf
+                        (write-region (point-min) (point-max) f))
+                      f)))
+         (org-file (or (buffer-file-name buf) org-tmp))
+         (html-file (make-temp-file "org-preview-" nil ".html"))
+         (css-file (make-temp-file "org-css-" nil ".css"))
+         (header-file (make-temp-file "org-mermaid-" nil ".html")))
+    (write-region my/markdown-preview-css nil css-file)
+    (write-region my/markdown-preview-mermaid-header nil header-file)
+    (unless (= 0 (call-process "pandoc" nil nil nil
+                               "-f" "org"
+                               "-t" "html5"
+                               "--standalone"
+                               "--embed-resources"
+                               "--syntax-highlighting=tango"
+                               (format "--css=%s" css-file)
+                               (format "--include-in-header=%s" header-file)
+                               "-o" html-file
+                               org-file))
+      (delete-file css-file)
+      (delete-file header-file)
+      (when org-tmp (delete-file org-tmp))
+      (delete-file html-file)
+      (error "pandoc の実行に失敗しました"))
+    (delete-file css-file)
+    (delete-file header-file)
+    (when org-tmp (delete-file org-tmp))
+    (with-current-buffer buf
+      (when (and my/org-preview--last-html
+                 (file-exists-p my/org-preview--last-html))
+        (ignore-errors (delete-file my/org-preview--last-html)))
+      (setq my/org-preview--last-html html-file))
+    html-file))
+
+(defun my/org-preview (&optional select)
+  "現在の org バッファを WebKit (xwidget) でプレビューする.
+pandoc で GitHub 風 HTML に変換し、xwidget-webkit で描画する。"
+  (interactive (list t))
+  (unless (and (display-graphic-p) (featurep 'xwidget-internal))
+    (user-error "WebKit プレビューには xwidget 対応の GUI Emacs が必要です"))
+  (require 'xwidget)
+  (let* ((src-buf (current-buffer))
+         (html-file (my/org-preview--render src-buf))
+         (url (concat "file://" html-file)))
+    (save-window-excursion
+      (xwidget-webkit-browse-url url))
+    (let* ((session (xwidget-webkit-current-session))
+           (buf (and session (xwidget-buffer session))))
+      (unless (buffer-live-p buf)
+        (error "WebKit セッションの取得に失敗しました"))
+      (if select
+          (pop-to-buffer buf)
+        (display-buffer buf)))))
+
+(define-minor-mode my/org-auto-preview-mode
+  "保存時に自動で org プレビューを更新するマイナーモード."
+  :lighter " OrgPv"
+  (if my/org-auto-preview-mode
+      (add-hook 'after-save-hook #'my/org-preview nil t)
+    (remove-hook 'after-save-hook #'my/org-preview t)))
+
+(with-eval-after-load 'org
+  ;; C-c C-v は org-babel prefix だが、プレビューを優先して上書きする
+  (evil-define-key '(normal insert visual motion emacs) org-mode-map
+    (kbd "C-c C-v")   #'my/org-preview
+    (kbd "C-c C-x v") #'my/org-auto-preview-mode
+    (kbd "C-c C-g")   #'browse-url-of-file))
+#+end_src
+
 *** Web 検索
 
 =C-c w= で Google 検索する。結果は xwidget-webkit (WebKit) で Emacs 内に

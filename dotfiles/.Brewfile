@@ -3,7 +3,7 @@
 # `brew bundle` 実行中の subshell には PATH が通っていないため、HOMEBREW_BREW_FILE を使う。
 _brew = ENV["HOMEBREW_BREW_FILE"] || "brew"
 %w[
-  koekeishiya/formulae
+  acsandmann/tap
   laishulu/homebrew
   spring-io/tap
   hashicorp/tap
@@ -11,7 +11,7 @@ _brew = ENV["HOMEBREW_BREW_FILE"] || "brew"
   railwaycat/emacsmacport
 ].each { |t| system(_brew, "trust", "--tap", t, out: File::NULL, err: File::NULL) }
 
-tap "koekeishiya/formulae"
+tap "acsandmann/tap"
 tap "laishulu/homebrew"
 tap "spring-io/tap"
 tap "d12frosted/emacs-plus"
@@ -66,8 +66,7 @@ brew "tree"
 brew "wget"
 brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
-brew "koekeishiya/formulae/skhd"
-brew "koekeishiya/formulae/yabai"
+brew "acsandmann/tap/rift"
 brew "laishulu/homebrew/macism"
 brew "minikube"
 brew "kubernetes-cli"
@@ -113,6 +112,7 @@ cask "kindle-previewer"
 cask "basictex"
 cask "font-symbols-only-nerd-font"
 cask "emacs-plus-app@master"
+cask "ghostty"
 
 # Container runtime: Docker.app が既に入っていれば何もせず、なければ OrbStack を入れる。
 # Docker Desktop と OrbStack はどちらも Docker socket を提供するため共存させない。
