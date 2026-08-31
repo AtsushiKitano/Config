@@ -1,8 +1,13 @@
 # ~/.config/ghostty/config
 
 # ── フォント ──────────────────────────────────────────
+# 欧文フォントに続けて日本語フォールバックフォントを指定
+# (指定しないと漢字などのグリフが表示されない/文字化けする)
 font-family = Ubuntu Mono
+font-family = BIZ UDGothic
 font-size = 17
+# 「ます」「株式会社」等が合字化されるのを防ぐ
+font-feature = -dlig
 
 # ── カーソル ──────────────────────────────────────────
 cursor-color = c7c7c7
@@ -60,9 +65,9 @@ quit-after-last-window-closed = true
 confirm-close-surface = false
 
 # ── tmux 互換 ────────────────────────────────────────
-# Ctrl+@ / Ctrl+Space (NUL 0x00) を tmux の begin-selection に届ける
+# Ctrl+@ (NUL 0x00) を tmux の begin-selection に届ける
+# Ctrl+Space は macOS の日本語入力切り替えに使うため横取りしない
 keybind = ctrl+@=text:\x00
-keybind = ctrl+space=text:\x00
 
 # ── キーバインド ──────────────────────────────────────
 # cmd+d : 右に新規スプリット (kitty の cmd+d new_window_with_cwd 相当)
