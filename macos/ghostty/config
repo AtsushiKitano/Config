@@ -78,3 +78,6 @@ keybind = super+t=new_tab
 
 # cmd+w : 現在のサーフェスを閉じる
 keybind = super+w=close_surface
+
+# Ctrl+jの改行を無効化
+keybind = ctrl+j=ignore

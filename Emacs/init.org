@@ -736,8 +736,14 @@ git 管理外なら default-directory の basename にフォールバックす�
   "agent-shell(claude-agent-acp) に渡す環境変数を生成する。
 OTEL_RESOURCE_ATTRIBUTES に service.namespace と、セッションのディレクトリから
 導出した project.name を動的に付与する。これにより Grafana の Project フィルタで
-リポジトリ単位に分解できる。"
+リポジトリ単位に分解できる。
+CLAUDE_CODE_DISABLE_1M_CONTEXT で 1M コンテキストへの自動昇格を止める
+(有効のままだと長い会話で 429 \"Usage credits required for 1M context\" になる)。"
   (agent-shell-make-environment-variables
+   ;; 長い会話になると SDK が 1M コンテキスト (context-1m beta) に切り替えるが、
+   ;; usage credits を有効にしていないアカウントでは 429 で落ちる。
+   ;; 200K の標準コンテキスト + auto-compact に固定する。
+   "CLAUDE_CODE_DISABLE_1M_CONTEXT" "1"
    "CLAUDE_CODE_ENABLE_TELEMETRY" "1"
    "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA" "1"
    "OTEL_METRICS_EXPORTER" "otlp"

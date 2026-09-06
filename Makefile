@@ -9,7 +9,7 @@ HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo /opt/homebrew)
 export PATH := $(HOMEBREW_PREFIX)/bin:/usr/local/bin:$(PATH)
 
 .PHONY: all setup bootstrap sync link link-pre link-dotfiles link-emacs link-rift link-yabai \
-        link-karabiner link-ghostty link-kitty link-mise link-aquaskk link-claude \
+        link-karabiner link-ghostty link-kitty link-mise link-macskk link-claude \
         link-launchd link-hammerspoon macos-defaults install homebrew services setup-slack org-sync-setup \
         emacs-install emacs-daemon-setup doctor
 
@@ -37,7 +37,7 @@ all: bootstrap
 # --------------------------------------------------------------------------
 
 link: link-dotfiles link-emacs link-rift \
-      link-karabiner link-ghostty link-mise link-aquaskk link-claude \
+      link-karabiner link-ghostty link-mise link-macskk link-claude \
       link-launchd link-hammerspoon
 
 # install 前に必要な最小限のリンク (Brewfile と mise 設定)
@@ -167,12 +167,25 @@ org-sync-setup:
 		"$$HOME/Library/LaunchAgents/com.user.org-sync.plist"
 	@echo "[org-sync] Registered and started"
 
-# AquaSKK: sub-rule.desc / arrow.rule → ~/Library/Application Support/AquaSKK/
-link-aquaskk:
-	@echo "[aquaskk] Linking to ~/Library/Application Support/AquaSKK"
-	@mkdir -p "$$HOME/Library/Application Support/AquaSKK"
-	@ln -fnsv "$(REPO_DIR)/macos/AquaSKK/sub-rule.desc"  "$$HOME/Library/Application Support/AquaSKK/sub-rule.desc"
-	@ln -fnsv "$(REPO_DIR)/macos/AquaSKK/arrow.rule"     "$$HOME/Library/Application Support/AquaSKK/arrow.rule"
+# macSKK: kana-rule-azik.conf (AZIK + 矢印記号) → macSKK サンドボックスコンテナの Settings/
+#
+# ファイルを置くだけでは反映されない、2つの理由がある:
+# 1. macSKK は App Sandbox 内で動作しており、コンテナ外 (このリポジトリ) を指す
+#    symlink の実体を読み込めない。読み込みに失敗すると黙って利用可能ルール一覧から
+#    除外されるため、symlink ではなく実体ファイルとして cp する必要がある。
+# 2. macSKK (v2.10.0+) はコンテナ内の Settings/kana-rule*.conf を複数読み込み、
+#    設定画面の「Kana Rule」ドロップダウンで選択されたファイル名
+#    (UserDefaults の `kanaRule` キー) だけを実際に使用する。ファイルが読み込みに
+#    失敗した場合、起動時にこのキーは "" (Default) へ自動的に戻されてしまうため、
+#    1 を満たした上で defaults write する必要がある。
+link-macskk:
+	@echo "[macskk] Copying to macSKK Settings container"
+	@mkdir -p "$$HOME/Library/Containers/net.mtgto.inputmethod.macSKK/Data/Documents/Settings"
+	@rm -f "$$HOME/Library/Containers/net.mtgto.inputmethod.macSKK/Data/Documents/Settings/kana-rule.conf"
+	@cp "$(REPO_DIR)/macos/macSKK/kana-rule-azik.conf" \
+		"$$HOME/Library/Containers/net.mtgto.inputmethod.macSKK/Data/Documents/Settings/kana-rule.conf"
+	@defaults write net.mtgto.inputmethod.macSKK kanaRule "kana-rule.conf"
+	@pkill -x macSKK 2>/dev/null || true
 
 # Hammerspoon: Hammerspoon/ → ~/.hammerspoon
 link-hammerspoon:

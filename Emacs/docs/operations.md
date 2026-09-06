@@ -1549,6 +1549,16 @@ Emacs 再起動後、SKK で日本語や英語の絵文字名を変換すると�
 
 トークン利用量を CLI と同じ OTLP コレクタ経由で langfuse へ転送する設定が入っている。転送先は `my/agent-shell-otel-endpoint` で切り替え可能で、既定は環境変数 `OTEL_EXPORTER_OTLP_ENDPOINT`、無ければ `http://localhost:4318`（ローカル langfuse コレクタ）にフォールバックする。CLI 由来のスパンとは `OTEL_RESOURCE_ATTRIBUTES=service.namespace=emacs-agent-shell` で区別される。
 
+#### 1M コンテキストの無効化
+
+会話が長くなると claude-agent-acp (Claude Agent SDK) が 1M コンテキスト (`context-1m` beta) に切り替わり、usage credits を有効にしていないアカウントでは以下のエラーで停止する。
+
+```
+Error (-32603) Internal error: API Error: Usage credits required for 1M context
+```
+
+これを避けるため `my/agent-shell-make-environment` で `CLAUDE_CODE_DISABLE_1M_CONTEXT=1` を渡し、200K の標準コンテキスト + auto-compact に固定している。
+
 ### ellama (Gemini)
 
 | キー | コマンド | 説明 |

@@ -17,7 +17,7 @@ macOS の環境設定を管理する dotfiles リポジトリ。
 ├── macos/
 │   ├── rift/                 # rift (タイリングウィンドウマネージャ)
 │   ├── Karabiner/            # Karabiner-Elements
-│   ├── AquaSKK/              # AquaSKK
+│   ├── macSKK/               # macSKK
 │   └── init.sh               # macOS システム設定
 └── scripts/           # セットアップスクリプト
 ```
@@ -87,7 +87,7 @@ make link-rift        # macos/rift/config.toml → ~/.config/rift/
 make link-karabiner   # karabiner.json → ~/.config/karabiner/
 make link-kitty       # kitty.conf → ~/.config/kitty/
 make link-mise        # mise/config.toml → ~/.config/mise/
-make link-aquaskk     # AquaSKK ルール → ~/Library/Application Support/AquaSKK/
+make link-macskk      # macSKK ルール (AZIK+矢印) → macSKK サンドボックスコンテナの Settings/
 make link-hammerspoon # Hammerspoon/ → ~/.hammerspoon
 ```
 
@@ -154,6 +154,13 @@ make services    # rift service install && start
 設定ファイルは `hot_reload = true` のため、`macos/rift/config.toml` を編集すると
 自動で反映される。手動でリロードする場合は `Meta + Ctrl + R`。
 
+特定の仮想ウィンドウ（space）で tiling が効かなくなった場合は、サービスを
+再起動すると復旧することがある。
+
+```sh
+rift service restart   # launchd サービスを再起動 (kickstart -k)
+```
+
 #### キーバインド (主要)
 
 | キー | 動作 |
@@ -170,7 +177,7 @@ make services    # rift service install && start
 #### 入力ソース自動切り替え
 
 Hammerspoon (`Hammerspoon/init.lua`) が `hs.window.filter` でウィンドウフォーカスを監視し、
-Emacs フォーカス時は ABC (英字)、それ以外は AquaSKK に自動切り替えする。
+Emacs フォーカス時は ABC (英字)、それ以外は macSKK に自動切り替えする。
 `make link-hammerspoon` + Hammerspoon の Reload Config で有効になる。
 
 ### Slack (emacs-slack)
