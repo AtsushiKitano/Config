@@ -278,6 +278,20 @@ Apple Silicon (=/opt/homebrew=) と Intel (=/usr/local=) 両対応。
     (setenv "PATH" (concat homebrew-bin ":" (getenv "PATH")))))
 #+end_src
 
+** Go パスの設定
+
+`go install` でインストールした gopls / goimports 等 (=$(go env GOBIN)= または
+=$(go env GOPATH)/bin=) を Emacs の =exec-path= / =PATH= に追加する。
+eglot が gopls を見つけられず ~(file-missing "Searching for program" ... "gopls")~
+で失敗するのを防ぐ。
+
+#+begin_src emacs-lisp :tangle yes
+(let ((go-bin (expand-file-name "go/bin" (or (getenv "GOPATH") "~"))))
+  (when (file-directory-p go-bin)
+    (add-to-list 'exec-path go-bin)
+    (setenv "PATH" (concat go-bin ":" (getenv "PATH")))))
+#+end_src
+
 ** BasicTeX パスの設定
 
 BasicTeX のバイナリパスを Emacs の exec-path とサブプロセスの PATH の両方に追加する。
