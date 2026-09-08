@@ -9,7 +9,7 @@ HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo /opt/homebrew)
 export PATH := $(HOMEBREW_PREFIX)/bin:/usr/local/bin:$(PATH)
 
 .PHONY: all setup bootstrap sync link link-pre link-dotfiles link-emacs link-rift link-yabai \
-        link-karabiner link-ghostty link-kitty link-mise link-macskk link-claude \
+        link-karabiner link-ghostty link-kitty link-mise link-herdr link-macskk link-claude \
         link-launchd link-hammerspoon macos-defaults install homebrew services setup-slack org-sync-setup \
         emacs-install emacs-daemon-setup doctor
 
@@ -37,7 +37,7 @@ all: bootstrap
 # --------------------------------------------------------------------------
 
 link: link-dotfiles link-emacs link-rift \
-      link-karabiner link-ghostty link-mise link-macskk link-claude \
+      link-karabiner link-ghostty link-mise link-herdr link-macskk link-claude \
       link-launchd link-hammerspoon
 
 # install 前に必要な最小限のリンク (Brewfile と mise 設定)
@@ -119,6 +119,12 @@ link-mise:
 	@echo "[mise] Linking to $$HOME/.config/mise"
 	@mkdir -p "$$HOME/.config/mise"
 	@ln -fnsv "$(REPO_DIR)/dotfiles/mise/config.toml"  "$$HOME/.config/mise/config.toml"
+
+# herdr: config.toml → ~/.config/herdr/
+link-herdr:
+	@echo "[herdr] Linking to $$HOME/.config/herdr"
+	@mkdir -p "$$HOME/.config/herdr"
+	@ln -fnsv "$(REPO_DIR)/dotfiles/herdr/config.toml"  "$$HOME/.config/herdr/config.toml"
 
 # Claude Code: settings.json → ~/.claude/
 link-claude:

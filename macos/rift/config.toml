@@ -47,8 +47,18 @@ workspace_names = ["main", "code", "browser", "misc"]
 # App rules
 # Rift はデフォルトで全ウィンドウを管理する。
 # 浮動扱いになりやすいアプリを明示的に manage=true で固定する。
+#
+# Emacs は corfu の補完候補ポップアップや lsp-ui-doc の hover 表示などを
+# 「子フレーム（child frame）」として実装しており、これらは通常ウィンドウの
+# タイトルバーを持たない undecorated な NSWindow になる（AXSubrole が
+# "AXStandardWindow" にならない）。以前は `app_name = "Emacs"` に無条件で
+# manage=true を指定していたため、これらの子フレームまで強制的にタイル対象
+# になり、補完候補が出るたびに bsp レイアウトへ組み込まれて画面分割されて
+# しまっていた。ax_subrole でタイトルバー付きの通常フレームだけに絞ることで、
+# 子フレームはデフォルトのヒューリスティック（非標準ウィンドウを無視する）
+# に任せ、浮動ポップアップのまま表示させる。
 app_rules = [
-  { app_name = "Emacs",                  manage = true },
+  { app_name = "Emacs", ax_subrole = "AXStandardWindow", manage = true },
   { app_name = "LINE",                   manage = true },
   { app_name = "App for Google Calendar", manage = true },
 ]

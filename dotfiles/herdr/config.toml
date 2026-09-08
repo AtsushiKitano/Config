@@ -1,0 +1,29 @@
+# herdr configuration
+# tmux (dotfiles/.tmux.conf) と同じ操作感になるようキーバインドを合わせている。
+# 明示的に変更していない項目は herdr のデフォルトのまま
+# (tmux のデフォルトと一致するもの: split_horizontal="prefix+minus"(=tmux "-"),
+#  focus_pane_left/down/up/right="prefix+h/j/k/l", close_pane="prefix+x",
+#  zoom="prefix+z", next_tab="prefix+n", previous_tab="prefix+p",
+#  new_tab="prefix+c")。
+
+[keys]
+# tmux.conf: set-option -g prefix C-t
+prefix = "ctrl+t"
+
+# tmux.conf: bind r source-file ~/.tmux.conf
+# デフォルトの resize_mode ("prefix+r") と衝突するため、
+# resize_mode 側は tmux に存在しない機能なので解放する。
+reload_config = "prefix+r"
+resize_mode = ""
+
+# tmux.conf: bind | split-window -h (左右分割)
+split_vertical = "prefix+|"
+
+# tmux 組み込みデフォルト: prefix+d = detach-client
+detach = "prefix+d"
+
+# tmux.conf: bind -r H/J/K/L resize-pane -L/-D/-U/-R 5
+resize_pane_left = "prefix+shift+h"
+resize_pane_down = "prefix+shift+j"
+resize_pane_up = "prefix+shift+k"
+resize_pane_right = "prefix+shift+l"
